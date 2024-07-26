@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - PayrollPro</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <img src="../images/brand.png" alt="PayrollPro Logo" class="logo">
+        <h1>Create an Account</h1>
+        <div class="login-box">
+            <form>
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username">
+                
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password">
+                
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password">
+                
+                <label for="account-type">Account Type</label>
+                <select id="account-type" name="account-type">
+                    <option value="employee">Employee</option>
+                    <option value="employer">Employer</option>
+                </select>
+                
+                <button type="submit">Sign Up</button>
+                
+                <div class="login-links">
+                    <a href="http://localhost:5500/lib/templates/login/html/login.html">Already have an account? Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
