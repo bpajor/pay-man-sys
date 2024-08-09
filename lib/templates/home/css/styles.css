@@ -6,14 +6,6 @@ body {
   line-height: 1.6;
 }
 
-.header {
-  background-color: #0a8080;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .logo {
   width: 86px;
 }
@@ -122,11 +114,4 @@ footer {
 .about-info {
   max-width: 500px;
   margin: 0 auto;
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  padding: 10px;
-  font-family: "Roboto", sans-serif;
 }
