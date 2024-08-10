@@ -14,35 +14,6 @@ main {
     width: 75%;
 }
 
-.date-picker {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 5px 10px;
-    cursor: pointer;
-    width: 40%;
-    margin: 20px 20px;
-}
-
-.date-text {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 1em;
-    color: #333;
-    margin: 0 10px;
-}
-
-.date-arrow {
-    font-size: 1.5em;
-    color: #333;
-    cursor: pointer;
-    user-select: none;
-}
-
 .dropdown {
     position: absolute;
     top: 40px;
