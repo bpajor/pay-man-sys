@@ -1,0 +1,244 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+
+body {
+  font-family: "Roboto", sans-serif;
+}
+
+main {
+  display: flex;
+  flex-direction: row;
+}
+
+.base-card {
+  height: 420px;
+  width: 350px;
+  border-radius: 15px; /* Zaokrąglone rogi */
+  box-shadow: 0 2px 5px rgba(4, 4, 4, 4); /* Cień */
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+}
+
+.little-card {
+  width: 90%;
+  border-radius: 15px; /* Zaokrąglone rogi */
+  box-shadow: 0 2px 5px rgba(4, 4, 4, 0.5); /* Cień */
+  padding-left: 15px;
+}
+
+.cards {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-around;
+  padding: 20px 0px;
+}
+
+.card-title > h2 {
+  color: #0a8080;
+  font-size: 2em;
+}
+
+.card-title > a {
+    color: black;
+    font-weight: bold;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  padding-left: 15px;
+  gap: 30px;
+  width: 100%;
+}
+
+.mark-att {
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-in-button {
+  background-color: #4a7a7a; /* Dopasowanie koloru do nagłówka */
+  color: #fff; /* Biały tekst */
+  border: none; /* Brak obramowania */
+  border-radius: 4px; /* Zaokrąglone rogi */
+  padding: 20px 80px; /* Wewnętrzne odstępy */
+  font-size: 16px; /* Rozmiar czcionki */
+  cursor: pointer; /* Kursor wskazujący na możliwość kliknięcia */
+  transition: background-color 0.3s ease; /* Płynne przejście koloru tła */
+  font-size: 1.5em;
+}
+
+.check-in-button:hover {
+  background-color: #3a5a5a; /* Ciemniejszy kolor przy najechaniu */
+}
+
+.stat-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    width: 90%;
+    text-align: center;
+    margin: 10px;
+}
+
+.stat-title {
+    font-size: 1em;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.stat-progress {
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    height: 15px;
+}
+
+.stat-bar {
+    height: 100%;
+    background-color: #76c7c0;
+    width: 0; /* Initial width will be set by JavaScript */
+}
+
+.stat-duration {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.activity-title {
+    font-size: 1.2em;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    width: 80%;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.activity-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 2.5px;
+    width: 10px;
+    height: 10px;
+    background-color: #76c7c0;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+.activity-item:last-child::after {
+    display: none;
+}
+
+.activity-time {
+    font-size: 0.9em;
+    color: #666;
+    margin-right: 10px;
+}
+
+.activity-description {
+    font-size: 1em;
+    color: #333;
+}
+
+.list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attendance-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 80%;
+    max-width: 800px;
+    margin: 10px;
+}
+
+.attendance-title {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-table th, .attendance-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.attendance-table th {
+    background-color: #f2f2f2;
+    color: #333;
+}
+
+.attendance-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.attendance-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+@media screen and (max-width: 1340px) {
+    .base-card {
+        width: 250px;
+    }
+}
+
+@media screen and (max-width: 1050px) {
+    .cards {
+        flex-flow: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .base-card{
+        width: 70%;
+        height: 450px;
+    }
+}
+
+@media screen and (max-width: 900px) {
+  main {
+    flex-direction: column;
+  }
+}
+
+.content {
+  width: 75%;
+}
+
+@media screen and (max-width: 1070px) {
+  .content {
+    width: 100%;
+  }
+}
