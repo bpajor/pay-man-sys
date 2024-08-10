@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../../common/css/header.css" />
+    <link rel="stylesheet" href="../../common/css/footer.css" />
+    <link rel="stylesheet" href="../../common/css/left-employee-nav.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <header class="header">
+      <img
+        src="../../common/images/brand.png"
+        alt="PayrollPro Logo"
+        class="logo"
+      />
+      <nav>
+        <a href="">Home</a>
+        <a href="">Features</a>
+        <a href="">About</a>
+        <a href="http://localhost:5500/lib/templates/login/html/login.html"
+          >Logout</a
+        >
+      </nav>
+    </header>
+    <main>
+      <secion class="menu">
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+      </secion>
+      <section class="content">
+        <div class="absence-card">
+          <div class="absence-title">Absence Form</div>
+          <form class="absence-form">
+            <div class="form-group">
+              <label for="absence-type">Type of Absence</label>
+              <select id="absence-type" name="absence-type">
+                <option value="sick">Sick Leave</option>
+                <option value="vacation">Annual Leave</option>
+                <option value="personal">Casual Leave</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="absence-reason">Reason</label>
+              <textarea
+                id="absence-reason"
+                name="absence-reason"
+                rows="4"
+                placeholder="Enter the reason for your absence..."
+              ></textarea>
+            </div>
+            <button type="submit" class="submit-button">Submit</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+  </body>
+</html>
