@@ -33,8 +33,6 @@ main {
   width: 100%;
 }
 
-/**/
-
 @media screen and (max-width: 900px) {
   main {
     flex-direction: column;
