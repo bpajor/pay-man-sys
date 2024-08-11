@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../../common/css/header.css" />
+    <link rel="stylesheet" href="../../common/css/footer.css" />
+    <link rel="stylesheet" href="../../common/css/left-employee-nav.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <header class="header">
+      <img
+        src="../../common/images/brand.png"
+        alt="PayrollPro Logo"
+        class="logo"
+      />
+      <nav>
+        <a href="">Home</a>
+        <a href="">Features</a>
+        <a href="">About</a>
+        <a href="http://localhost:5500/lib/templates/login/html/login.html"
+          >Logout</a
+        >
+      </nav>
+    </header>
+    <main>
+      <secion class="menu">
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+      </secion>
+      <section class="content">
+        <div class="card">
+          <h2>Employee Information</h2>
+          <form>
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" value="Wiktoria Twaróg" />
+            </div>
+            <div class="form-group">
+              <label for="position">Position</label>
+              <input type="text" id="position" value="Software Engineer" readonly/>
+            </div>
+            <div class="form-group">
+              <label for="department">Department</label>
+              <input type="text" id="department" value="IT" readonly />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" value="john.doe@example.com" />
+            </div>
+            <div class="form-group">
+                <label for="salary">Salary</label>
+                <input type="number" id="salary" value="5000" readonly/>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" value="123456789" />
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" id="address" value="ul. Kolorowa 12, 12-345 Warszawa" />
+            </div>
+            <div class="form-group">
+                <label for="birth">Date of Birth</label>
+                <input type="date" id="birth" value="1990-01-01" />
+            </div>
+            <div class="form-group">
+                <label for="sick_leave">Sick leave</label>
+                <input type="number" id="sick_leave" value="10" readonly/>
+            </div>
+            <div class="form-group">
+                <label for="annual_leave">Vacation days</label>
+                <input type="number" id="vacation_days" value="20" readonly/>
+            </div>
+            <div class="form-group">
+                <label for="casual_leave">Casual leave</label>
+                <input type="number" id="casual_leave" value="5" readonly/>
+            </div>
+            <div class="form-group">
+                <label for="manager">Manager</label>
+                <input type="text" id="manager" value="John Doe" readonly/>
+            </div>
+            <button type="submit">Save</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+  </body>
+</html>
