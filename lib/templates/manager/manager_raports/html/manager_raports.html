@@ -66,7 +66,10 @@
         <!-- Header -->
         <header class="content-header">
           <div class="header-left">
-            <h1>Financial Reports</h1>
+            <h1>
+              Financial Reports
+              <a class="all-emp-link" href="">See details for all employees</a>
+            </h1>
           </div>
           <div class="header-right">
             <div class="date-picker">
@@ -124,12 +127,12 @@
               </div>
             </div>
           </div>
-            <div class="card">
+          <div class="card">
             <h2>Trend Analysis</h2>
             <div class="card-content">
               <div class="chart">
-              <!-- Line Chart -->
-              <canvas id="lineChart"></canvas>
+                <!-- Line Chart -->
+                <canvas id="lineChart"></canvas>
               </div>
             </div>
           </div>
@@ -230,58 +233,80 @@
       };
 
       const lineData = {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ],
         datasets: [
-            {
-            label: 'Salaries',
-            data: [100000, 105000, 110000, 115000, 120000, 125000, 130000, 135000, 140000, 145000, 150000, 155000],
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          {
+            label: "Salaries",
+            data: [
+              100000, 105000, 110000, 115000, 120000, 125000, 130000, 135000,
+              140000, 145000, 150000, 155000,
+            ],
+            borderColor: "rgba(75, 192, 192, 1)",
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
             fill: false,
-            tension: 0.1
-            },
-            {
-            label: 'Bonuses',
-            data: [20000, 21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000, 31000],
-            borderColor: 'rgba(255, 99, 132, 1)',
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.1,
+          },
+          {
+            label: "Bonuses",
+            data: [
+              20000, 21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000,
+              29000, 30000, 31000,
+            ],
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
             fill: false,
-            tension: 0.1
-            },
-            {
-            label: 'Benefits',
-            data: [10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500, 14000, 14500, 15000, 15500],
-            borderColor: 'rgba(255, 205, 86, 1)',
-            backgroundColor: 'rgba(255, 205, 86, 0.2)',
+            tension: 0.1,
+          },
+          {
+            label: "Benefits",
+            data: [
+              10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500, 14000,
+              14500, 15000, 15500,
+            ],
+            borderColor: "rgba(255, 205, 86, 1)",
+            backgroundColor: "rgba(255, 205, 86, 0.2)",
             fill: false,
-            tension: 0.1
-            }
-        ]
-        };
+            tension: 0.1,
+          },
+        ],
+      };
 
-        // Line chart configuration
-        const lineConfig = {
-        type: 'line',
+      // Line chart configuration
+      const lineConfig = {
+        type: "line",
         data: lineData,
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
             legend: {
-            position: 'top',
+              position: "top",
             },
             title: {
-            display: true,
-            text: 'Trend Analysis'
-            }
+              display: true,
+              text: "Trend Analysis",
             },
-            scales: {
+          },
+          scales: {
             y: {
-            beginAtZero: true
-            }
-            }
+              beginAtZero: true,
+            },
+          },
         },
-        };
+      };
 
       document.addEventListener("DOMContentLoaded", function () {
         const pie_ctx = document.getElementById("pieChart").getContext("2d");
