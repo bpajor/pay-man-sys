@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../../../common/css/header.css" />
+    <link rel="stylesheet" href="../../../common/css/footer.css" />
+    <link rel="stylesheet" href="../../../common/css/left-employee-nav.css" />
+    <link rel="stylesheet" href="../../../common/css/date-picker.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Document</title>
+  </head>
+  <body>
+    <header class="header">
+      <img
+        src="../../../common/images/brand.png"
+        alt="PayrollPro Logo"
+        class="logo"
+      />
+      <nav>
+        <a href="">Home</a>
+        <a href="">Features</a>
+        <a href="">About</a>
+        <a href="http://localhost:5500/lib/templates/login/html/login.html"
+          >Logout</a
+        >
+      </nav>
+    </header>
+    <main>
+      <section class="menu">
+        <div class="menu-item">
+          <img
+            src="../../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img
+            src="../../../common/images/user.png"
+            alt="user_icon"
+            class="user-icon"
+          />
+          <p>Employee Dashboard</p>
+        </div>
+      </section>
+      <section class="content">
+        <!-- Header -->
+        <header class="content-header">
+          <div class="header-left">
+            <h1>John Doe</h1>
+          </div>
+          <div class="header-right">
+            <div class="date-picker">
+              <span class="date-arrow" onclick="prevMonth()">&#9664;</span>
+              <span class="date-text" id="date-text"
+                >01 January - 31 January 2024</span
+              >
+              <span class="date-arrow" onclick="nextMonth()">&#9654;</span>
+            </div>
+            <button class="export-btn">
+              Export to CSV<span> &#128229;</span>
+            </button>
+          </div>
+        </header>
+        <section class="cards">
+          <div class="card">
+            <div class="card-header">
+              <p>Personal Information</p>
+              <button class="edit-button" onclick="editCard(this)">Edit</button>
+            </div>
+            <div class="card-content">
+              <div>
+                <label>Name:</label>
+                <span>John Doe</span>
+                <input type="text" value="John Doe" style="display: none" />
+              </div>
+              <div>
+                <label>Email:</label>
+                <span>john.doe@example.com</span>
+                <input type="text" value="john.doe@example.com" style="display: none" />
+              </div>
+              <div>
+                <label>Phone Number:</label>
+                <span>+48 123 456 789</span>
+                <input type="text" value="+48 123 456 789" style="display: none">
+              </div>
+              <div>
+                <label>Home Address:</label>
+                <span>ul. Przykładowa 1, 00-001 Warsaw</span>
+                <input type="text" value="ul. Przykładowa 1, 00-001 Warsaw" style="display: none" />
+              </div>
+              <div>
+                <label>Date of Birth:</label>
+                <span>01.01.1980</span>
+                <input type="date" value="1980-01-01" style="display: none" />
+              </div>
+              <button
+                class="save-button"
+                onclick="saveCard(this)"
+                style="display: none"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <p>Health Information</p>
+              <button class="edit-button" onclick="editCard(this)">Edit</button>
+            </div>
+            <div class="card-content">
+              <div>
+                <label>Health Insurance:</label>
+                <span>Yes</span>
+                <input type="text" value="Yes" style="display: none" />
+              </div>
+              <div>
+                <label>Policy Number:</label>
+                <span>1234567890</span>
+                <input type="text" value="1234567890" style="display: none" />
+              </div>
+              <div>
+                <label>Healthcare Provider:</label>
+                <span>LuxMed</span>
+                <input type="text" value="LuxMed" style="display: none" />
+              </div>
+              <div>
+                <label>Policy Expiry Date:</label>
+                <span>31.12.2023</span>
+                <input type="text" value="31.12.2023" style="display: none" />
+              </div>
+              <div>
+                <label>Notes:</label>
+                <span>None</span>
+                <input type="text" value="None" style="display: none" />
+              </div>
+              <button
+                class="save-button"
+                onclick="saveCard(this)"
+                style="display: none"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <script src="../../../common/scripts/dates.js"></script>
+    <script>
+      function editCard(button) {
+        const card = button.closest(".card");
+        const spans = card.querySelectorAll("span");
+        const inputs = card.querySelectorAll("input");
+        const saveButton = card.querySelector(".save-button");
+
+        spans.forEach((span) => (span.style.display = "none"));
+        inputs.forEach((input) => (input.style.display = "block"));
+        saveButton.style.display = "block";
+        button.style.display = "none";
+      }
+
+      function saveCard(button) {
+        const card = button.closest(".card");
+        const spans = card.querySelectorAll("span");
+        const inputs = card.querySelectorAll("input");
+        const editButton = card.querySelector(".edit-button");
+
+        inputs.forEach((input, index) => {
+          spans[index].textContent = input.value;
+          input.style.display = "none";
+        });
+        spans.forEach((span) => (span.style.display = "inline"));
+        button.style.display = "none";
+        editButton.style.display = "block";
+      }
+    </script>
+  </body>
+</html>
