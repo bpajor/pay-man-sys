@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES6",                  // Wersja JavaScript do skompilowania
+    "module": "commonjs",              // Moduł do używania (Node.js używa CommonJS)
+    "strict": true,                    // Włącza tryb ścisły TypeScript
+    "esModuleInterop": true,           // Włącza poprawną współpracę z importami CommonJS
+    "skipLibCheck": true,              // Pomija sprawdzanie typów w plikach .d.ts
+    "outDir": "./build",                // Gdzie zostaną umieszczone skompilowane pliki
+    "rootDir": "."                 // Skąd TypeScript będzie kompilować pliki
+  },
+  "include": ["."],                  // Folder do skanowania przez kompilator TS
+  "exclude": ["node_modules"]          // Wyklucza folder node_modules z kompilacji
+}

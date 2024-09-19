@@ -1,0 +1,34 @@
+{
+  "name": "pay-man-sys",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm run build && node build/app.js",
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn app.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bpajor/pay-man-sys.git"
+  },
+  "author": "bpajor",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bpajor/pay-man-sys/issues"
+  },
+  "homepage": "https://github.com/bpajor/pay-man-sys#readme",
+  "dependencies": {
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.5.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.2"
+  }
+}
