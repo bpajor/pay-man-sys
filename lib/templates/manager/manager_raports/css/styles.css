@@ -106,6 +106,14 @@ body {
     height: 300px;
 }
 
+.all-emp-link {
+    font-weight: normal;
+    color: rgb(74, 71, 67);
+    font-style: italic;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 @media screen and (max-width: 900px) {
   main {
     flex-direction: column;
