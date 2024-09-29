@@ -1,16 +1,28 @@
 import path from "path";
-import { fileURLToPath } from "url";
 import Express from "express";
 import bodyParser from "body-parser";
-import { employee_router as employee_routes } from "./routes/employee.js";
+import { employee_router as employee_routes } from "./routes/employee";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+// import rateLimit from "express-rate-limit";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+console.log(__filename)
 
 const app = Express();
 
 app.set("view engine", "ejs");
 app.set("views", "views");
+
+app.use(helmet()); //Set security headers
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again after 15 minutes",
+});
+
+app.use(limiter);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -18,7 +30,12 @@ const publicPath =
   process.env.NODE_ENVIRONMENT === "local"
     ? path.join(__dirname, "public")
     : path.join(__dirname, "../public");
-app.use(Express.static(publicPath));
+
+app.use(
+  Express.static(publicPath, {
+    maxAge: "1y", //Cache static files for 1 year since they will not change
+  })
+);
 
 // Will be needed probably
 // app.use(
@@ -37,8 +54,6 @@ try {
 } catch (error) {
   console.log(`problem connecting: ${error}`);
 }
-
-
 
 // // --------------------------------------------
 
