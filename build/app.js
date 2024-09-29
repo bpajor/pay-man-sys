@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -17,6 +18,33 @@ else {
         ssl: { rejectUnauthorized: false },
     });
 }
+=======
+import path from "path";
+import { fileURLToPath } from "url";
+import Express from "express";
+import bodyParser from "body-parser";
+import { employee_router as employee_routes } from "./routes/employee.js";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const app = Express();
+app.set("view engine", "ejs");
+app.set("views", "views");
+app.use(bodyParser.urlencoded({ extended: false }));
+const publicPath = process.env.NODE_ENVIRONMENT === "local"
+    ? path.join(__dirname, "public")
+    : path.join(__dirname, "dist", "../public");
+app.use(Express.static(publicPath));
+// Will be needed probably
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//     store: store,
+//   })
+// );
+app.use(employee_routes);
+>>>>>>> Stashed changes
 try {
     client.connect();
 }
