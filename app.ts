@@ -1,30 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-import express from "express";
-import { Client } from "pg";
-=======
-import path from "path"
-import { fileURLToPath } from "url"
-import Express from "express"
-import bodyParser from "body-parser"
-import {employee_router as employee_routes} from "./routes/employee.js"
->>>>>>> 1501ac7973f7568e036e807295320c880a2de1bb
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-<<<<<<< HEAD
-if (process.env.NODE_ENVIRONMENT === 'local') {
-  client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  })
-} else {
-  client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-  });
-}
-=======
 import path from "path";
 import { fileURLToPath } from "url";
 import Express from "express";
@@ -34,24 +7,18 @@ import { employee_router as employee_routes } from "./routes/employee.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-=======
->>>>>>> 1501ac7973f7568e036e807295320c880a2de1bb
 const app = Express();
 
 app.set("view engine", "ejs");
 app.set("views", "views");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-<<<<<<< HEAD
 
 const publicPath =
   process.env.NODE_ENVIRONMENT === "local"
     ? path.join(__dirname, "public")
     : path.join(__dirname, "../public");
 app.use(Express.static(publicPath));
-=======
-app.use(Express.static(path.join(__dirname, "public")));
->>>>>>> 1501ac7973f7568e036e807295320c880a2de1bb
 
 // Will be needed probably
 // app.use(
@@ -64,10 +31,6 @@ app.use(Express.static(path.join(__dirname, "public")));
 // );
 
 app.use(employee_routes);
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> 1501ac7973f7568e036e807295320c880a2de1bb
 
 try {
   app.listen(process.env.PORT || 3000);
@@ -75,34 +38,9 @@ try {
   console.log(`problem connecting: ${error}`);
 }
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-const app = express();
-const port = process.env.PORT || 3000;
-=======
->>>>>>> 1501ac7973f7568e036e807295320c880a2de1bb
 
 
-
-
-// --------------------------------------------
-
-<<<<<<< HEAD
-process.on("SIGINT", () => {
-  console.log("SIGINT signal received: closing PostgreSQL client");
-  client.end(err => {
-    if (err) {
-      console.error("Error closing PostgreSQL client", err);
-    } else {
-      console.log("PostgreSQL client closed");
-    }
-    process.exit(err ? 1 : 0);
-  });
-});
-=======
-// --------------------------------------------
-=======
->>>>>>> 1501ac7973f7568e036e807295320c880a2de1bb
+// // --------------------------------------------
 
 // import express from "express";
 // import { Client } from "pg";
@@ -187,8 +125,4 @@ process.on("SIGINT", () => {
 //     }
 //     process.exit(err ? 1 : 0);
 //   });
-// });
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> 1501ac7973f7568e036e807295320c880a2de1bb
+// // });
