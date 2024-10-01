@@ -16,6 +16,8 @@ app.set("views", "views");
 
 app.use(helmet()); //Set security headers
 
+app.set('trust proxy', 1); // trust only first proxy
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   limit: 100, // limit each IP to 100 requests per windowMs
