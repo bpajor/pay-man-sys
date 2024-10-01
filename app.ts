@@ -2,6 +2,7 @@ import path from "path";
 import Express from "express";
 import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
+import {auth_router as auth_routes} from "./routes/auth";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 // import rateLimit from "express-rate-limit";
@@ -49,6 +50,7 @@ app.use(
 //   })
 // );
 
+app.use(auth_routes);
 app.use(employee_routes);
 
 try {
