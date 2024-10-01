@@ -1,10 +1,12 @@
 import path from "path";
-import Express from "express";
+import Express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
 import {auth_router as auth_routes} from "./routes/auth";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { generateScriptNonce } from "./middlewares/generateScriptNonce";
+import { customHelmet } from "./middlewares/customHelmet";
 // import rateLimit from "express-rate-limit";
 
 // const __filename = fileURLToPath(import.meta.url);
@@ -15,7 +17,20 @@ const app = Express();
 app.set("view engine", "ejs");
 app.set("views", "views");
 
-app.use(helmet()); //Set security headers
+app.use(generateScriptNonce);
+
+// app.use(helmet(
+//   {
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'"],
+//         scriptSrc: ["'self'", "https://cdn.jsdelivr.net", `'nonce-${res.locals.nonce}'`,]
+//       }
+//     }
+//   }
+// )); //Set security headers
+
+app.use(customHelmet)
 
 app.set('trust proxy', 1); // trust only first proxy
 
