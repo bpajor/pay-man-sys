@@ -1,5 +1,5 @@
 import path from "path";
-import Express, { Request, Response } from "express";
+import Express, {Request, Response } from "express";
 import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
 import {auth_router as auth_routes} from "./routes/auth";
@@ -7,28 +7,19 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { generateScriptNonce } from "./middlewares/generateScriptNonce";
 import { customHelmet } from "./middlewares/customHelmet";
+import { createLogger } from "./middlewares/createLogger";
 // import rateLimit from "express-rate-limit";
 
 // const __filename = fileURLToPath(import.meta.url);
-console.log(__filename)
 
 const app = Express();
 
 app.set("view engine", "ejs");
 app.set("views", "views");
 
-app.use(generateScriptNonce);
+app.use(createLogger)
 
-// app.use(helmet(
-//   {
-//     contentSecurityPolicy: {
-//       directives: {
-//         defaultSrc: ["'self'"],
-//         scriptSrc: ["'self'", "https://cdn.jsdelivr.net", `'nonce-${res.locals.nonce}'`,]
-//       }
-//     }
-//   }
-// )); //Set security headers
+app.use(generateScriptNonce);
 
 app.use(customHelmet)
 
@@ -71,7 +62,7 @@ app.use(employee_routes);
 try {
   app.listen(process.env.PORT || 3000);
 } catch (error) {
-  console.log(`problem connecting: ${error}`);
+  console.error(`Error starting server: ${error}`);
 }
 
 // // --------------------------------------------
