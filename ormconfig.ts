@@ -13,7 +13,7 @@ export const orm_config: DataSourceOptions = {
   password: isProduction ? undefined : process.env.TYPEORM_PASSWORD,
   database: isProduction ? undefined : process.env.TYPEORM_DATABASE,
   url: isProduction ? process.env.DATABASE_URL : undefined,
-  entities: ["./entity/**/*.ts"],
+  entities: ["build/entity/**/*.js", "**/entiy/**/*.ts"],
   synchronize: process.env.TYPEORM_SYNCHRONIZE === "true",
   logging: process.env.TYPEORM_LOGGING === "true",
   ssl: isProduction,
