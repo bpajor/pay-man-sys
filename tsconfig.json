@@ -6,7 +6,10 @@
     "strict": true,                          // Ścisłe sprawdzanie typów
     "esModuleInterop": true,                 // Umożliwia użycie importu z modułami CommonJS
     "skipLibCheck": true,                    // Pomija sprawdzanie typów w plikach definicji .d.ts
-    "forceConsistentCasingInFileNames": true // Wymusza konsekwencję w nazwach plików
+    "forceConsistentCasingInFileNames": true, // Wymusza konsekwencję w nazwach plików
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false
   },
   "include": ["./**/*"],                   // Źródłowe pliki TS
   "exclude": ["node_modules", "build"]       // Wykluczenie folderów

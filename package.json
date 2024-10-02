@@ -29,10 +29,14 @@
   },
   "dependencies": {
     "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.18.2",
     "express-rate-limit": "^7.4.0",
     "helmet": "^8.0.0",
+    "pg": "^8.13.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20",
     "winston": "^3.14.2"
   }
 }
