@@ -22,14 +22,14 @@ export const getEmployeeMainPage = async (req: Request, res: Response) => {
 
   //Let's test typeorm crud
 
-  const userRepo = AppDataSource.getRepository(User);
+  // const userRepo = AppDataSource.getRepository(User);
 
-  const new_user = new User();
-  new_user.username = `testuser${randomInt(100000)}`;
-  new_user.email = `testuser${randomInt(100000)}@example.com`;
-  new_user.password_hash = `testpassword`;
+  // const new_user = new User();
+  // new_user.username = `testuser${randomInt(100000)}`;
+  // new_user.email = `testuser${randomInt(100000)}@example.com`;
+  // new_user.password_hash = `testpassword`;
 
-  await userRepo.save(new_user);
+  // await userRepo.save(new_user);
 
   try {
     logger.info(`Rendering employee main page`);
