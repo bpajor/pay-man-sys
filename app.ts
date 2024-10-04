@@ -2,7 +2,7 @@ import path from "path";
 import Express from "express";
 import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
-import {auth_router as auth_routes} from "./routes/auth";
+import { auth_router as auth_routes } from "./routes/auth";
 import rateLimit from "express-rate-limit";
 import { generateScriptNonce } from "./middlewares/generateScriptNonce";
 import { customHelmet } from "./middlewares/customHelmet";
@@ -10,6 +10,11 @@ import { createLogger } from "./middlewares/createLogger";
 import { startServer } from "./helpers/startServer";
 import winston from "winston";
 import * as dotenv from "dotenv";
+import { AppDataSource } from "./data-source";
+import connectRedis from "connect-redis";
+import session from "express-session";
+import { createClient } from "redis";
+import RedisStore from "connect-redis";
 
 dotenv.config();
 
@@ -20,9 +25,7 @@ app.set("views", "views");
 
 const logger = winston.createLogger({
   level: "info",
-  format: winston.format.combine(
-    winston.format.json()
-  ),
+  format: winston.format.combine(winston.format.json()),
   transports: [
     new winston.transports.Console({
       stderrLevels: ["error"],
@@ -30,49 +33,162 @@ const logger = winston.createLogger({
   ],
 });
 
-app.use(createLogger)
+AppDataSource.initialize()
+  .then(async (client) => {
+    logger.info("Connection with db established successfully");
 
-app.use(generateScriptNonce);
+    // The idea is to use Heroku redis to manage sessions, because I'cant get pool from typeorm to initialize store in express-sessions
 
-app.use(customHelmet)
+    // const store = new (PgSession(session))({
+    //   pool: client, // Korzystamy z połączenia PostgreSQL
+    //   tableName: 'session', // Nazwa tabeli sesji
+    // }),
 
-app.set('trust proxy', 1); // trust only first proxy
+    // Pass logger to middlewares
+    app.use(createLogger);
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // limit each IP to 100 requests per windowMs
-  message: "Too many requests from this IP, please try again after 15 minutes",
-});
+    let redisClient = createClient({
+      url: process.env.REDIS_URL,
+    });
 
-app.use(limiter);
+    await redisClient.connect();
 
-app.use(bodyParser.urlencoded({ extended: false }));
+    let redisStore = new RedisStore({
+      client: redisClient,
+    });
 
-const publicPath =
-  process.env.NODE_ENVIRONMENT === "local"
-    ? path.join(__dirname, "public")
-    : path.join(__dirname, "../public");
+    if(!process.env.SESSION_SECRET) {
+      logger.error("SESSION_SECRET is not defined in .env file");
+      process.exit(1);
+    }
 
-app.use(
-  Express.static(publicPath, {
-    maxAge: "1y", //Cache static files for 1 year since they will not change
+    const session_secret_array = process.env.SESSION_SECRET.split("|||");
+
+    app.use(
+      session({
+        store: redisStore,
+        secret: session_secret_array,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+          secure: process.env.NODE_ENVIRONMENT === "production", // HTTPS w produkcji
+          httpOnly: true,
+          maxAge: 1000 * 60 * 60 * 24, // 1 dzień
+        },
+      })
+    );
+
+    logger.info("Session middleware initialized");
+
+    app.use(generateScriptNonce);
+
+    app.use(customHelmet);
+
+    app.set("trust proxy", 1); // trust only first proxy
+
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      limit: 100, // limit each IP to 100 requests per windowMs
+      message:
+        "Too many requests from this IP, please try again after 15 minutes",
+    });
+
+    app.use(limiter);
+
+    app.use(bodyParser.urlencoded({ extended: false }));
+
+    const publicPath =
+      process.env.NODE_ENVIRONMENT === "local"
+        ? path.join(__dirname, "public")
+        : path.join(__dirname, "../public");
+
+    app.use(
+      Express.static(publicPath, {
+        maxAge: "1y", //Cache static files for 1 year since they will not change
+      })
+    );
+
+    // Will be needed probably
+    // app.use(
+    //   session({
+    //     secret: process.env.SESSION_SECRET,
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     store: store,
+    //   })
+    // );
+
+    app.get('/set-session', (req, res) => {
+      // Ustawienie danych sesji
+      // TODO ts-node throws error - probably it cant see types.d.ts
+      console.log(req.session)
+      req.session.username = 'TestUser';
+      res.send('Session set with username: TestUser');
+    });
+    
+    app.get('/get-session', (req, res) => {
+      // Sprawdzenie, czy dane sesji istnieją
+      if (req.session.username) {
+        res.send(`Session found with username: ${req.session.username}`);
+      } else {
+        res.send('No session found');
+      }
+    });
+    
+
+    app.use(auth_routes);
+    app.use(employee_routes);
+
+    startServer(app, logger!);
   })
-);
+  .catch((error) => {
+    logger.error("Error connecting to the database:", error);
+    process.exit(1);
+  });
 
-// Will be needed probably
+// app.use(createLogger)
+
+// app.use(generateScriptNonce);
+
+// app.use(customHelmet)
+
+// app.set('trust proxy', 1); // trust only first proxy
+
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   limit: 100, // limit each IP to 100 requests per windowMs
+//   message: "Too many requests from this IP, please try again after 15 minutes",
+// });
+
+// app.use(limiter);
+
+// app.use(bodyParser.urlencoded({ extended: false }));
+
+// const publicPath =
+//   process.env.NODE_ENVIRONMENT === "local"
+//     ? path.join(__dirname, "public")
+//     : path.join(__dirname, "../public");
+
 // app.use(
-//   session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//     store: store,
+//   Express.static(publicPath, {
+//     maxAge: "1y", //Cache static files for 1 year since they will not change
 //   })
 // );
 
-app.use(auth_routes);
-app.use(employee_routes);
+// // Will be needed probably
+// // app.use(
+// //   session({
+// //     secret: process.env.SESSION_SECRET,
+// //     resave: false,
+// //     saveUninitialized: false,
+// //     store: store,
+// //   })
+// // );
 
-startServer(app, logger!);
+// app.use(auth_routes);
+// app.use(employee_routes);
+
+// startServer(app, logger!);
 
 // // Gracefully close the client when the application is shutting down
 // process.on("SIGTERM", () => {

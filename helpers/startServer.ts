@@ -5,15 +5,14 @@ import Express from "express";
 import { AppDataSource } from "../data-source";
 
 export const startServer = async (app: Express.Application, logger: Logger) => {
+  // try {
+  //   await AppDataSource.initialize(); // Nawiązywanie połączenia z bazą danych
+  //   logger.info("Connection with db established successfully");
+  // } catch (error) {
+  //   logger.error("Error connecting to the database:", error);
+  //   process.exit(1);
+  // }
   try {
-    await AppDataSource.initialize(); // Nawiązywanie połączenia z bazą danych
-    logger.info("Connection with db established successfully");
-  } catch (error) {
-    logger.error("Error connecting to the database:", error);
-    process.exit(1);
-  }
-  try {
-    // Po nawiązaniu połączenia, serwer zaczyna nasłuchiwać
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
