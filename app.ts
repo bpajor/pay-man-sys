@@ -1,5 +1,5 @@
 import path from "path";
-import Express from "express";
+import Express, { NextFunction, Request, Response } from "express";
 import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
 import { auth_router as auth_routes } from "./routes/auth";
@@ -37,13 +37,6 @@ AppDataSource.initialize()
   .then(async (client) => {
     logger.info("Connection with db established successfully");
 
-    // The idea is to use Heroku redis to manage sessions, because I'cant get pool from typeorm to initialize store in express-sessions
-
-    // const store = new (PgSession(session))({
-    //   pool: client, // Korzystamy z połączenia PostgreSQL
-    //   tableName: 'session', // Nazwa tabeli sesji
-    // }),
-
     // Pass logger to middlewares
     app.use(createLogger);
 
@@ -57,7 +50,7 @@ AppDataSource.initialize()
       client: redisClient,
     });
 
-    if(!process.env.SESSION_SECRET) {
+    if (!process.env.SESSION_SECRET) {
       logger.error("SESSION_SECRET is not defined in .env file");
       process.exit(1);
     }
@@ -71,12 +64,29 @@ AppDataSource.initialize()
         resave: false,
         saveUninitialized: false,
         cookie: {
-          secure: process.env.NODE_ENVIRONMENT === "production", // HTTPS w produkcji
+          secure: process.env.NODE_ENVIRONMENT !== "local", // HTTPS w produkcji
           httpOnly: true,
           maxAge: 1000 * 60 * 60 * 24, // 1 dzień
+          sameSite: "strict",
         },
       })
     );
+
+    // Prevent cookie jar overflow attack
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (!req.cookies) {
+        console.log("No cookies in request");
+        return next();
+      }
+      const cookies = Object.keys(req.cookies);
+      if (cookies.length < 25) {
+        next();
+      }
+      logger.error(
+        `Too many cookies (${cookies.length}) in request: ${req.originalUrl}`
+      );
+      res.status(400).send("Too many cookies in request");
+    });
 
     logger.info("Session middleware initialized");
 
@@ -108,33 +118,22 @@ AppDataSource.initialize()
       })
     );
 
-    // Will be needed probably
-    // app.use(
-    //   session({
-    //     secret: process.env.SESSION_SECRET,
-    //     resave: false,
-    //     saveUninitialized: false,
-    //     store: store,
-    //   })
-    // );
-
-    app.get('/set-session', (req, res) => {
+    app.get("/set-session", (req, res) => {
       // Ustawienie danych sesji
       // TODO ts-node throws error - probably it cant see types.d.ts
-      console.log(req.session)
-      req.session.username = 'TestUser';
-      res.send('Session set with username: TestUser');
+      console.log(req.session);
+      req.session.username = "TestUser";
+      res.send("Session set with username: TestUser");
     });
-    
-    app.get('/get-session', (req, res) => {
+
+    app.get("/get-session", (req, res) => {
       // Sprawdzenie, czy dane sesji istnieją
       if (req.session.username) {
         res.send(`Session found with username: ${req.session.username}`);
       } else {
-        res.send('No session found');
+        res.send("No session found");
       }
     });
-    
 
     app.use(auth_routes);
     app.use(employee_routes);

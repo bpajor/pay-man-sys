@@ -12,17 +12,21 @@
       <h1>Create an Account</h1>
       <div class="login-box">
         <form>
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" />
-
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required/>
+          <label for="last_name">Last Name</label>
+          <input type="text" id="last_name" name="last_name" required/>
+          <label for="email">Email</label>
+          <input type="text" id="email" name="email" required>
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" />
+          <input type="password" id="password" name="password" required/>
 
           <label for="confirm-password">Confirm Password</label>
           <input
             type="password"
             id="confirm-password"
             name="confirm-password"
+            required
           />
 
           <label for="account-type">Account Type</label>

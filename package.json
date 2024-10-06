@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "start": "npm run build && node build/app.js",
-    "dev": "nodemon --watch . --exec ts-node --transpile-only app.ts",
+    "dev": "tsc && nodemon --watch . --exec ts-node --transpile-only app.ts",
     "heroku-postbuild": "npm run build",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js"
   },

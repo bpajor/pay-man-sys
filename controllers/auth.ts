@@ -26,3 +26,19 @@ export const getSignup = (req: Request, res: Response) => {
     res.status(500).send("Error rendering signup page");
   }
 };
+
+export const postSignup = (req: Request, res: Response) => {
+  const logger: Logger = res.locals.logger;
+
+  logger.info(`Received signup request`);
+
+  const required_fields = ["name", "last_name", "email", "password", "confirm_password", "account_type"];
+
+  for (const field of required_fields) {
+    if (!req.body[field]) {
+      logger.error(`${field} not provided`);
+      return res.status(400).send(`Missing field ${field}`);
+    }
+  }
+  
+};
