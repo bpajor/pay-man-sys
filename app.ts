@@ -107,6 +107,8 @@ AppDataSource.initialize()
 
     app.use(bodyParser.urlencoded({ extended: false }));
 
+    app.use(Express.json());
+
     const publicPath =
       process.env.NODE_ENVIRONMENT === "local"
         ? path.join(__dirname, "public")
