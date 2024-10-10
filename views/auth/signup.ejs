@@ -11,24 +11,33 @@
       <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
       <h1>Create an Account</h1>
       <div class="login-box">
-        <form>
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" />
-
+        <div class="error-message">
+          <% if (error) { %>
+            <p><%= error %></p>
+          <% } %>
+        </div>
+        <form method="post" action="<% baseUrl %>/signup">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required />
+          <label for="last_name">Last Name</label>
+          <input type="text" id="last_name" name="last_name" required />
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required />
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" />
+          <input type="password" id="password" name="password" required />
 
-          <label for="confirm-password">Confirm Password</label>
+          <label for="confirm_password">Confirm Password</label>
           <input
             type="password"
-            id="confirm-password"
-            name="confirm-password"
+            id="confirm_password"
+            name="confirm_password"
+            required
           />
 
-          <label for="account-type">Account Type</label>
-          <select id="account-type" name="account-type">
+          <label for="account_type">Account Type</label>
+          <select id="account_type" name="account_type">
             <option value="employee">Employee</option>
-            <option value="employer">Employer</option>
+            <option value="manager">Manager</option>
           </select>
 
           <button type="submit">Sign Up</button>
@@ -39,5 +48,37 @@
         </form>
       </div>
     </div>
+
+    <script nonce="<%= nonce %>">
+      document.addEventListener("DOMContentLoaded", () => {
+        const form = document.querySelector("form");
+        form.addEventListener("submit", (event) => {
+          const name = document.getElementById("name").value.trim();
+          const lastName = document.getElementById("last_name").value.trim();
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+          const confirmPassword =
+            document.getElementById("confirm_password").value;
+
+          if (name.length < 2) {
+            alert("Name must be at least 2 characters long.");
+            event.preventDefault();
+          }
+          if (lastName.length < 2) {
+            alert("Last Name must be at least 2 characters long.");
+            event.preventDefault();
+          }
+
+          if (password !== confirmPassword) {
+            alert("Passwords do not match.");
+            event.preventDefault();
+          }
+          if (password.length < 15 || password.length > 254) {
+            alert("Password must be between 15 and 254 characters long.");
+            event.preventDefault();
+          }
+        });
+      });
+    </script>
   </body>
 </html>

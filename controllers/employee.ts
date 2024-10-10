@@ -6,6 +6,7 @@ import { randomInt } from "crypto";
 
 export const getMainPage = (req: Request, res: Response) => {
   const logger: Logger = res.locals.logger;
+  console.log(req);
   try {
     logger.info(`Rendering main page`);
     res.render("common/main", {
@@ -22,9 +23,9 @@ export const getEmployeeMainPage = async (req: Request, res: Response) => {
 
   //Let's test typeorm crud
 
-  // const userRepo = AppDataSource.getRepository(User);
+  const userRepo = AppDataSource.getRepository(User);
 
-  // const new_user = new User();
+  const new_user = new User();
   // new_user.username = `testuser${randomInt(100000)}`;
   // new_user.email = `testuser${randomInt(100000)}@example.com`;
   // new_user.password_hash = `testpassword`;
