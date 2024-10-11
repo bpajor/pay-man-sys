@@ -3,3 +3,5 @@ build/
 custom_scripts/
 lib/
 .env
+dumb.rdb
+.vscode

@@ -79,3 +79,18 @@ button:hover {
 .login-links a:hover {
     text-decoration: underline;
 }
+
+.error-message {
+    background-color: #f8d7da; /* Jasny czerwony dla tła błędu */
+    color: #721c24; /* Ciemnoczerwony dla tekstu */
+    border: 1px solid #f5c6cb; /* Obramowanie dla wyróżnienia */
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  
+  .error-message p {
+    margin: 0; /* Usunięcie domyślnych marginesów z <p> */
+  }
+  
