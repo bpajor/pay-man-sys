@@ -44,7 +44,12 @@ AppDataSource.initialize()
       url: process.env.REDIS_URL,
     });
 
-    await redisClient.connect();
+    try {
+      await redisClient.connect();
+    } catch (error) {
+      logger.error("Error connecting to Redis:", error);
+      process.exit(1);
+    }
 
     let redisStore = new RedisStore({
       client: redisClient,
