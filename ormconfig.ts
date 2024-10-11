@@ -15,7 +15,7 @@ export const orm_config: DataSourceOptions = {
   password: is_not_local ? undefined : process.env.TYPEORM_PASSWORD,
   database: is_not_local ? undefined : process.env.TYPEORM_DATABASE,
   url: is_not_local ? process.env.DATABASE_URL : undefined,
-  entities: ["build/entity/**/*.js", "./entity/**/*.ts"],
+  entities: is_not_local ? ["build/entity/**/*.js"] : ["build/entity/**/*.js", "./entity/**/*.ts"],
   migrations: ["build/migration/**/*.js"],
   synchronize: process.env.TYPEORM_SYNCHRONIZE === "true",
   logging: process.env.TYPEORM_LOGGING === "true",
