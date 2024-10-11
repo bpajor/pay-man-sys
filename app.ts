@@ -41,7 +41,7 @@ AppDataSource.initialize()
     app.use(createLogger);
 
     let redisClient = createClient({
-      url: process.env.REDIS_URL,
+      url: process.env.REDIS_TEMPORARY_URL,
     });
 
     try {
