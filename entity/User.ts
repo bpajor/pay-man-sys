@@ -6,8 +6,14 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true, length: 50, type: "varchar", nullable: false })
-  username: string;
+  // @Column({ unique: true, length: 50, type: "varchar", nullable: false })
+  // username: string;
+
+  @Column({ length: 50, type: "varchar", nullable: false })
+  name: string;
+
+  @Column({ length: 50, type: "varchar", nullable: false })
+  last_name: string;
 
   @Column({ unique: true, length: 50, type: "varchar", nullable: false })
   email: string;
@@ -17,4 +23,7 @@ export class User {
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   created_at: Date;
+
+  @Column({type: "enum", enum: ["employee", "manager"], })
+  account_type: string;
 }

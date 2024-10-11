@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/error/styles.css" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <title>Error <%= code %></title>
+  </head>
+  <body>
+    <header class="header">
+        <img
+          src="/images/brand.png"
+          alt="PayrollPro Logo"
+          class="logo"
+        />
+        <nav>
+          <a href="">Home</a>
+          <a href="">Features</a>
+          <a href="">About</a>
+          <a href="http://localhost:5500/lib/templates/login/html/login.html"
+            >Logout</a
+          >
+        </nav>
+      </header>
+    <main class="error-page">
+      <section class="error-content">
+
+        <div class="error-details">
+          <h1>Error <%= code %></h1>
+          <p><%= message %></p>
+          <a href="/" class="error-home-button">Return to Home</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+  </body>
+</html>

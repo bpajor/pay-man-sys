@@ -11,24 +11,34 @@
       <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
       <h1>Create an Account</h1>
       <div class="login-box">
-        <form>
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" />
-
+        <% if (error) { %>
+        <div class="error-message">
+          <p><%= error %></p>
+        </div>
+        <br />
+        <% } %>
+        <form method="post" action="<% baseUrl %>/signup">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" required />
+          <label for="last_name">Last Name</label>
+          <input type="text" id="last_name" name="last_name" required />
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required />
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" />
+          <input type="password" id="password" name="password" required />
 
-          <label for="confirm-password">Confirm Password</label>
+          <label for="confirm_password">Confirm Password</label>
           <input
             type="password"
-            id="confirm-password"
-            name="confirm-password"
+            id="confirm_password"
+            name="confirm_password"
+            required
           />
 
-          <label for="account-type">Account Type</label>
-          <select id="account-type" name="account-type">
+          <label for="account_type">Account Type</label>
+          <select id="account_type" name="account_type">
             <option value="employee">Employee</option>
-            <option value="employer">Employer</option>
+            <option value="manager">Manager</option>
           </select>
 
           <button type="submit">Sign Up</button>
@@ -39,5 +49,71 @@
         </form>
       </div>
     </div>
+
+    <script nonce="<%= nonce %>">
+      document.addEventListener("DOMContentLoaded", () => {
+        const form = document.querySelector("form");
+        form.addEventListener("submit", (event) => {
+          const name = document.getElementById("name").value.trim();
+          const lastName = document.getElementById("last_name").value.trim();
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+          const confirmPassword =
+            document.getElementById("confirm_password").value;
+          const accountType = document.getElementById("account_type").value;
+
+          const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿĀ-žḀ-ỿ'’\- ]+$/;
+          const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+
+          if (name.length < 2 || name.length > 50 || !nameRegex.test(name)) {
+            alert(
+              "Name must be between 2 and 50 characters and in a valid format."
+            );
+            event.preventDefault();
+          }
+
+          if (
+            lastName.length < 2 ||
+            lastName.length > 50 ||
+            !nameRegex.test(lastName)
+          ) {
+            alert(
+              "Last Name must be between 2 and 50 characters and in a valid format."
+            );
+            event.preventDefault();
+          }
+
+          if (
+            !email ||
+            email.length > 254 ||
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+          ) {
+            alert("Email is required and must be valid.");
+            event.preventDefault();
+          }
+
+          if (password !== confirmPassword) {
+            alert("Passwords do not match.");
+            event.preventDefault();
+          }
+
+          if (
+            password.length < 15 ||
+            password.length > 255 ||
+            !passwordRegex.test(password)
+          ) {
+            alert(
+              "Password must be between 15 and 255 characters, and contain at least one uppercase letter, one lowercase letter, one digit, and one special character."
+            );
+            event.preventDefault();
+          }
+
+          if (!["employee", "manager"].includes(accountType)) {
+            alert("Account type must be either 'employee' or 'manager'.");
+            event.preventDefault();
+          }
+        });
+      });
+    </script>
   </body>
 </html>
