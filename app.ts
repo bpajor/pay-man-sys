@@ -42,6 +42,25 @@ AppDataSource.initialize()
 
     let redisClient = createClient({
       url: process.env.REDIS_TEMPORARY_URL,
+      socket: {
+        reconnectStrategy: (retries) => {
+          const delay = Math.min(retries * 50, 2000);
+          logger.warn(`Reconnecting to Redis in ${delay}ms`);
+          return delay;
+        },
+      },
+    });
+
+    redisClient.on("error", (error) => {
+      logger.error("Error in Redis client:", error);
+    });
+
+    redisClient.on("end", () => {
+      logger.warn("Redis client disconnected");
+    });
+
+    redisClient.on("connect", () => {
+      logger.info("Connected to Redis");
     });
 
     try {
@@ -50,6 +69,12 @@ AppDataSource.initialize()
       logger.error("Error connecting to Redis:", error);
       process.exit(1);
     }
+
+    // Pass redis to request
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      res.locals.redisClient = redisClient;
+      next();
+    });
 
     let redisStore = new RedisStore({
       client: redisClient,
@@ -131,7 +156,7 @@ AppDataSource.initialize()
         code: code,
         message: message,
       });
-    })
+    });
 
     // app.get("/set-session", (req, res) => {
     //   // Ustawienie danych sesji

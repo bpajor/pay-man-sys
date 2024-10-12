@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity('users')
+@Entity("users")
 export class User {
   // uid - unique id for user
   @PrimaryGeneratedColumn()
@@ -21,6 +21,12 @@ export class User {
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   created_at: Date;
 
-  @Column({type: "enum", enum: ["employee", "manager"], })
+  @Column({ type: "enum", enum: ["employee", "manager"] })
   account_type: string;
+
+  @Column({ type: "varchar", nullable: true })
+  resetToken: string | null;
+
+  @Column({ type: "timestamp", nullable: true })
+  resetTokenExpiration: Date | null;
 }
