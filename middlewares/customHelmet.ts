@@ -20,6 +20,9 @@ export const customHelmet = (
         scriptSrc: ["'self'",`'nonce-${nonce}'`],
       },
     },
+    frameguard: {
+      action: "deny", // Prevents clickjacking
+    }
   })(req, res, next); //helmet is calling next itself
 
   logger.info(`Helmet response headers set`);

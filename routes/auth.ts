@@ -1,5 +1,14 @@
 import { Application, Router } from "express";
-import { getLogin, getSignup, postSignup } from "../controllers/auth";
+import {
+  getForgotPassword,
+  getLogin,
+  getResetPassword,
+  getSignup,
+  postForgotPassword,
+  postLogin,
+  postResetPassword,
+  postSignup,
+} from "../controllers/auth";
 import { body } from "express-validator";
 
 const postSignupValidators = [
@@ -50,7 +59,19 @@ const postSignupValidators = [
     .withMessage("Email is invalid")
     .isLength({ max: 254 })
     .normalizeEmail(),
-  body(["password", "confirm_password"])
+  body(["password"])
+    .exists()
+    .withMessage("Password is required")
+    .isString()
+    .withMessage("Password must be a string")
+    .isLength({ min: 15, max: 255 })
+    .withMessage("Password must be between 15 and 255 characters")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/)
+    .withMessage(
+      "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
+    )
+    .trim(),
+  body("confirm_password")
     .exists()
     .withMessage("Password is required")
     .isString()
@@ -75,7 +96,22 @@ export const auth_router = Router();
 
 auth_router.get("/login", getLogin);
 
+// Let's use third and fourth validators from signup validators to not write unnecessary code only for login
+auth_router.post(
+  "/login",
+  [postSignupValidators[2], postSignupValidators[3]],
+  postLogin as Application
+);
+
 auth_router.get("/signup", getSignup);
 
 // Use Application type to avoid ts complaints
 auth_router.post("/signup", postSignupValidators, postSignup as Application);
+
+auth_router.get("/forgot-password", getForgotPassword);
+
+auth_router.post("/forgot-password", postSignupValidators[2], postForgotPassword as Application);  
+
+auth_router.get("/reset-password", getResetPassword);
+
+auth_router.post("/reset-password", postSignupValidators[2], postSignupValidators[3], postSignupValidators[4], postResetPassword as Application);
