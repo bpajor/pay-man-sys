@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/employee/settings/styles.css" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <title>Ustawienia konta</title>
+  </head>
+  <body>
+    <header class="header">
+      <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
+      <nav>
+        <a href="">Home</a>
+        <a href="">Features</a>
+        <a href="">About</a>
+        <a href="/login.html">Logout</a>
+      </nav>
+    </header>
+    <main>
+      <secion class="menu">
+        <div class="menu-item">
+          <img src="/images/user.png" alt="user_icon" class="user-icon" />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img src="/images/user.png" alt="user_icon" class="user-icon" />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img src="/images/user.png" alt="user_icon" class="user-icon" />
+          <p>Employee Dashboard</p>
+        </div>
+        <div class="menu-item">
+          <img src="/images/user.png" alt="user_icon" class="user-icon" />
+          <p>Employee Dashboard</p>
+        </div>
+      </secion>
+      <section class="content">
+        <div id="notification-bar" class="notification hidden"></div>
+        <h2>Ustawienia bezpieczeństwa</h2>
+        <div class="setting-option">
+          <p>Uwierzytelnianie dwuskładnikowe (2FA)</p>
+          <label class="switch">
+            <input type="checkbox" id="2fa-toggle" <%= is2faEnabled ? 'checked' : '' %> />
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <!-- Modal ładowania -->
+        <div id="loading-modal" class="modal">
+          <div class="modal-content">
+            <h2>Włączanie uwierzytelniania dwuskładnikowego (2FA)</h2>
+            <p>Proszę czekać...</p>
+            <!-- Animacja ładowania -->
+            <div class="loader"></div>
+          </div>
+        </div>
+
+        <!-- Modal QR Code -->
+        <div id="qr-modal" class="modal hidden">
+          <div class="modal-content">
+            <h2>Skonfiguruj uwierzytelnianie dwuskładnikowe</h2>
+            <p>Zeskanuj poniższy kod QR w aplikacji uwierzytelniającej.</p>
+            <img id="qr-code" src="" alt="QR Code do konfiguracji 2FA" />
+            <button id="close-qr-modal">Zamknij</button>
+          </div>
+        </div>
+
+        <!-- Możesz dodać więcej opcji ustawień -->
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. Wszelkie prawa zastrzeżone.</p>
+    </footer>
+  </body>
+  <script nonce="<%= nonce %>">
+    function showNotification(message, isSuccess) {
+      const notificationBar = document.getElementById("notification-bar");
+      notificationBar.textContent = message;
+      notificationBar.className = `notification ${
+        isSuccess ? "success" : "error"
+      }`;
+      notificationBar.classList.remove("hidden");
+
+      // Automatycznie ukryj pasek po 3 sekundach
+      setTimeout(() => {
+        notificationBar.classList.add("hidden");
+      }, 3000);
+    }
+
+    function init2FA() {
+      // Pokaż modal ładowania
+      document.getElementById("loading-modal").style.display = "block";
+
+      // Zablokuj przełącznik
+      document.getElementById("2fa-toggle").disabled = true;
+
+      fetch("<% baseUrl %>/enable-2fa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          // Ukryj modal ładowania
+          document.getElementById("loading-modal").style.display = "none";
+
+          // Odblokuj przełącznik
+          document.getElementById("2fa-toggle").disabled = false;
+
+          if (data.success) {
+            // document.getElementById("2fa-toggle").checked = false;
+            document.getElementById("qr-code").src = data.qrCode;
+            document.getElementById("qr-modal").style.display = "block";
+            showNotification("2FA has been enabled.", true);
+          } else {
+            document.getElementById("2fa-toggle").checked = true;
+            showNotification("Erro enabling 2fa: " + data.message, false);
+          }
+        })
+        .catch((error) => {
+          // Ukryj modal ładowania
+          document.getElementById("loading-modal").style.display = "none";
+
+          // Odblokuj przełącznik
+          document.getElementById("2fa-toggle").disabled = false;
+
+          // Przywróć stan slidera
+          document.getElementById("2fa-toggle").checked = false;
+          showNotification(
+            "Internal server error. Please try again later.",
+            false
+          );
+        });
+    }
+
+    function disable2FA() {
+      const confirmDisable = confirm("Are you sure you want to disable 2FA?");
+      if (!confirmDisable) {
+        document.getElementById("2fa-toggle").checked = true;
+        return;
+      }
+
+      document.getElementById("loading-modal").classList.remove("hidden");
+      document.getElementById("2fa-toggle").disabled = true;
+
+      fetch("<% baseUrl %>/disable-2fa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("loading-modal").style.display.none;
+          document.getElementById("2fa-toggle").disabled = false;
+
+          if (data.success) {
+            document.getElementById("2fa-toggle").checked = false;
+            showNotification("2FA has been disabled.", true);
+          } else {
+            document.getElementById("2fa-toggle").checked = true;
+            showNotification("Error disabling 2fa. " + data.message, false);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          document.getElementById("loading-modal").style.display.none;
+          document.getElementById("2fa-toggle").disabled = false;
+          showNotification(
+            "Internal server error. Please try again later.",
+            false
+          );
+        });
+    }
+
+    document
+      .getElementById("close-qr-modal")
+      .addEventListener("click", function () {
+        document.getElementById("qr-modal").style.display = "none";
+      });
+
+    document
+      .getElementById("2fa-toggle")
+      .addEventListener("change", function () {
+        if (this.checked) {
+          init2FA();
+        } else {
+          disable2FA();
+        }
+      });
+  </script>
+</html>

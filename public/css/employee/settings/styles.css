@@ -1,0 +1,220 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+
+body {
+  font-family: "Roboto", sans-serif;
+}
+
+main {
+  display: flex;
+  flex-direction: row;
+}
+
+@media screen and (max-width: 900px) {
+  main {
+    flex-direction: column;
+  }
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  width: 25%;
+  background-color: #efefef;
+}
+
+.menu-item {
+  display: flex;
+}
+
+.menu-item p {
+  width: calc(100% - 60px);
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  font-size: 23px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.content {
+  width: 75%;
+  padding: 40px;
+}
+
+.setting-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+  left: 4px;
+  bottom: 4px;
+}
+
+input:checked + .slider {
+  background-color: #0a8080;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.round {
+  border-radius: 34px;
+}
+
+.user-icon {
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+}
+
+/* Modal */
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 1000; /* Wyższy indeks, aby modal był na wierzchu */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.5); /* Przyciemnione tło */
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Animacja ładowania */
+.loader {
+  border: 8px solid #f3f3f3; /* Jasnoszary */
+  border-top: 8px solid #0a8080; /* Teal */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  margin: 20px auto;
+  animation: spin 1s linear infinite;
+}
+
+/* Pasek komunikatu */
+.notification {
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    transition: opacity 0.5s;
+  }
+  
+  .notification.hidden {
+    display: none;
+  }
+  
+  .notification.success {
+    background-color: #4caf50; /* Zielony dla sukcesu */
+    color: white;
+  }
+  
+  .notification.error {
+    background-color: #f44336; /* Czerwony dla błędu */
+    color: white;
+  }
+
+/* Kluczowe klatki dla animacji */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@media screen and (max-width: 900px) {
+  main {
+    flex-direction: column;
+  }
+  .menu,
+  .content {
+    width: 100%;
+    padding: 0;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .menu {
+    width: 100%;
+    flex-direction: row;
+  }
+
+  .menu-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 25%;
+  }
+
+  .user-icon {
+    width: 40px;
+    height: 40px;
+    padding: 10px;
+  }
+
+  .menu-item p {
+    font-size: 18px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .menu {
+    flex-wrap: wrap;
+  }
+  .menu-item {
+    width: 50%;
+  }
+}

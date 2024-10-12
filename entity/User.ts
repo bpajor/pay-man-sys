@@ -29,4 +29,7 @@ export class User {
 
   @Column({ type: "timestamp", nullable: true })
   resetTokenExpiration: Date | null;
+
+  @Column({ type: "varchar", nullable: true })
+  twoFASecret: string | null;
 }
