@@ -39,9 +39,9 @@
       </secion>
       <section class="content">
         <div id="notification-bar" class="notification hidden"></div>
-        <h2>Ustawienia bezpieczeństwa</h2>
+        <h2>Security settings</h2>
         <div class="setting-option">
-          <p>Uwierzytelnianie dwuskładnikowe (2FA)</p>
+          <p>Two-factor Authentication (2FA)-</p>
           <label class="switch">
             <input type="checkbox" id="2fa-toggle" <%= is2faEnabled ? 'checked' : '' %> />
             <span class="slider round"></span>
@@ -50,8 +50,8 @@
         <!-- Modal ładowania -->
         <div id="loading-modal" class="modal">
           <div class="modal-content">
-            <h2>Włączanie uwierzytelniania dwuskładnikowego (2FA)</h2>
-            <p>Proszę czekać...</p>
+            <h2>Enabling two-factor authentication...</h2>
+            <p>Please wait...</p>
             <!-- Animacja ładowania -->
             <div class="loader"></div>
           </div>
@@ -60,10 +60,10 @@
         <!-- Modal QR Code -->
         <div id="qr-modal" class="modal hidden">
           <div class="modal-content">
-            <h2>Skonfiguruj uwierzytelnianie dwuskładnikowe</h2>
-            <p>Zeskanuj poniższy kod QR w aplikacji uwierzytelniającej.</p>
+            <h2>Configure two-factor authentication</h2>
+            <p>Scan QR in authentication app.</p>
             <img id="qr-code" src="" alt="QR Code do konfiguracji 2FA" />
-            <button id="close-qr-modal">Zamknij</button>
+            <button id="close-qr-modal">Close</button>
           </div>
         </div>
 
@@ -71,7 +71,7 @@
       </section>
     </main>
     <footer>
-      <p>© 2024 PayrollPro. Wszelkie prawa zastrzeżone.</p>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
     </footer>
   </body>
   <script nonce="<%= nonce %>">

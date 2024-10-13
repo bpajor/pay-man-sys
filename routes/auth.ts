@@ -4,9 +4,12 @@ import {
   getLogin,
   getResetPassword,
   getSignup,
+  getVerify2fa,
   postForgotPassword,
   postLogin,
+  postLoginVerify2fa,
   postResetPassword,
+  postResetPasswordVerify2fa,
   postSignup,
 } from "../controllers/auth";
 import { body } from "express-validator";
@@ -110,8 +113,40 @@ auth_router.post("/signup", postSignupValidators, postSignup as Application);
 
 auth_router.get("/forgot-password", getForgotPassword);
 
-auth_router.post("/forgot-password", postSignupValidators[2], postForgotPassword as Application);  
+auth_router.post(
+  "/forgot-password",
+  postSignupValidators[2],
+  postForgotPassword as Application
+);
 
 auth_router.get("/reset-password", getResetPassword);
 
-auth_router.post("/reset-password", postSignupValidators[2], postSignupValidators[3], postSignupValidators[4], postResetPassword as Application);
+auth_router.post(
+  "/reset-password",
+  postSignupValidators[2],
+  postSignupValidators[3],
+  postSignupValidators[4],
+  postResetPassword as Application
+);
+
+auth_router.get("/verify-2fa", getVerify2fa);
+
+auth_router.post(
+  "/verify-2fa",
+  body("code")
+    .exists()
+    .withMessage("Verification code is required")
+    .isInt({ min: 100000, max: 999999 })
+    .withMessage("Verification code must be a 6-digit number"),
+  postLoginVerify2fa
+);
+
+auth_router.post(
+  "/reset-password/verify-2fa",
+  body("code")
+    .exists()
+    .withMessage("Verification code is required")
+    .isInt({ min: 100000, max: 999999 })
+    .withMessage("Verification code must be a 6-digit number"),
+  postResetPasswordVerify2fa
+);
