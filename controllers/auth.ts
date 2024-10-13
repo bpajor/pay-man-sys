@@ -7,7 +7,7 @@ import { validationResult } from "express-validator";
 import { RedisClientType } from "redis";
 import { incrementFailedAttempts } from "./helpers/ddos";
 import { getAllowedHosts, transporter } from "./helpers/transporter";
-import crypto from "crypto";
+import crypto, { verify } from "crypto";
 import { verify2fa } from "./helpers/twoFA";
 
 export const getLogin = (req: Request, res: Response) => {
@@ -555,10 +555,10 @@ export const postLoginVerify2fa = async (
       });
     }
   } catch (error) {
-    logger.error(`Validation errors: ${errors.array()}`);
-    return res.status(400).render("auth/verify-2fa", {
+    logger.error(`Validation errors: ${errors.array()}`); //TODO this is strange - probably should remove this try/catch
+    return res.status(500).render("auth/verify-2fa", {
       baseUrl: `${process.env.BASE_URL}`,
-      error: errors.array()[0].msg,
+      error: "Internal server error",
       nonce: res.locals.nonce,
     });
   }
@@ -674,6 +674,7 @@ export const postLoginVerify2fa = async (
   return res.status(400).render("auth/verify-2fa", {
     baseUrl: `${process.env.BASE_URL}`,
     error: "Invalid 2fa code",
+    verifyPath: "verify-2fa",
     nonce: res.locals.nonce,
   });
 };
@@ -811,4 +812,15 @@ export const postResetPasswordVerify2fa = async (
       return next(error);
     }
   }
+
+  await incrementFailedAttempts(attempts_key, lock_key, redis_client);
+
+  logger.error(`Invalid 2fa code`);
+
+  return res.status(400).render("auth/verify-2fa", {
+    baseUrl: `${process.env.BASE_URL}`,
+    error: "Invalid 2fa code",
+    nonce: res.locals.nonce,
+    verifyPath: "reset-password/verify-2fa",
+  });
 };
