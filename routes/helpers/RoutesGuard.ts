@@ -5,4 +5,5 @@ export const RoutesGuard = (req: Request, res: Response, next: NextFunction) => 
         res.status(403);
         return next(new Error("Unauthorized"));
     }
+    next();
 }
