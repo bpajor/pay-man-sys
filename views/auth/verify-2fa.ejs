@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Two-Factor Authentication - PayrollPro</title>
+    <link rel="stylesheet" href="/css/auth/login/styles.css" />
+  </head>
+  <body>
+    <div class="login-container">
+      <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
+      <h1>Please enter the code from your authentication app.</h1>
+      <div class="login-box">
+        <% if (error) { %>
+        <div class="error-message">
+          <p><%= error %></p>
+        </div>
+        <br />
+        <% } %>
+        <form method="POST" action="<% baseUrl %>/<%= verifyPath %>">
+          <label for="code">Code</label>
+          <input type="number" id="code" name="code" maxlength="6" />
+
+          <button type="submit">Verify</button>
+
+          <div class="login-links">
+            <a href="<% baseUrl %>/login">Back to login</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

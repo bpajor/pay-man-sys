@@ -5,5 +5,8 @@ declare module 'express-session' {
     uid: number;
     email: string;
     account_type: "employee" | "manager";
+    pending_2fa: boolean;
+    unlogged_email: string;
+    hashed_password: string;
   }
 }

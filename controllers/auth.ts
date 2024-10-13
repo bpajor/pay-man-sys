@@ -8,6 +8,7 @@ import { RedisClientType } from "redis";
 import { incrementFailedAttempts } from "./helpers/ddos";
 import { getAllowedHosts, transporter } from "./helpers/transporter";
 import crypto from "crypto";
+import { verify2fa } from "./helpers/twoFA";
 
 export const getLogin = (req: Request, res: Response) => {
   const logger: Logger = res.locals.logger;
@@ -111,9 +112,16 @@ export const postLogin = async (
   req.session.email = user.email;
   req.session.account_type = user.account_type as "employee" | "manager";
 
-  logger.info(`User ${email} successfully logged in`);
-
   await redisClient.del(attemptsKey);
+
+  if (user.twoFASecret) {
+    logger.info(`2fa pending for user ${email}`);
+    req.session.pending_2fa = true;
+    logger.info(`Redirecting to 2fa verification page`);
+    return res.redirect("/verify-2fa");
+  }
+
+  logger.info(`User ${email} successfully logged in`);
 
   return res.redirect("/employee/dashboard");
 };
@@ -303,7 +311,9 @@ export const postForgotPassword = async (
     return next;
   }
 
-  const resetLink = `https://${host_header}/reset-password?token=${token}`;
+  const resetLink = process.env.is_not_local
+    ? `https://${host_header}/reset-password?token=${token}`
+    : `http://${host_header}/reset-password?token=${token}`;
 
   const mail_options = {
     from: process.env.GMAIL_EMAIL,
@@ -325,10 +335,14 @@ export const postForgotPassword = async (
       success: `Email sent to ${email}`,
       nonce: res.locals.nonce,
     });
-  })
+  });
 };
 
-export const getResetPassword = async (req: Request, res: Response, next: NextFunction) => {
+export const getResetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const logger: Logger = res.locals.logger;
   logger.info(`Rendering reset password page`);
 
@@ -340,18 +354,22 @@ export const getResetPassword = async (req: Request, res: Response, next: NextFu
     success: null,
     nonce: res.locals.nonce,
     token,
-  })
-}
+  });
+};
 
-export const postResetPassword = async (req: Request, res: Response, next: NextFunction) => {
+export const postResetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const logger: Logger = res.locals.logger;
-  const user_repo = await AppDataSource.getRepository(User);
+  const user_repo = AppDataSource.getRepository(User);
 
   const { token, email, password, confirm_password } = req.body;
 
   const allowed_hosts = getAllowedHosts();
   const host_header = req.headers.host as string;
-  
+
   if (!allowed_hosts.includes(host_header)) {
     logger.error(`Host ${host_header} is not allowed`);
     res.status(403);
@@ -359,7 +377,7 @@ export const postResetPassword = async (req: Request, res: Response, next: NextF
   }
 
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
     logger.error(`Validation errors: ${errors.array()}`);
     return res.status(400).render("auth/reset-password", {
@@ -393,7 +411,11 @@ export const postResetPassword = async (req: Request, res: Response, next: NextF
     return next(err);
   }
 
-  if (!user || !user.resetTokenExpiration || user.resetTokenExpiration < new Date()) {
+  if (
+    !user ||
+    !user.resetTokenExpiration ||
+    user.resetTokenExpiration < new Date()
+  ) {
     logger.error(`Invalid or expired token`);
     return res.status(400).render("auth/reset-password", {
       baseUrl: `${process.env.BASE_URL}`,
@@ -405,7 +427,10 @@ export const postResetPassword = async (req: Request, res: Response, next: NextF
   }
 
   try {
-    const is_token_valid = await bcrypt.compare(token, user.resetToken as string);
+    const is_token_valid = await bcrypt.compare(
+      token,
+      user.resetToken as string
+    );
     if (!is_token_valid) {
       logger.error(`Invalid token`);
       return res.status(400).render("auth/reset-password", {
@@ -431,24 +456,359 @@ export const postResetPassword = async (req: Request, res: Response, next: NextF
     return next(error);
   }
 
+  if (!user.twoFASecret) {
+    try {
+      logger.info(`Updating user password`);
+      await user_repo.update(user.id, {
+        password_hash: hashed_password,
+        resetToken: null,
+        resetTokenExpiration: null,
+      });
+    } catch (error) {
+      logger.error(`Error updating user password: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+
+    try {
+      logger.info(`Redirecting to login page`);
+      return res.redirect("/login");
+    } catch (err) {
+      logger.error(`Error redirecting to login page: ${err}`);
+      res.status(500);
+      return next(err);
+    }
+  }
+
+  req.session.unlogged_email = email;
+  req.session.hashed_password = hashed_password;
+
+  // try {
+  //   logger.info(`Updating user password`);
+  //   await user_repo.update(user.id, {
+  //     password_hash: hashed_password,
+  //     resetToken: null,
+  //     resetTokenExpiration: null,
+  //   });
+  // } catch (error) {
+  //   logger.error(`Error updating user password: ${error}`);
+  //   res.status(500);
+  //   return next(error);
+  // }
   try {
-    logger.info(`Updating user password`);
-    await user_repo.update(user.id, {
-      password_hash: hashed_password,
-      resetToken: null,
-      resetTokenExpiration: null,
+    logger.info(`Redirecting to 2fa verification page`);
+    return res.redirect("/verify-2fa");
+  } catch (err) {
+    logger.error(`Error redirecting to 2fa verification page: ${err}`);
+    res.status(500);
+    return next(err);
+  }
+  // res.status(200).render("auth/reset-password", {
+  //   baseUrl: `${process.env.BASE_URL}`,
+  //   error: null,
+  //   success: "Password successfully reset",
+  //   nonce: res.locals.nonce,
+  //   token,
+  // });
+};
+
+export const getVerify2fa = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+  const { unlogged_email } = req.session;
+
+  try {
+    logger.info(`Rendering 2fa verification page`);
+    res.render("auth/verify-2fa", {
+      baseUrl: `${process.env.BASE_URL}`,
+      verifyPath: unlogged_email ? "reset-password/verify-2fa" : "verify-2fa",
+      error: null,
+      nonce: res.locals.nonce,
     });
   } catch (error) {
-    logger.error(`Error updating user password: ${error}`);
+    logger.error(`Error rendering 2fa verification page: ${error}`);
+    res.status(500);
+    return next(error);
+  }
+};
+
+export const postLoginVerify2fa = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+  const user_repo = AppDataSource.getRepository(User);
+  const redis_client: RedisClientType = res.locals.redisClient;
+
+  const errors = validationResult(req);
+  try {
+    if (!errors.isEmpty()) {
+      logger.error(`Validation errors: ${errors.array()}`);
+      return res.status(400).render("auth/verify-2fa", {
+        baseUrl: `${process.env.BASE_URL}`,
+        error: errors.array()[0].msg,
+        nonce: res.locals.nonce,
+      });
+    }
+  } catch (error) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).render("auth/verify-2fa", {
+      baseUrl: `${process.env.BASE_URL}`,
+      error: errors.array()[0].msg,
+      nonce: res.locals.nonce,
+    });
+  }
+
+  const { code } = req.body as { code: number };
+
+  if (!req.session.uid || !req.session.email) {
+    logger.error(`Session data not found`);
+    return res.redirect("/login");
+  }
+
+  if (!req.session.pending_2fa) {
+    logger.error(`2fa not pending`);
+    if (req.session.uid) {
+      return res.redirect("/employee/dashboard");
+    }
+    return res.redirect("/");
+  }
+
+  // Session is already set, but not verified
+  const { uid, email } = req.session;
+
+  let attempts_key: string;
+  let lock_key: string;
+
+  try {
+    attempts_key = `2fa_attempts:${email}`;
+    lock_key = `2fa_lock:${email}`;
+
+    const is_locked = await redis_client.get(lock_key);
+
+    if (is_locked) {
+      logger.error(
+        `User ${email} is locked out (too many verification attempts)`
+      );
+
+      req.session.destroy((err) => {
+        if (err) {
+          logger.error(`Error destroying session: ${err}`);
+          res.status(500);
+          return next(err);
+        }
+
+        logger.info(`Session destroyed`);
+      });
+
+      return res.status(400).render("auth/login", {
+        baseUrl: `${process.env.BASE_URL}`,
+        error: "User is locked out (too many verification attempts)",
+        nonce: res.locals.nonce,
+      });
+    }
+  } catch (error) {
+    logger.error(`Error checking if user is locked out: ${error}`);
     res.status(500);
     return next(error);
   }
 
-  res.status(200).render("auth/reset-password", {
+  let user;
+  try {
+    logger.info(`Getting user data`);
+    user = await user_repo.findOneBy({ id: uid });
+  } catch (error) {
+    logger.error(`Error getting user data: ${error}`);
+    res.status(500);
+    return next(error);
+  }
+
+  if (!user) {
+    logger.error(`User not found`);
+    res.status(404);
+    return next(new Error("User not found"));
+  }
+
+  if (!user.twoFASecret) {
+    logger.error(`2fa not enabled for user`);
+    if (req.session.uid) {
+      return res.redirect("/employee/dashboard");
+    }
+
+    return res.redirect("/");
+  }
+
+  let verified = false;
+
+  try {
+    logger.info(`Verifying 2fa code`);
+
+    // We assume that twoFASecret is available here
+    verified = await verify2fa(user.twoFASecret as string, code.toString());
+  } catch (error) {
+    logger.error(`Error verifying 2fa code: ${error}`);
+    res.status(500);
+    return next(error);
+  }
+
+  if (verified) {
+    req.session.pending_2fa = false;
+    logger.info(`2fa code verified`);
+    try {
+      logger.info(`Redirecting to dashboard`);
+      return res.redirect("/employee/dashboard");
+    } catch (error) {
+      logger.error(`Error redirecting to dashboard: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+  }
+
+  await incrementFailedAttempts(attempts_key, lock_key, redis_client);
+  logger.error(`Invalid 2fa code`);
+
+  return res.status(400).render("auth/verify-2fa", {
     baseUrl: `${process.env.BASE_URL}`,
-    error: null,
-    success: "Password successfully reset",
+    error: "Invalid 2fa code",
     nonce: res.locals.nonce,
-    token,
-  })
-}
+  });
+};
+
+export const postResetPasswordVerify2fa = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+
+  const user_repo = AppDataSource.getRepository(User);
+
+  const redis_client: RedisClientType = res.locals.redisClient;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).render("auth/verify-2fa", {
+      baseUrl: `${process.env.BASE_URL}`,
+      error: errors.array()[0].msg,
+      nonce: res.locals.nonce,
+    });
+  }
+
+  const { code } = req.body as { code: number };
+
+  if (!req.session.unlogged_email || !req.session.hashed_password) {
+    logger.error(`Session data not found`);
+    return res.redirect("/login");
+  }
+
+  const { unlogged_email, hashed_password } = req.session;
+
+  let attempts_key: string;
+  let lock_key: string;
+
+  try {
+    attempts_key = `2fa_attempts:${unlogged_email}`;
+    lock_key = `2fa_lock:${unlogged_email}`;
+
+    const is_locked = await redis_client.get(lock_key);
+
+    if (is_locked) {
+      logger.error(
+        `User ${unlogged_email} is locked out (too many verification attempts)`
+      );
+      req.session.destroy((err) => {
+        if (err) {
+          logger.error(`Error destroying session: ${err}`);
+          res.status(500);
+          return next(err);
+        }
+
+        logger.info(`Session destroyed`);
+      });
+
+      return res.status(400).render("auth/login", {
+        baseUrl: `${process.env.BASE_URL}`,
+        error: "User is locked out (too many verification attempts)",
+        nonce: res.locals.nonce,
+      });
+    }
+  } catch (error) {
+    logger.error(`Error checking if user is locked out: ${error}`);
+    res.status(500);
+    return next(error);
+  }
+
+  let user;
+
+  try {
+    logger.info(`Finding user by email`);
+    user = await user_repo.findOneBy({ email: unlogged_email });
+  } catch (error) {
+    logger.error(`Error finding user by email: ${error}`);
+    res.status(500);
+    return next(error);
+  }
+
+  if (!user) {
+    logger.error(`User not found`);
+    res.status(404);
+    return next(new Error("User not found"));
+  }
+
+  if (!user.twoFASecret) {
+    logger.error(`2fa not enabled for user`);
+    return res.redirect("/login");
+  }
+
+  let verified = false;
+  try {
+    logger.info(`Verifying 2fa code`);
+
+    // We assume that twoFASecret is available here
+    verified = await verify2fa(user.twoFASecret as string, code.toString());
+  } catch (error) {
+    logger.error(`Error verifying 2fa code: ${error}`);
+    res.status(500);
+    return next(error);
+  }
+
+  if (verified) {
+    req.session.destroy((err) => {
+      if (err) {
+        logger.error(`Error destroying session: ${err}`);
+        res.status(500);
+        return next(err);
+      }
+
+      logger.info(`Session destroyed`);
+    });
+
+    try {
+      logger.info(`Updating user password`);
+      await user_repo.update(user.id, {
+        password_hash: hashed_password,
+        resetToken: null,
+        resetTokenExpiration: null,
+      });
+    } catch (error) {
+      logger.error(`Error updating user password: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+
+    try {
+      logger.info(`Redirecting to login page`);
+      return res.redirect("/login");
+    } catch (error) {
+      logger.error(`Error redirecting to login page: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+  }
+};
