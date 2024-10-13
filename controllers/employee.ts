@@ -12,6 +12,7 @@ export const getMainPage = (req: Request, res: Response) => {
     logger.info(`Rendering main page`);
     res.render("common/main", {
       baseUrl: `${process.env.BASE_URL}`,
+      loggedUser: req.session.uid,
     });
   } catch (error) {
     logger.info(`Error rendering main page: ${error}`);
@@ -36,6 +37,7 @@ export const getEmployeeMainPage = async (req: Request, res: Response) => {
     logger.info(`Rendering employee main page`);
     res.render("employee/main", {
       baseUrl: `${process.env.BASE_URL}`,
+      loggedUser: req.session.uid,
       nonce: res.locals.nonce,
     });
   } catch (error) {
@@ -84,6 +86,7 @@ export const getEmployeeSettings = async (
     logger.info(`Rendering employee settings page`);
     res.render("employee/settings", {
       baseUrl: `${process.env.BASE_URL}`,
+      loggedUser: req.session.uid,
       is2faEnabled: is_2fa_enabled,
       nonce: res.locals.nonce,
     });

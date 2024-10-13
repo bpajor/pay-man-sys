@@ -824,3 +824,23 @@ export const postResetPasswordVerify2fa = async (
     verifyPath: "reset-password/verify-2fa",
   });
 };
+
+export const postLogout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+  logger.info(`Logging out user`);
+
+  req.session.destroy((err) => {
+    if (err) {
+      logger.error(`Error destroying session: ${err}`);
+      res.status(500);
+      return next(err);
+    }
+
+    logger.info(`Session destroyed`);
+    res.redirect("/login");
+  });
+};

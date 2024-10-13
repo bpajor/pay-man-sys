@@ -1,0 +1,16 @@
+<header class="header">
+  <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
+  <nav>
+    <a href="">Home</a>
+    <a href="">Features</a>
+    <a href="">About</a>
+    <% if (loggedUser) {%>
+    <a href="<% baseUrl %>/employee/settings">Settings</a>
+    <form method="post" action="<%baseUrl%>/logout">
+      <button type="submit" class="logout-btn">Logout</button>
+    </form>
+    <% } else {%>
+    <a href="<% baseUrl %>/login">Login</a>
+    <% } %>
+  </nav>
+</header>
