@@ -145,7 +145,7 @@ AppDataSource.initialize()
 
     app.use(
       Express.static(publicPath, {
-        maxAge: "1y", //Cache static files for 1 year since they will not change
+        maxAge: process.env.NODE_ENVIRONMENT === "local" ? undefined : "1y", //Cache static files for 1 year since they will not change
       })
     );
 
