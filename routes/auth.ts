@@ -8,6 +8,7 @@ import {
   postForgotPassword,
   postLogin,
   postLoginVerify2fa,
+  postLogout,
   postResetPassword,
   postResetPasswordVerify2fa,
   postSignup,
@@ -150,3 +151,5 @@ auth_router.post(
     .withMessage("Verification code must be a 6-digit number"),
   postResetPasswordVerify2fa
 );
+
+auth_router.post("/logout", postLogout);

@@ -8,11 +8,22 @@
   align-items: center;
 }
 
-nav a {
+nav a, .logout-btn {
   color: white;
   text-decoration: none;
   padding: 10px;
   font-family: "Roboto", sans-serif;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  font-size: 16px; /* Dopasuj rozmiar do pozostałych linków */
+  cursor: pointer;
+}
+
+nav {
+  display: flex;;
 }
 
 .logo {
