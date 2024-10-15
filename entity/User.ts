@@ -1,4 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Company } from "./Company";
+import { JoinRequest } from "./JoinRequest";
+import { Employee } from "./Employee";
 
 @Entity("users")
 export class User {
@@ -25,11 +28,20 @@ export class User {
   account_type: string;
 
   @Column({ type: "varchar", nullable: true })
-  resetToken: string | null;
+  reset_token: string | null;
 
   @Column({ type: "timestamp", nullable: true })
-  resetTokenExpiration: Date | null;
+  reset_token_expiration: Date | null;
 
   @Column({ type: "varchar", nullable: true })
-  twoFASecret: string | null;
+  two_fa_secret: string | null;
+
+  @OneToOne(() => Company, (company: Company) => company.manager)
+  company: Company;
+
+  @OneToMany(() => JoinRequest, (joinRequest: JoinRequest) => joinRequest.employee)
+  join_requests: JoinRequest[];
+
+  @OneToMany(() => Employee, (employee: Employee) => employee.user)
+  employees: Employee[];
 }

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js"
+      nonce="<%= nonce %>"
+    ></script>
+    <link rel="stylesheet" href="/css/manager/dashboard/styles.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <%- include("../includes/header", {baseUrl, loggedUser}) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav") %>
+      <% if (companyId) {%>
+      <%- include("../includes/content_dashboard_main", {totalSalary, totalBonus, totalPayoutsHistoryAmount, topEmployees}) %>
+      <% } else {%>
+        <%- include("../includes/no_company_entitled_dashboard_main_manager") %>
+      <% } %>
+    </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <script nonce="<%= nonce %>">
+      document.addEventListener("DOMContentLoaded", function () {
+        const totalBalanceElement = document.getElementById("total-balance");
+        const payrollsAmountElement =
+          document.getElementById("payrolls-amount");
+        const bonusesAmountElement = document.getElementById("bonuses-amount");
+        const payrollsBar = document.querySelector(".payrolls-bar");
+        const bonusesBar = document.querySelector(".bonuses-bar");
+
+        const totalBalance = parseFloat(
+          totalBalanceElement.textContent.replace(/[^0-9.-]+/g, "")
+        );
+        const payrollsAmount = parseFloat(
+          payrollsAmountElement.textContent.replace(/[^0-9.-]+/g, "")
+        );
+        const bonusesAmount = parseFloat(
+          bonusesAmountElement.textContent.replace(/[^0-9.-]+/g, "")
+        );
+
+        const payrollsPercentage = (payrollsAmount / totalBalance) * 100;
+        const bonusesPercentage = (bonusesAmount / totalBalance) * 100;
+
+        payrollsBar.style.width = payrollsPercentage + "%";
+        bonusesBar.style.width = bonusesPercentage + "%";
+
+        const presentSpendingsElement = document.querySelector(
+          ".desc-item:nth-child(1) h3"
+        );
+        const targetElement = document.querySelector(
+          ".desc-item:nth-child(2) h3"
+        );
+      });
+    </script>
+
+    <script nonce="<%= nonce %>">
+      document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById("paymentChart").getContext("2d");
+        const paymentChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: [
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+              "August",
+              "September",
+              "October",
+              "November",
+              "December",
+            ],
+            datasets: [
+              {
+                label: "Bonuses",
+                data: [
+                  `<%= payoutsHistory[0].totalBonus %>`,
+                  `<%= payoutsHistory[1].totalBonus %>`,
+                  `<%= payoutsHistory[2].totalBonus %>`,
+                  `<%= payoutsHistory[3].totalBonus %>`,
+                  `<%= payoutsHistory[4].totalBonus %>`,
+                  `<%= payoutsHistory[5].totalBonus %>`,
+                  `<%= payoutsHistory[6].totalBonus %>`,
+                  `<%= payoutsHistory[7].totalBonus %>`,
+                  `<%= payoutsHistory[8].totalBonus %>`,
+                  `<%= payoutsHistory[9].totalBonus %>`,
+                  `<%= payoutsHistory[10].totalBonus %>`,
+                  `<%= payoutsHistory[11].totalBonus %>`,
+                ],
+                backgroundColor: "#81c784",
+              },
+              {
+                label: "Basic Payrolls",
+                data: [
+                  `<%= payoutsHistory[0].totalSalary %>`,
+                  `<%= payoutsHistory[1].totalSalary %>`,
+                  `<%= payoutsHistory[2].totalSalary %>`,
+                  `<%= payoutsHistory[3].totalSalary %>`,
+                  `<%= payoutsHistory[4].totalSalary %>`,
+                  `<%= payoutsHistory[5].totalSalary %>`,
+                  `<%= payoutsHistory[6].totalSalary %>`,
+                  `<%= payoutsHistory[7].totalSalary %>`,
+                  `<%= payoutsHistory[8].totalSalary %>`,
+                  `<%= payoutsHistory[9].totalSalary %>`,
+                  `<%= payoutsHistory[10].totalSalary %>`,
+                  `<%= payoutsHistory[11].totalSalary %>`,
+                ],
+                backgroundColor: "#d4e157",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value) {
+                    return value + "K";
+                  },
+                },
+              },
+            },
+          },
+        });
+      });
+    </script>
+  </body>
+</html>

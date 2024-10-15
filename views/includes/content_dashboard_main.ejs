@@ -1,0 +1,72 @@
+<section class="content">
+    <section class="cards-header">
+      <h1>Dashboard</h1>
+    </section>
+    <section class="cards">
+      <div class="card">
+        <div class="card-header">
+          <h2>Balance</h2>
+          <div class="card-menu">...</div>
+        </div>
+        <div class="total-balance">
+          <h1 id="total-balance">$<%= totalSalary + totalBonus %></h1>
+          <p>
+            Last updated 1m ago
+            <span class="refresh" style="font-size: 20px">🔄</span>
+          </p>
+        </div>
+        <div class="details">
+          <div class="detail">
+            <p>Present Payrolls</p>
+            <h3 id="payrolls-amount">$<%= totalSalary %></h3>
+            <div class="bar-overlay">
+              <div class="bar payrolls-bar"></div>
+            </div>
+          </div>
+          <div class="detail">
+            <p>Bonuses</p>
+            <h3 id="bonuses-amount">$<%= totalBonus %></h3>
+            <div class="bar-overlay">
+              <div class="bar bonuses-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2>General Payment</h2>
+          <div class="card-menu">...</div>
+        </div>
+        <div class="general-total-balance">
+          <h1 id="general-total-balance">
+            $<%= totalPayoutsHistoryAmount %>
+          </h1>
+          <p>Last updated 1m ago <span class="refresh">🔄</span></p>
+        </div>
+        <div class="chart-container">
+          <canvas id="paymentChart"></canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item bonuses">Bonuses</span>
+          <span class="legend-item payrolls">Basic Payrolls</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Top Employees in this year</h2>
+          <div class="top-employees-menu">...</div>
+        </div>
+        <div class="employee-list">
+          <% if (topEmployees.length === 0) { %>
+          <p>No employees to display.</p>
+          <% } else { %> <% topEmployees.forEach(employee => { %>
+          <div class="employee">
+            <p class="employee-name"><%= employee.employee %></p>
+            <p class="employee-salary">
+              $<%= employee.payout.toLocaleString() %>
+            </p>
+          </div>
+          <% }) %> <% } %>
+        </div>
+      </div>
+    </section>

@@ -12,7 +12,7 @@ export const getMainPage = (req: Request, res: Response) => {
     logger.info(`Rendering main page`);
     res.render("common/main", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.uid,
+      loggedUser: req.session.user?.uid,
     });
   } catch (error) {
     logger.info(`Error rendering main page: ${error}`);
@@ -20,24 +20,37 @@ export const getMainPage = (req: Request, res: Response) => {
   }
 };
 
-export const getEmployeeMainPage = async (req: Request, res: Response) => {
+export const getEmployeeMainPage = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const logger: Logger = res.locals.logger;
-
-  //Let's test typeorm crud
-
   const userRepo = AppDataSource.getRepository(User);
 
-  const new_user = new User();
+  if (!req.session.user) {
+    logger.error(`Session data not found`);
+    return res.status(400).send("Session data not found"); //TODO here and in other places - should be next(new Error("Session data not found"))
+  }
 
-  if (req.session.email) {
-    console.log(req.session.email);
+  const { uid, account_type } = req.session.user;
+
+  if (account_type !== "employee") {
+    logger.error(`User is not an employee`);
+    res.status(403);
+    return next(new Error("Unauthorized"));
+  }
+
+  if (!uid) {
+    logger.error(`Session data not found`);
+    return res.status(400).send("Session data not found");
   }
 
   try {
     logger.info(`Rendering employee main page`);
     res.render("employee/main", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.uid,
+      loggedUser: req.session.user.uid,
       nonce: res.locals.nonce,
     });
   } catch (error) {
@@ -56,7 +69,13 @@ export const getEmployeeSettings = async (
 
   const user_repo = AppDataSource.getRepository(User);
 
-  const { uid } = req.session;
+  if (!req.session.user) {
+    logger.error(`Session data not found`);
+    res.status(400);
+    return next(new Error("Session data not found"));
+  }
+
+  const { uid } = req.session.user;
 
   if (!uid) {
     logger.error(`Session data not found`);
@@ -80,13 +99,13 @@ export const getEmployeeSettings = async (
     return next(new Error("User not found"));
   }
 
-  const is_2fa_enabled = user.twoFASecret ? true : false;
+  const is_2fa_enabled = user.two_fa_secret ? true : false;
 
   try {
     logger.info(`Rendering employee settings page`);
     res.render("employee/settings", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.uid,
+      loggedUser: req.session.user.uid,
       is2faEnabled: is_2fa_enabled,
       nonce: res.locals.nonce,
     });
@@ -107,7 +126,13 @@ export const postEnable2fa = async (
 
   logger.info(`Enabling 2fa`);
 
-  const { email, uid } = req.session;
+  if (!req.session.user) {
+    logger.error(`Session data not found`);
+    res.status(400);
+    return next(new Error("Session data not found"));
+  }
+
+  const { email, uid } = req.session.user;
 
   if (!email || !uid) {
     logger.error(`Session data not found`);
@@ -127,7 +152,7 @@ export const postEnable2fa = async (
 
   try {
     logger.info(`Updating user with 2fa secret`);
-    await user_repo.update({ id: uid }, { twoFASecret: secret });
+    await user_repo.update({ id: uid }, { two_fa_secret: secret });
   } catch (error) {
     logger.error(`Error updating user with 2fa secret: ${error}`);
     return res.status(500).json({ success: false });
@@ -145,7 +170,12 @@ export const postDisable2fa = async (req: Request, res: Response) => {
 
   const user_repo = AppDataSource.getRepository(User);
 
-  const { uid } = req.session;
+  if (!req.session.user) {
+    logger.error(`Session data not found`);
+    return res.status(400).json({ success: false });
+  }
+
+  const { uid } = req.session.user;
 
   if (!uid) {
     logger.error(`Session data not found`);
@@ -154,7 +184,7 @@ export const postDisable2fa = async (req: Request, res: Response) => {
 
   try {
     logger.info(`Disabling 2fa for user`);
-    await user_repo.update({ id: uid }, { twoFASecret: null });
+    await user_repo.update({ id: uid }, { two_fa_secret: null });
   } catch (error) {
     logger.error(`Error disabling 2fa for user: ${error}`);
     return res.status(500).json({ success: false });

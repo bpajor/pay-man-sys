@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/common/date-picker.css" />
+    <link rel="stylesheet" href="/css/manager/employees_details/styles.css" />
+    <title>Employee Details</title>
+  </head>
+  <body>
+    <%- include("../includes/header", {baseUrl, loggedUser}) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav") %>
+      <section class="content">
+        <header class="content-header">
+          <div class="header-left">
+            <h1>Employees details</h1>
+          </div>
+          <div class="header-right">
+            <div class="date-picker">
+              <span class="date-arrow" id="prev-arrow">&#9664;</span>
+              <span class="date-text" id="date-text"></span>
+              <span class="date-arrow" id="next-arrow">&#9654;</span>
+            </div>
+            <button class="export-btn">
+              Export to CSV<span> &#128229;</span>
+            </button>
+          </div>
+        </header>
+        <div class="card">
+          <h2>Employee List</h2>
+          <table id="employeeTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-column="0">Name</th>
+                <th class="sortable" data-column="1">Hourly Gross Pay</th>
+                <th>Deductions</th>
+                <th class="sortable" data-column="3">Attendance Hours</th>
+                <th class="sortable" data-column="4">
+                  Employee Tenure (months)
+                </th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody">
+              <!-- Rows will be generated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <script nonce="<%= nonce %>">
+        // Ustawienie bieżącego miesiąca i roku
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth(); // 0 = January
+        let currentYear = currentDate.getFullYear();
+      
+        function formatDateRange(month, year) {
+          const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+          ];
+          const lastDay = new Date(year, month + 1, 0).getDate();
+          return `01 ${monthNames[month]} - ${lastDay} ${monthNames[month]} ${year}`;
+        }
+      
+        async function fetchEmployeeData() {
+          try {
+            const response = await fetch(
+              `<%= baseUrl %>/manager/employees-details/json?month=${currentMonth + 1}&year=${currentYear}&company_id=<%= companyId %>`,
+              {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            const data = await response.json();
+            renderTable(data);
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          }
+        }
+      
+        function renderTable(data) {
+          const tableBody = document.getElementById("employeeTableBody");
+          tableBody.innerHTML = ""; // Clear existing rows
+          data.forEach((employee) => {
+            const row = document.createElement("tr");
+      
+            row.innerHTML = `
+              <td><a href="#">${employee.first_name} ${employee.last_name}</a></td>
+              <td>$${employee.salary_per_hour}</td>
+              <td>
+                <table class="inner-table">
+                  <tr><td class="title retirement">Retirement:</td><td class="highlight retirement">$${employee.retirement_contributions}</td></tr>
+                  <tr><td class="title disability">Disability:</td><td class="highlight disability">$${employee.disability_contributions}</td></tr>
+                  <tr><td class="title healthcare">Healthcare:</td><td class="highlight healthcare">$${employee.healthcare_contributions}</td></tr>
+                  <tr><td class="title income-tax">Income Tax:</td><td class="highlight income-tax">$${employee.income_tax}</td></tr>
+                  <tr><td class="title net-pay">Net Pay:</td><td class="highlight net-pay">$${employee.net_pay}</td></tr>
+                </table>
+              </td>
+              <td>${employee.hours_present_in_month}</td>
+              <td>${employee.employment_duration_months}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        }
+      
+        function updateDateText() {
+          const dateText = document.getElementById("date-text");
+          dateText.textContent = formatDateRange(currentMonth, currentYear);
+        }
+      
+        function prevMonth() {
+          if (currentMonth === 0) {
+            currentMonth = 11;
+            currentYear--;
+          } else {
+            currentMonth--;
+          }
+          updateDateText();
+          fetchEmployeeData();
+        }
+      
+        function nextMonth() {
+          if (currentMonth === 11) {
+            currentMonth = 0;
+            currentYear++;
+          } else {
+            currentMonth++;
+          }
+          updateDateText();
+          fetchEmployeeData();
+        }
+      
+        document.addEventListener("DOMContentLoaded", () => {
+          document.getElementById("prev-arrow").addEventListener("click", prevMonth);
+          document.getElementById("next-arrow").addEventListener("click", nextMonth);
+      
+          updateDateText(); // Wyświetla bieżący miesiąc na starcie
+          fetchEmployeeData(); // Fetch data na starcie dla bieżącego miesiąca
+        });
+      </script>
+
+<!-- <script nonce="<%= nonce %>">
+    function sortTable(n) {
+      const table = document.getElementById("employeeTable");
+      const rowsArray = Array.from(table.rows).slice(1); // Pomijamy nagłówek
+      let dir = "asc";
+      let switchcount = 0;
+  
+      // Sortujemy tablicę wierszy
+      rowsArray.sort((a, b) => {
+        const x = getCellValue(a, n);
+        const y = getCellValue(b, n);
+  
+        if (dir === "asc") {
+          if (x > y) return 1;
+          if (x < y) return -1;
+        } else if (dir === "desc") {
+          if (x > y) return -1;
+          if (x < y) return 1;
+        }
+        return 0;
+      });
+  
+      // Jeśli żadne zmiany, przełączamy na drugi kierunek sortowania
+      if (switchcount === 0 && dir === "asc") {
+        dir = "desc";
+        rowsArray.reverse();
+      }
+  
+      // Usuwamy istniejące wiersze i dodajemy posortowane
+      const tableBody = document.getElementById("employeeTableBody");
+      tableBody.innerHTML = ""; // Czyszczenie obecnych wierszy
+      rowsArray.forEach(row => tableBody.appendChild(row));
+    }
+  
+    // Pobiera wartość komórki z uwzględnieniem tekstu lub liczby
+    function getCellValue(row, colIndex) {
+      const cell = row.cells[colIndex];
+      if (cell.querySelector(".inner-table")) {
+        return parseFloat(cell.querySelector(".highlight.net-pay").textContent.trim().replace('$', '')) || 0;
+      }
+      return isNaN(cell.textContent.trim()) ? cell.textContent.trim().toLowerCase() : parseFloat(cell.textContent.trim().replace('$', ''));
+    }
+  
+    // Przypisujemy sortowanie do nagłówków kolumn
+    document.addEventListener("DOMContentLoaded", () => {
+      const tableHeaders = document.querySelectorAll(".sortable");
+      tableHeaders.forEach((header) => {
+        header.addEventListener("click", () => {
+          const columnIndex = parseInt(header.getAttribute("data-column"));
+          sortTable(columnIndex);
+        });
+      });
+    });
+  </script> -->
+  
+
+
+  </body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/common/date-picker.css" />
+    <link rel="stylesheet" href="/css/manager/employees_details/styles.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <%- include("../includes/header", {baseUrl, loggedUser}) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav") %>
+      <section class="content">
+        <header class="content-header">
+          <div class="header-left">
+            <h1>Employees details</h1>
+          </div>
+          <div class="header-right">
+            <div class="date-picker">
+              <span class="date-arrow" id="prev-arrow">&#9664;</span>
+              <span class="date-text" id="date-text"
+                >01 January - 31 January 2024</span
+              >
+              <span class="date-arrow" id="next-arrow">&#9654;</span>
+            </div>
+            <button class="export-btn">
+              Export to CSV<span> &#128229;</span>
+            </button>
+          </div>
+        </header>
+        <div class="card">
+          <h2>Employee List</h2>
+          <table id="employeeTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-column="0">
+                  Name (click on name to see details)
+                </th>
+                <th class="sortable" data-column="1">
+                  Hourly Gross Pay
+                </th>
+                <th>Deductions</th>
+                <th class="sortable" data-column="3">Attendance Days</th>
+                <th class="sortable" data-column="4">Employee Tenure</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="">John Doe</a></td>
+                <td>$20</td>
+                <td>
+                  <table class="inner-table">
+                    <tr>
+                      <td class="title retirement">Retirement:</td>
+                      <td class="highlight retirement">$4.88</td>
+                    </tr>
+                    <tr>
+                      <td class="title disability">Disability:</td>
+                      <td class="highlight disability">$0.75</td>
+                    </tr>
+                    <tr>
+                      <td class="title sickness">Sickness:</td>
+                      <td class="highlight sickness">$1.23</td>
+                    </tr>
+                    <tr>
+                      <td class="title healthcare">Healthcare:</td>
+                      <td class="highlight healthcare">$4.50</td>
+                    </tr>
+                    <tr>
+                      <td class="title income-tax">Income Tax:</td>
+                      <td class="highlight income-tax">$7.64</td>
+                    </tr>
+                    <tr>
+                      <td class="title net-pay">Net Pay:</td>
+                      <td class="highlight net-pay">$1.00</td>
+                    </tr>
+                  </table>
+                </td>
+                <td>$20</td>
+                <td>5 years</td>
+              </tr>
+              <tr>
+                <td><a href="">Jane Smith</a></td>
+                <td>$18</td>
+                <td>
+                  <table class="inner-table">
+                    <tr>
+                      <td class="title retirement">Retirement:</td>
+                      <td class="highlight retirement">$4.88</td>
+                    </tr>
+                    <tr>
+                      <td class="title disability">Disability:</td>
+                      <td class="highlight disability">$0.75</td>
+                    </tr>
+                    <tr>
+                      <td class="title sickness">Sickness:</td>
+                      <td class="highlight sickness">$1.23</td>
+                    </tr>
+                    <tr>
+                      <td class="title healthcare">Healthcare:</td>
+                      <td class="highlight healthcare">$4.50</td>
+                    </tr>
+                    <tr>
+                      <td class="title income-tax">Income Tax:</td>
+                      <td class="highlight income-tax">$6.64</td>
+                    </tr>
+                    <tr>
+                      <td class="title net-pay">Net Pay:</td>
+                      <td class="highlight net-pay">$0.00</td>
+                    </tr>
+                  </table>
+                </td>
+                <td>$18</td>
+                <td>3 years</td>
+              </tr>
+              <tr>
+                <td><a href="">Mark Johnson</a></td>
+                <td>$22</td>
+                <td>
+                  <table class="inner-table">
+                    <tr>
+                      <td class="title retirement">Retirement:</td>
+                      <td class="highlight retirement">$4.88</td>
+                    </tr>
+                    <tr>
+                      <td class="title disability">Disability:</td>
+                      <td class="highlight disability">$0.75</td>
+                    </tr>
+                    <tr>
+                      <td class="title sickness">Sickness:</td>
+                      <td class="highlight sickness">$1.23</td>
+                    </tr>
+                    <tr>
+                      <td class="title healthcare">Healthcare:</td>
+                      <td class="highlight healthcare">$4.50</td>
+                    </tr>
+                    <tr>
+                      <td class="title income-tax">Income Tax:</td>
+                      <td class="highlight income-tax">$8.64</td>
+                    </tr>
+                    <tr>
+                      <td class="title net-pay">Net Pay:</td>
+                      <td class="highlight net-pay">$2.00</td>
+                    </tr>
+                  </table>
+                </td>
+                <td>$22</td>
+                <td>2 years</td>
+              </tr>
+              <tr>
+                <td><a href="">Sarah Williams</a></td>
+                <td>$25</td>
+                <td>
+                  <table class="inner-table">
+                    <tr>
+                      <td class="title retirement">Retirement:</td>
+                      <td class="highlight retirement">$4.88</td>
+                    </tr>
+                    <tr>
+                      <td class="title disability">Disability:</td>
+                      <td class="highlight disability">$0.75</td>
+                    </tr>
+                    <tr>
+                      <td class="title sickness">Sickness:</td>
+                      <td class="highlight sickness">$1.23</td>
+                    </tr>
+                    <tr>
+                      <td class="title healthcare">Healthcare:</td>
+                      <td class="highlight healthcare">$4.50</td>
+                    </tr>
+                    <tr>
+                      <td class="title income-tax">Income Tax:</td>
+                      <td class="highlight income-tax">$9.64</td>
+                    </tr>
+                    <tr>
+                      <td class="title net-pay">Net Pay:</td>
+                      <td class="highlight net-pay">$3.00</td>
+                    </tr>
+                  </table>
+                </td>
+                <td>$25</td>
+                <td>4 years</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <script nonce="<%= nonce %>">
+      document.addEventListener("DOMContentLoaded", function () {
+        const prevArrow = document.getElementById("prev-arrow");
+        const nextArrow = document.getElementById("next-arrow");
+
+        prevArrow.addEventListener("click", prevMonth);
+        nextArrow.addEventListener("click", nextMonth);
+
+        const tableHeaders = document.querySelectorAll(".sortable");
+        tableHeaders.forEach((header) => {
+          header.addEventListener("click", () => {
+            const columnIndex = header.getAttribute("data-column");
+            sortTable(parseInt(columnIndex));
+          });
+        });
+      });
+
+      const dateRanges = [
+        "01 January - 31 January 2024",
+        "01 February - 29 February 2024",
+        "01 March - 31 March 2024",
+        "01 April - 30 April 2024",
+        "01 May - 31 May 2024",
+        "01 June - 30 June 2024",
+        "01 July - 31 July 2024",
+      ];
+
+      let currentIndex = 0;
+
+      function updateDateText() {
+        const dateText = document.getElementById("date-text");
+        dateText.textContent = dateRanges[currentIndex];
+      }
+
+      function prevMonth() {
+        if (currentIndex > 0) {
+          currentIndex--;
+          updateDateText();
+        }
+      }
+
+      function nextMonth() {
+        if (currentIndex < dateRanges.length - 1) {
+          currentIndex++;
+          updateDateText();
+        }
+      }
+    </script>
+    <script nonce="<%= nonce %>">
+      function sortTable(n) {
+        var table,
+          rows,
+          switching,
+          i,
+          x,
+          y,
+          shouldSwitch,
+          dir,
+          switchcount = 0;
+        table = document.getElementById("employeeTable");
+        switching = true;
+        dir = "asc";
+        while (switching) {
+          switching = false;
+          rows = table.rows;
+          for (i = 1; i < rows.length - 1; i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("TD")[n];
+            y = rows[i + 1].getElementsByTagName("TD")[n];
+            if (dir == "asc") {
+              if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+              }
+            } else if (dir == "desc") {
+              if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                shouldSwitch = true;
+                break;
+              }
+            }
+          }
+          if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            switchcount++;
+          } else {
+            if (switchcount == 0 && dir == "asc") {
+              dir = "desc";
+              switching = true;
+            }
+          }
+        }
+      }
+    </script>
+  </body>
+</html> -->

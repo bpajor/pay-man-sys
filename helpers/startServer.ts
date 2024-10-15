@@ -13,7 +13,7 @@ export const startServer = async (app: Express.Application, logger: Logger) => {
   //   process.exit(1);
   // }
   try {
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 8000;
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
     });

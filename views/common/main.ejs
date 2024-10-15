@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/main/header.css">
   </head>
   <body>
-    <header class="header">
+    <!-- <header class="header">
       <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
       <nav>
         <a href="">Home</a>
@@ -16,7 +16,8 @@
         <a href="">About</a>
         <a href="<% baseUrl%>/login">Login</a>
       </nav>
-    </header>
+    </header> -->
+    <%- include("../includes/header", {baseUrl, loggedUser}) %>
     <br />
     <main>
       <section class="hero">
