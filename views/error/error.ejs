@@ -9,21 +9,7 @@
     <title>Error <%= code %></title>
   </head>
   <body>
-    <header class="header">
-        <img
-          src="/images/brand.png"
-          alt="PayrollPro Logo"
-          class="logo"
-        />
-        <nav>
-          <a href="">Home</a>
-          <a href="">Features</a>
-          <a href="">About</a>
-          <a href="http://localhost:5500/lib/templates/login/html/login.html"
-            >Logout</a
-          >
-        </nav>
-      </header>
+    <%- include("../includes/header", { baseUrl, loggedUser, accountType }) %>
     <main class="error-page">
       <section class="error-content">
 

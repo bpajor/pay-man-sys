@@ -1,18 +1,29 @@
 <section class="menu">
-  <div class="menu-item">
+  <div class="menu-item" id="dashboard-div">
     <img src="/images/user.png" alt="user_icon" class="user-icon" />
-    <p>Employee Dashboard</p>
+    <p>Dashboard</p>
   </div>
-  <div class="menu-item">
-    <img src="/images/user.png" alt="user_icon" class="user-icon" />
-    <p>Employee Dashboard</p>
+  <div class="menu-item" id="settings-div">
+    <img src="/images/settings.png" alt="settings_icon" class="settings-icon" />
+    <p>Settings</p>
   </div>
-  <div class="menu-item">
-    <img src="/images/user.png" alt="user_icon" class="user-icon" />
-    <p>Employee Dashboard</p>
-  </div>
-  <div class="menu-item">
-    <img src="/images/user.png" alt="user_icon" class="user-icon" />
-    <p>Employee Dashboard</p>
-  </div>
+  <% if (accountType == "manager") { %>
+    <div class="menu-item" id="employees-div">
+      <img src="/images/list.png" alt="list_icon" class="list-icon" />
+      <p>Employees</p>
+    </div>
+    <div class="menu-item" id="jrequests-div">
+      <div class="icon-container">
+        <img src="/images/mailbox.png" alt="mailbox_icon" class="mailbox-icon" />
+        <% if (jrequestsPending) { %>
+          <span class="badge">!</span>
+        <% } %>
+      </div>
+      <p>Join Requests</p>
+    </div>
+    <div class="menu-item" id="raports-div">
+      <img src="/images/raport.jpg" alt="raport_icon" class="raport-icon" />
+      <p>Raports</p>
+    </div>
+  <% } %>
 </section>

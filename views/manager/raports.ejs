@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta tags and links -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/common/date-picker.css" />
+    <link rel="stylesheet" href="/css/manager/manager_raports/styles.css" />
+    <script
+      nonce="<%= nonce %>"
+      src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
+    <title>Financial Reports</title>
+    <style>
+      /* Style for the "Card data is not available" message */
+      .no-data-message {
+        padding: 20px;
+        background-color: #ffeeba;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        border-radius: 5px;
+        margin: 10px 0;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include("../includes/header", { baseUrl, loggedUser, accountType }) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
+      <section class="content">
+        <!-- Header -->
+        <header class="content-header">
+          <div class="header-left">
+            <h1>
+              Financial Reports
+              <a
+                class="all-emp-link"
+                href="<%= baseUrl %>/manager/employees-details"
+                >See details for all employees</a
+              >
+            </h1>
+          </div>
+          <div class="header-right">
+            <div class="date-picker">
+              <span class="date-arrow" id="prev-arrow">&#9664;</span>
+              <span class="date-text" id="date-text"
+                >01 January - 31 January 2024</span
+              >
+              <span class="date-arrow" id="next-arrow">&#9654;</span>
+            </div>
+            <button class="export-btn">
+              Export to CSV<span> &#128229;</span>
+            </button>
+          </div>
+        </header>
+        <section class="cards">
+          <div class="card" id="monthly-summary-card">
+            <h2>Monthly Summary (<span class="month-name"></span>)</h2>
+            <div class="card-content" id="monthly-summary-content">
+              <div class="summary-item">
+                <span class="label">Total salary expenses:</span>
+                <span class="value" id="total-salary">$0</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Total bonus expenses:</span>
+                <span class="value" id="total-bonuses">$0</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Total contributions:</span>
+                <span class="value" id="total-contributions">$0</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Net pays (without bonuses):</span>
+                <span class="value" id="net-without-bonus">$0</span>
+              </div>
+              <div class="chart">
+                <!-- Pie Chart -->
+                <canvas id="pieChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Total Hours Worked (<span class="month-year"></span>)</h2>
+            <div class="card-content" id="hours-worked-content">
+              <div class="summary-item">
+                <span class="label">Total hours worked:</span>
+                <span class="value" id="total-hours-worked">0</span>
+              </div>
+              <div class="chart">
+                <!-- Line Chart for hours worked -->
+                <canvas id="hoursWorkedChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Commented out previous card with departments -->
+          <!--
+          <div class="card">
+            <h2>Salary Expenses</h2>
+            <div class="card-content">
+              <div class="summary-item">
+                <span class="label">Total salary expenses:</span>
+                <span class="value">$100,000</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Average salary per employee:</span>
+                <span class="value">$5,000</span>
+              </div>
+              <div class="chart">
+                <canvas id="barChart"></canvas>
+              </div>
+            </div>
+          </div>
+          -->
+
+          <div class="card">
+            <h2>
+              Average Gross Salary and Bonuses Trends (<span
+                class="month-year"
+              ></span
+              >)
+            </h2>
+            <div class="card-content">
+              <div class="chart">
+                <!-- Line Chart -->
+                <canvas id="salaryBonusTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Trend Analysis (<span class="month-year"></span>)</h2>
+            <div class="card-content">
+              <div class="chart">
+                <!-- Line Chart -->
+                <canvas id="lineChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <%- include("../includes/manager_left_dashboard_listener", { nonce }) %>
+
+    <!-- <script src="../../../common/scripts/dates.js"></script> -->
+    <script nonce="<%= nonce %>">
+      let currentDate = new Date();
+      let currentMonth = currentDate.getMonth(); // 0 = January
+      let currentYear = currentDate.getFullYear();
+
+      function formatDateRange(month, year) {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        return `01 ${monthNames[month]} - ${lastDay} ${monthNames[month]} ${year}`;
+      }
+
+      function updateDateText(hasYearChanged = false) {
+        const dateText = document.getElementById("date-text");
+        dateText.textContent = formatDateRange(currentMonth, currentYear);
+
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+
+        const monthName = monthNames[currentMonth];
+
+        const monthNameSpans = document.querySelectorAll(".month-name");
+        monthNameSpans.forEach((span) => {
+          span.textContent = monthName;
+        });
+
+        const monthYear = `${monthName} ${currentYear}`;
+        const monthYearSpans = document.querySelectorAll(".month-year");
+        monthYearSpans.forEach((span) => {
+          span.textContent = monthYear;
+        });
+
+        // Fetch and update the monthly summary
+        fetchMonthlySummary();
+
+        if (hasYearChanged) {
+          // Fetch and update the hours worked data
+          fetchHoursWorked();
+
+          // Fetch and update the average salary and bonus trends
+          fetchAverageSalaryAndBonusTrends();
+
+          // Fetch and update the trend analysis data
+          fetchTrendAnalysisData();
+        }
+      }
+
+      function prevMonth() {
+        if (currentMonth === 0) {
+          currentMonth = 11;
+          currentYear--;
+          return updateDateText(true);
+        } else {
+          currentMonth--;
+        }
+        updateDateText();
+      }
+
+      function nextMonth() {
+        if (currentMonth === 11) {
+          currentMonth = 0;
+          currentYear++;
+          return updateDateText(true);
+        } else {
+          currentMonth++;
+        }
+        updateDateText();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("prev-arrow")
+          .addEventListener("click", prevMonth);
+        document
+          .getElementById("next-arrow")
+          .addEventListener("click", nextMonth);
+
+        updateDateText(); // Display current month on start
+
+        // Initialize charts
+        const pie_ctx = document.getElementById("pieChart").getContext("2d");
+        // const bar_ctx = document.getElementById("barChart").getContext("2d");
+        const line_ctx = document.getElementById("lineChart").getContext("2d");
+        const salaryBonusTrend_ctx = document
+          .getElementById("salaryBonusTrendChart")
+          .getContext("2d");
+        const hoursWorked_ctx = document
+          .getElementById("hoursWorkedChart")
+          .getContext("2d");
+
+        // Initialize the pie chart with empty data
+        pieChart = new Chart(pie_ctx, config);
+        // new Chart(bar_ctx, barConfig); // Commented out
+        lineChart = new Chart(line_ctx, lineConfig);
+        salaryBonusTrendChart = new Chart(
+          salaryBonusTrend_ctx,
+          salaryBonusTrendConfig
+        );
+        hoursWorkedChart = new Chart(hoursWorked_ctx, hoursWorkedConfig);
+
+        // Fetch and update the monthly summary
+        fetchMonthlySummary();
+
+        // Fetch and update the hours worked data
+        fetchHoursWorked();
+
+        // Fetch and update the average salary and bonus trends
+        fetchAverageSalaryAndBonusTrends();
+
+        // Fetch and update the trend analysis data
+        fetchTrendAnalysisData();
+      });
+
+      // Variable to hold the chart instances
+      let pieChart;
+      let hoursWorkedChart;
+      let lineChart;
+      let salaryBonusTrendChart;
+
+      // Function to fetch monthly summary data
+      function fetchMonthlySummary() {
+        const year = currentYear;
+        const month = currentMonth + 1; // JavaScript months are 0-based, API expects 1-based
+        const url = `<%= baseUrl %>/api/manager/get-all-expenses-details?year=${year}&month=${month}`;
+
+        fetch(url)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Update the card values
+            document.getElementById(
+              "total-salary"
+            ).textContent = `$${data.total_salary}`;
+            document.getElementById(
+              "total-bonuses"
+            ).textContent = `$${data.total_bonuses}`;
+            document.getElementById(
+              "total-contributions"
+            ).textContent = `$${data.total_contributions}`;
+            document.getElementById(
+              "net-without-bonus"
+            ).textContent = `$${data.net_without_bonus_pay}`;
+
+            // Update the pie chart data
+            updatePieChart(data);
+          })
+          .catch((error) => {
+            console.error("Error fetching monthly summary:", error);
+            displayNoDataMessage();
+          });
+      }
+
+      // Function to update the pie chart with new data
+      function updatePieChart(data) {
+        const newData = [
+          data.net_without_bonus_pay || 0,
+          data.total_bonuses || 0,
+          data.total_contributions || 0,
+        ];
+
+        pieChart.data.labels = [
+          "Net pays (without bonuses)",
+          "Bonuses",
+          "Contributions",
+        ];
+        pieChart.data.datasets[0].data = newData;
+        pieChart.update();
+      }
+
+      // Function to display "Card data is not available" message
+      function displayNoDataMessage() {
+        const cardContent = document.getElementById("monthly-summary-content");
+        cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
+      }
+
+      // Function to fetch hours worked data
+      function fetchHoursWorked() {
+        const year = currentYear;
+        const url = `<%= baseUrl %>/api/manager/get-hours-worked?year=${year}`;
+
+        fetch(url)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Update the total hours worked value
+            const totalHours = data.reduce(
+              (sum, item) => sum + item.total_hours_worked,
+              0
+            );
+            document.getElementById(
+              "total-hours-worked"
+            ).textContent = `${totalHours}`;
+
+            // Update the hours worked chart
+            updateHoursWorkedChart(data);
+          })
+          .catch((error) => {
+            console.error("Error fetching hours worked data:", error);
+            displayHoursWorkedNoDataMessage();
+          });
+      }
+
+      function fetchAverageSalaryAndBonusTrends() {
+        const year = currentYear;
+        const url = `<%= baseUrl %>/api/manager/get-average-salary-and-bonuses?year=${year}`;
+
+        fetch(url)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            updateSalaryBonusTrendChart(data);
+          })
+          .catch((error) => {
+            console.error(
+              "Error fetching average salary and bonus trends:",
+              error
+            );
+            displayAverageSalaryAndBonusTrendsNoDataMessage();
+          });
+      }
+
+      function fetchTrendAnalysisData() {
+        const year = currentYear;
+        const url = `<%= baseUrl %>/api/manager/get-year-expenses-details?year=${year}`;
+
+        fetch(url)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            updateTrendAnalysisChart(data);
+          })
+          .catch((error) => {
+            console.error("Error fetching trend analysis data:", error);
+            displayTrendAnalysisNoDataMessage();
+          });
+      }
+
+      function updateTrendAnalysisChart(data) {
+        // const netPays = data.map(item => item.net_without_bonus_pay);
+        // const bonuses = data.map(item => item.total_bonuses);
+        // const contributions = data.map(item => item.total_contributions);
+        const netPays = new Array(12).fill(0);
+        const bonuses = new Array(12).fill(0);
+        const contributions = new Array(12).fill(0);
+
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+
+        data.forEach((item) => {
+          const monthIndex = monthNames.indexOf(item.month);
+          if (monthIndex >= 0) {
+            netPays[monthIndex] = item.net_without_bonus_pay;
+            bonuses[monthIndex] = item.total_bonuses;
+            contributions[monthIndex] = item.total_contributions;
+          }
+        });
+
+        lineChart.data.datasets[0].data = netPays;
+        lineChart.data.datasets[1].data = bonuses;
+        lineChart.data.datasets[2].data = contributions;
+        lineChart.update();
+      }
+
+      function displayTrendAnalysisNoDataMessage() {
+        const cardContent = document.getElementById("trend-analysis-content");
+        cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
+      }
+
+      // Function to update the hours worked chart
+      function updateHoursWorkedChart(data) {
+        // Prepare the data for the chart
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+
+        const chartData = new Array(12).fill(0);
+
+        data.forEach((item) => {
+          const monthIndex = monthNames.indexOf(item.month);
+          if (monthIndex >= 0) {
+            chartData[monthIndex] = item.total_hours_worked;
+          }
+        });
+
+        // Update the chart data
+        hoursWorkedChart.data.labels = monthNames;
+        hoursWorkedChart.data.datasets[0].data = chartData;
+        hoursWorkedChart.update();
+      }
+
+      // Function to display "Card data is not available" message for hours worked
+      function displayHoursWorkedNoDataMessage() {
+        const cardContent = document.getElementById("hours-worked-content");
+        cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
+      }
+
+      function updateSalaryBonusTrendChart(data) {
+        // Prepare the data for the chart
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+
+        const salaryData = new Array(12).fill(0);
+        const bonusData = new Array(12).fill(0);
+
+        data.forEach((item) => {
+          const monthIndex = monthNames.indexOf(item.month);
+          if (monthIndex >= 0) {
+            salaryData[monthIndex] = item.average_salary;
+            bonusData[monthIndex] = item.average_bonus;
+          }
+        });
+
+        // Update the chart data
+        salaryBonusTrendChart.data.labels = monthNames;
+        salaryBonusTrendChart.data.datasets[0].data = salaryData;
+        salaryBonusTrendChart.data.datasets[1].data = bonusData;
+        salaryBonusTrendChart.update();
+      }
+
+      function displayAverageSalaryAndBonusTrendsNoDataMessage() {
+        const cardContent = document.getElementById("salaryBonusTrendChart");
+        cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
+      }
+
+      // Pie chart data (initialized with zeros)
+      const data = {
+        labels: ["Net pays (without bonuses)", "Bonuses", "Contributions"],
+        datasets: [
+          {
+            label: "Expense Distribution",
+            data: [0, 0, 0],
+            backgroundColor: [
+              "rgba(75, 192, 192, 0.2)",
+              "rgba(255, 99, 132, 0.2)",
+              "rgba(54, 162, 235, 0.2)",
+            ],
+            borderColor: [
+              "rgba(75, 192, 192, 1)",
+              "rgba(255, 99, 132, 1)",
+              "rgba(54, 162, 235, 1)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      // Pie chart configuration
+      const config = {
+        type: "pie",
+        data: data,
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+            title: {
+              display: true,
+              text: "Expense Distribution",
+            },
+          },
+        },
+      };
+
+      // Line chart data for Trend Analysis (updated)
+      const lineData = {
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ],
+        datasets: [
+          {
+            label: "Net pays (without bonuses)",
+            data: [
+              6000, 6200, 6400, 6600, 6800, 7000, 7200, 7400, 7600, 7800, 8000,
+              8200,
+            ],
+            borderColor: "rgba(75, 192, 192, 1)",
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            fill: false,
+            tension: 0.1,
+          },
+          {
+            label: "Bonuses",
+            data: [
+              1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
+              1550,
+            ],
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            fill: false,
+            tension: 0.1,
+          },
+          {
+            label: "Contributions",
+            data: [
+              1500, 1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000,
+              2050,
+            ],
+            borderColor: "rgba(54, 162, 235, 1)",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            fill: false,
+            tension: 0.1,
+          },
+        ],
+      };
+
+      // Line chart configuration
+      const lineConfig = {
+        type: "line",
+        data: lineData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+            title: {
+              display: true,
+              text: "Trend Analysis",
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+
+      // Average Gross Salary and Bonuses Trends data (unchanged)
+      const salaryBonusTrendData = {
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ],
+        datasets: [
+          {
+            label: "Average Gross Salary",
+            data: [
+              5000, 5100, 5200, 5300, 5400, 5500, 5600, 5700, 5800, 5900, 6000,
+              6100,
+            ],
+            borderColor: "rgba(75, 192, 192, 1)",
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            fill: false,
+            tension: 0.1,
+          },
+          {
+            label: "Average Bonus",
+            data: [
+              1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
+              1550,
+            ],
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            fill: false,
+            tension: 0.1,
+          },
+        ],
+      };
+
+      // Average Gross Salary and Bonuses Trends configuration
+      const salaryBonusTrendConfig = {
+        type: "line",
+        data: salaryBonusTrendData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+            title: {
+              display: true,
+              text: "Average Gross Salary and Bonuses Trends",
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+
+      // Total Hours Worked chart data (initialized with zeros)
+      const hoursWorkedData = {
+        labels: [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ],
+        datasets: [
+          {
+            label: "Total Hours Worked",
+            data: new Array(12).fill(0),
+            borderColor: "rgba(54, 162, 235, 1)",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            fill: false,
+            tension: 0.1,
+          },
+        ],
+      };
+
+      // Total Hours Worked chart configuration
+      const hoursWorkedConfig = {
+        type: "line",
+        data: hoursWorkedData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+            },
+            title: {
+              display: true,
+              text: "Total Hours Worked Trends",
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+    </script>
+  </body>
+</html>

@@ -6,5 +6,6 @@ declare module "express-session" {
     pending_2fa: boolean;
     unlogged_email: string;
     hashed_password: string;
+    jrequests_pending: boolean;
   }
 }

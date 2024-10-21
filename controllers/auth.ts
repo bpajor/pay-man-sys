@@ -10,6 +10,10 @@ import { getAllowedHosts, transporter } from "./helpers/transporter";
 import crypto, { verify } from "crypto";
 import { verify2fa } from "./helpers/twoFA";
 import { Company } from "../entity/Company";
+import OTPAuth from "otpauth";
+import { encode } from "hi-base32";
+import QRCode from "qrcode";
+import { JoinRequest } from "../entity/JoinRequest";
 
 export const getLogin = (req: Request, res: Response) => {
   const logger: Logger = res.locals.logger;
@@ -73,8 +77,13 @@ export const postLogin = async (
 
   try {
     // user = await user_repo.findOne({ where: { email: email } });
-    user = await user_repo.createQueryBuilder("user").leftJoinAndSelect("user.company", "company").leftJoinAndSelect("user.employees", "employee")
-    .leftJoinAndSelect("employee.company", "employeeCompany").where("user.email = :email", { email}).getOne();
+    user = await user_repo
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.company", "company")
+      .leftJoinAndSelect("user.employees", "employee")
+      .leftJoinAndSelect("employee.company", "employeeCompany")
+      .where("user.email = :email", { email })
+      .getOne();
 
     if (!user) {
       logger.error(`User with email ${email} not found`);
@@ -112,35 +121,39 @@ export const postLogin = async (
     return next(error);
   }
 
+  let company_id;
+
+  if (user.company) {
+    company_id = user.company.id;
+  } else if (user.employees[0].company) {
+    company_id = user.employees[0].company.id;
+  } else {
+    company_id = null;
+  }
+
   let user_to_session = {
     uid: user.id,
     email: user.email,
     account_type: user.account_type as "employee" | "manager",
-    company_id: user.company.id
-  }
-
-  // let company_id;
-  // if (user.account_type === "manager") {
-  //   try {
-  //     const company = await AppDataSource.getRepository(Company).findOne({
-  //       where: {manager: user}, relations: ["manager"]
-  //     })
-
-  //     if (company) {
-  //       company_id = company.id;
-  //     }
-  //   }
-  //   catch () {}
-  // }
-
-  // let user_to_session = {
-  //   uid: user.id,
-  //   email: user.email,
-  //   account_type: user.account_type as "employee" | "manager",
-  //   company_id
-  // }
-
+    company_id,
+  };
   req.session.user = user_to_session;
+
+  if (user.account_type === "manager") {
+    try {
+      const jrequests_pending = await AppDataSource.getRepository(
+        JoinRequest
+      ).exists({
+        where: { company: { id: user.company.id }, status: "pending" },
+      });
+
+      req.session.jrequests_pending = jrequests_pending;
+    } catch (error) {
+      logger.error(`Error checking for pending join requests: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+  }
 
   await redisClient.del(attemptsKey);
 
@@ -153,7 +166,10 @@ export const postLogin = async (
 
   logger.info(`User ${email} successfully logged in`);
 
-  const redirect_path = user.account_type === "manager" ? "/manager/dashboard" : "/employee/dashboard";
+  const redirect_path =
+    user.account_type === "manager"
+      ? "/manager/dashboard"
+      : "/employee/dashboard";
 
   return res.redirect(redirect_path);
 };
@@ -875,4 +891,100 @@ export const postLogout = async (
     logger.info(`Session destroyed`);
     res.redirect("/login");
   });
+};
+
+export const postEnable2fa = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+  const user_repo = AppDataSource.getRepository(User);
+
+  logger.info(`Enabling 2fa`);
+
+  if (!req.session.user) {
+    logger.error(`Session data not found`);
+    res.status(400);
+    return next(new Error("Session data not found"));
+  }
+
+  const { email, uid } = req.session.user;
+
+  if (!email || !uid) {
+    logger.error(`Session data not found`);
+    return res.status(400).json({ success: false });
+  }
+
+  const { secret, otpauthURL } = generate2FASecret(email);
+
+  let qrCodeDataUrl;
+  try {
+    logger.info(`Generating QR code`);
+    qrCodeDataUrl = await QRCode.toDataURL(otpauthURL);
+  } catch (error) {
+    logger.error(`Error generating QR code: ${error}`);
+    return res.status(500).json({ success: false });
+  }
+
+  try {
+    logger.info(`Updating user with 2fa secret`);
+    await user_repo.update({ id: uid }, { two_fa_secret: secret });
+  } catch (error) {
+    logger.error(`Error updating user with 2fa secret: ${error}`);
+    return res.status(500).json({ success: false });
+  }
+
+  return res.json({
+    success: true,
+    qrCode: qrCodeDataUrl,
+  });
+};
+
+export const postDisable2fa = async (req: Request, res: Response) => {
+  const logger = res.locals.logger;
+  logger.info(`Disabling 2fa`);
+
+  const user_repo = AppDataSource.getRepository(User);
+
+  if (!req.session.user) {
+    logger.error(`Session data not found`);
+    return res.status(400).json({ success: false });
+  }
+
+  const { uid } = req.session.user;
+
+  if (!uid) {
+    logger.error(`Session data not found`);
+    return res.status(400).json({ success: false });
+  }
+
+  try {
+    logger.info(`Disabling 2fa for user`);
+    await user_repo.update({ id: uid }, { two_fa_secret: null });
+  } catch (error) {
+    logger.error(`Error disabling 2fa for user: ${error}`);
+    return res.status(500).json({ success: false });
+  }
+
+  return res.json({ success: true });
+};
+
+const generate2FASecret = (userEmail: string) => {
+  // Utwórz obiekt OTPAuth.TOTP (czasowy kod jednorazowy)
+  const totp = new OTPAuth.TOTP({
+    issuer: "PayrollPro", // Nazwa Twojej aplikacji
+    label: userEmail, // Email użytkownika jako identyfikator
+    algorithm: "SHA1",
+    digits: 6,
+    period: 30,
+  });
+
+  // Wygeneruj tajny klucz (base32 encoded)
+  const secret = encode(totp.secret.bytes);
+
+  // Utwórz URL dla aplikacji uwierzytelniającej
+  const otpauthURL = totp.toString();
+
+  return { secret, otpauthURL };
 };

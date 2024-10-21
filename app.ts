@@ -4,6 +4,8 @@ import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
 import { auth_router as auth_routes } from "./routes/auth";
 import { manager_router as manager_routes } from "./routes/manager";
+import { api_router as api_routes } from "./routes/api";
+import {user_router as user_routes} from "./routes/user";
 import rateLimit from "express-rate-limit";
 import { generateScriptNonce } from "./middlewares/generateScriptNonce";
 import { customHelmet } from "./middlewares/customHelmet";
@@ -178,6 +180,8 @@ AppDataSource.initialize()
     app.use(auth_routes);
     app.use(employee_routes);
     app.use(manager_routes);
+    app.use(api_routes);
+    app.use(user_routes);
 
     // Obsługa błędu 404 - nieznaleziono strony
     app.use((req: Request, res: Response) => {
@@ -200,6 +204,9 @@ AppDataSource.initialize()
       res.status(statusCode).render("error/error", {
         code: statusCode,
         message: errorMessage,
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: req.session.user ? req.session.user.uid : null,
+        accountType: req.session.user ? req.session.user.account_type : null,
       });
     });
 

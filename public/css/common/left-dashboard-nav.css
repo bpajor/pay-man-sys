@@ -21,11 +21,54 @@
   cursor: pointer;
 }
 
-.user-icon {
+.user-icon,
+.settings-icon,
+.list-icon,
+.mailbox-icon,
+.raport-icon
+{
   width: 50px;
   height: 50px;
   padding: 20px;
 }
+
+/* Stylizacja dla kontenera ikony */
+.icon-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Stylizacja dla badge (wykrzyknik) */
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Opcjonalnie: Animacja migotania dla uwydatnienia */
+@keyframes blink {
+  0%, 50%, 100% {
+    opacity: 1;
+  }
+  25%, 75% {
+    opacity: 0.5;
+  }
+}
+
+.badge {
+  animation: blink 5s infinite;
+}
+
 
 @media screen and (max-width: 900px) {
   .menu {
@@ -59,3 +102,4 @@
     width: 50%;
   }
 }
+

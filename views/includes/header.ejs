@@ -5,7 +5,7 @@
     <a href="">Features</a>
     <a href="">About</a>
     <% if (loggedUser) {%>
-    <a href="<% baseUrl %>/employee/settings">Settings</a>
+    <a href="<% baseUrl %>/<%= accountType %>/settings">Settings</a>
     <form method="post" action="<%baseUrl%>/logout">
       <button type="submit" class="logout-btn">Logout</button>
     </form>

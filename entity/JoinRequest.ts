@@ -8,7 +8,7 @@ export class JoinRequest {
     id: number;
 
     @ManyToOne(() => User, (user: User) => user.join_requests)
-    employee: User;
+    user: User;
 
     @ManyToOne(() => Company, (company: Company) => company.join_requests)
     company: Company;

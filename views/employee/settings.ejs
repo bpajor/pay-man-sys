@@ -3,40 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/css/employee/settings/styles.css" />
+    <link rel="stylesheet" href="/css/common/settings/styles.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
     <title>Ustawienia konta</title>
   </head>
   <body>
-    <header class="header">
-      <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
-      <nav>
-        <a href="">Home</a>
-        <a href="">Features</a>
-        <a href="">About</a>
-        <a href="/login.html">Logout</a>
-      </nav>
-    </header>
+    <%- include("../includes/header", { baseUrl, loggedUser, accountType }) %>
     <main>
-      <secion class="menu">
-        <div class="menu-item">
-          <img src="/images/user.png" alt="user_icon" class="user-icon" />
-          <p>Employee Dashboard</p>
-        </div>
-        <div class="menu-item">
-          <img src="/images/user.png" alt="user_icon" class="user-icon" />
-          <p>Employee Dashboard</p>
-        </div>
-        <div class="menu-item">
-          <img src="/images/user.png" alt="user_icon" class="user-icon" />
-          <p>Employee Dashboard</p>
-        </div>
-        <div class="menu-item">
-          <img src="/images/user.png" alt="user_icon" class="user-icon" />
-          <p>Employee Dashboard</p>
-        </div>
-      </secion>
+      <%- include("../includes/left-dashboard-nav") %>
       <section class="content">
         <div id="notification-bar" class="notification hidden"></div>
         <h2>Security settings</h2>
@@ -96,7 +71,7 @@
       // Zablokuj przełącznik
       document.getElementById("2fa-toggle").disabled = true;
 
-      fetch("<% baseUrl %>/enable-2fa", {
+      fetch("<% baseUrl %>/auth/enable-2fa", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +123,7 @@
       document.getElementById("loading-modal").classList.remove("hidden");
       document.getElementById("2fa-toggle").disabled = true;
 
-      fetch("<% baseUrl %>/disable-2fa", {
+      fetch("<% baseUrl %>/auth/disable-2fa", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

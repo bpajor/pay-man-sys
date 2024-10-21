@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/employee/main/styles.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <title>Ustawienia konta</title>
+    <style>
+      .content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .user-details-section {
+        margin: 50px 0;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        position: relative;
+      }
+
+      .user-details-section h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .user-details-section p {
+        margin-bottom: 10px;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .user-details-section .label {
+        font-weight: bold;
+      }
+
+      .edit-button,
+      .save-button,
+      .cancel-button {
+        background-color: #008cba;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        top: 20px;
+      }
+
+      .edit-button {
+        right: 20px;
+      }
+
+      .save-button,
+      .cancel-button {
+        margin-top: 20px;
+      }
+
+      .save-button {
+        background-color: #4caf50;
+      }
+
+      .cancel-button {
+        background-color: #f44336;
+        right: 20px; /* Positioned next to the save button */
+      }
+
+      input[type="text"],
+      input[type="email"],
+      input[type="tel"],
+      input[type="date"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      .company-create {
+        color: #008cba;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include("../includes/header", { baseUrl, loggedUser , accountType}) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
+      <section class="content">
+        <section class="user-details-section">
+          <h2>Fill in employee details</h2>
+          <form
+            id="edit-mode-company"
+            method="post"
+            action="<%= baseUrl %>/manager/join-request/<%= user.id %>"
+          >
+            <label for="name">Full Name:</label>
+            <input name="name" type="text" id="company-name" value="<%= user.name %> <%= user.last_name %>" readonly/>
+
+            <label for="email">Email:</label>
+            <input name="email" type="email" id="company-email" value="<%= user.email %>" readonly/>
+
+            <label for="phone">Phone:</label>
+            <input name="phone" type="tel" id="company-phone" value="<%= user.phone_number %>" readonly/>
+
+            <label for="address">Address:</label>
+            <input name="address" type="text" id="company-address" value="<%= user.home_address %>" readonly/>
+
+            <label for="date_of_birth">Date of birth: </label>
+            <input name="date_of_birth" type="date" id="company-dob" value="<%=user.date_of_birth%>" readonly/>
+
+            <label for="salry">Salary per hour</label>
+            <input name="salary" type="number" id="company-salary" required/>
+
+            <label for="hi_number">Health Insurance policy number: </label>
+            <input name="hi_number" type="number" id="company-hi_number" required/>
+
+            <label for="hi_provider">Health Insurance provider: </label>
+            <input name="hi_provider" type="text" id="company-hi_provider" required/>
+
+            <label for="exp_date">Expiration Date</label>
+            <input name="exp_date" type="date" id="company-exp-date" required/>
+
+            <label for="notes">Notes</label>
+            <textarea name="notes" id="company-notes" required></textarea>
+
+            <button type="submit" class="save-button" id="save-button-company">
+              Save
+            </button>
+          </form>
+        </section>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+  </body>
+
+  <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
+</html>

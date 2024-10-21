@@ -12,11 +12,17 @@
     ></script>
     <link rel="stylesheet" href="/css/manager/dashboard/styles.css" />
     <title>Document</title>
+    <style>
+      .create-company {
+        color: #008cba;
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
-    <%- include("../includes/header", {baseUrl, loggedUser}) %>
+    <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
     <main>
-      <%- include("../includes/left-dashboard-nav") %>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
       <% if (companyId) {%>
       <%- include("../includes/content_dashboard_main", {totalSalary, totalBonus, totalPayoutsHistoryAmount, topEmployees}) %>
       <% } else {%>
@@ -27,6 +33,8 @@
     <footer>
       <p>© 2024 PayrollPro. All rights reserved.</p>
     </footer>
+
+    <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
 
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", function () {
@@ -62,6 +70,8 @@
       });
     </script>
 
+
+<% if (companyId && payoutsHistory) {%>
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", function () {
         const ctx = document.getElementById("paymentChart").getContext("2d");
@@ -137,5 +147,8 @@
         });
       });
     </script>
+    <% } %>
   </body>
 </html>
+
+<!--TODO chart values are too high-->

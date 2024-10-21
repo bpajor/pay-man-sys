@@ -1,0 +1,27 @@
+<script nonce="<%= nonce %>">
+  const dashboard_div = document.getElementById("dashboard-div");
+  const settings_div = document.getElementById("settings-div");
+  const employees_div = document.getElementById("employees-div");
+  const jrequests_div = document.getElementById("jrequests-div");
+  const raports_div = document.getElementById("raports-div");
+
+  dashboard_div.addEventListener("click", () => {
+    window.location.href = "/manager/dashboard";
+  });
+
+  settings_div.addEventListener("click", () => {
+    window.location.href = "/manager/settings";
+  });
+
+  employees_div.addEventListener("click", () => {
+    window.location.href = "/manager/employees-details";
+  });
+
+  jrequests_div.addEventListener("click", () => {
+    window.location.href = "/manager/join-requests";
+  });
+
+  raports_div.addEventListener("click", () => {
+    window.location.href = "/manager/raports";
+  });
+</script>
