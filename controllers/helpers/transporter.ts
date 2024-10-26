@@ -20,7 +20,7 @@ export const getAllowedHosts = () => {
   ];
 
   if (process.env.NODE_ENVIRONMENT === "local") {
-    allowed_hosts.push("localhost:3000");
+    allowed_hosts.push(process.env.BASE_URL!.split("//")[1]);
   }
 
   return allowed_hosts;

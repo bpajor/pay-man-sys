@@ -3,115 +3,113 @@ import {
   getManagerCreateCompany,
   getManagerDashboard,
   getManagerEmployeesDetails,
-  getManagerEmployeesDetailsJSON,
   getManagerJoinRequest,
   getManagerJoinRequests,
   getManagerRaports,
   getManagerSettings,
-  getManagerSingleEmpDetailsJSON,
   getManagerSingleEmployeeDetails,
   postManagerCreateCompany,
   postManagerJoinRequest,
   postUpdateCompanySettings,
   postUpdateEmployeePresentEarnings,
 } from "../controllers/manager";
-import { RoutesGuard } from "./helpers/RoutesGuard";
+import { authenticationRoutesGuard, authorizationManagerGuard } from "./helpers/RoutesGuard";
 import { Guard2fa } from "./helpers/Guard2fa";
 
 export const manager_router = Router();
 
 manager_router.get(
   "/manager/dashboard",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerDashboard
 );
 
 manager_router.get(
   "/manager/employees-details",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerEmployeesDetails
 );
 
 manager_router.get(
-  "/manager/employees-details/json",
-  RoutesGuard,
-  Guard2fa,
-  getManagerEmployeesDetailsJSON as Application
-);
-
-manager_router.get(
   "/manager/single-emp-details/:employee_id",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerSingleEmployeeDetails
-);
-
-manager_router.get(
-  "/manager/single-emp-details-json",
-  RoutesGuard,
-  Guard2fa,
-  getManagerSingleEmpDetailsJSON as Application
 );
 
 manager_router.post(
   "/manager/update-employee-payment-details/:employee_id",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   postUpdateEmployeePresentEarnings as Application
 );
 
 manager_router.get(
   "/manager/raports",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerRaports
 );
 
 manager_router.post(
   "/manager/settings/update-company-settings",
+  authenticationRoutesGuard,
+  Guard2fa,
+  authorizationManagerGuard,
   postUpdateCompanySettings
 );
 
 manager_router.get(
   "/manager/settings",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerSettings
 );
 
 manager_router.get(
   "/manager/company/create",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerCreateCompany
 );
 
 manager_router.post(
   "/manager/company/create",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   postManagerCreateCompany
 );
 
 manager_router.get(
   "/manager/join-requests",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerJoinRequests
 );
 
 manager_router.get(
   "/manager/join-request/:id",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   getManagerJoinRequest
 );
 
 manager_router.post(
   "/manager/join-request/:id",
-  RoutesGuard,
+  authenticationRoutesGuard,
   Guard2fa,
+  authorizationManagerGuard,
   postManagerJoinRequest
 )

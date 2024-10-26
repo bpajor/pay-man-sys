@@ -6,6 +6,7 @@ import { User } from "../entity/User";
 import { Employee } from "../entity/Employee";
 import { Company } from "../entity/Company";
 import { JoinRequest } from "../entity/JoinRequest";
+import { userInSessionFieldsExist } from "./helpers/validator";
 
 type PayoutsHistory = {
   month: number;
@@ -29,38 +30,32 @@ export const getManagerDashboard = async (
 
   //TODO add case (in frontent also when company_id is null)
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
     logger.error(`Session data not found`);
     res.status(400);
-    return next(new Error("Session data not found"));
+    return next(new Error("Requested resources not found"));
   }
 
-  const uid = user.uid;
+  const { uid, account_type } = user_session;
 
-  if (!uid) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  if (!user.company_id) {
-    return res.render("manager/dashboard", {
-      baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: uid,
-      nonce: res.locals.nonce,
-      companyId: null,
-      payoutsHistory: [],
-      accountType: user.account_type,
-      jrequestsPending: req.session.jrequests_pending,
-    });
+  if (!user_session.company_id) {
+    try {
+      return res.render("manager/dashboard", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: uid,
+        nonce: res.locals.nonce,
+        companyId: null,
+        payoutsHistory: [],
+        accountType: account_type,
+        jrequestsPending: req.session.jrequests_pending,
+      });
+    } catch (error) {
+      logger.error(`Error rendering manager dashboard: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
   }
 
   const present_year = new Date().getFullYear();
@@ -70,7 +65,7 @@ export const getManagerDashboard = async (
     payouts_history = await getGeneralYearPayment(
       present_year,
       logger,
-      user.company_id
+      user_session.company_id
     );
   } catch (error) {
     logger.error(`Error getting salary history: ${error}`);
@@ -97,7 +92,7 @@ export const getManagerDashboard = async (
   } catch (error) {
     logger.error(`Error fetching top 5 employees: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   try {
@@ -111,13 +106,14 @@ export const getManagerDashboard = async (
       payoutsHistory: payouts_history,
       totalPayoutsHistoryAmount: total_payouts_history_amount,
       topEmployees: top_employees,
-      companyId: user.company_id,
-      accountType: user.account_type,
+      companyId: user_session.company_id,
+      accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
     });
   } catch (error) {
     logger.error(`Error rendering manager dashboard: ${error}`);
-    res.status(500).send("Error rendering manager dashboard");
+    res.status(500);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -128,29 +124,17 @@ export const getManagerEmployeesDetails = async (
 ) => {
   const logger: Logger = res.locals.logger;
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
     logger.error(`Session data not found`);
     res.status(400);
-    return next(new Error("Session data not found"));
+    return next(new Error("Requested resources not found"));
   }
 
-  const uid = user.uid;
+  const { uid, account_type } = user_session;
 
-  if (!uid) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  if (!user.company_id) {
+  if (!user_session.company_id) {
     // logger.error(`Company id not found`);
     // res.status(400);
     // return next(new Error("Company id not found"));
@@ -160,17 +144,17 @@ export const getManagerEmployeesDetails = async (
         loggedUser: uid,
         nonce: res.locals.nonce,
         companyId: null,
-        accountType: user.account_type,
+        accountType: account_type,
         jrequestsPending: req.session.jrequests_pending,
       });
     } catch (error) {
       logger.error(`Error rendering manager employees details: ${error}`);
       res.status(500);
-      return next(error);
+      return next(new Error("Internal server error"));
     }
   }
 
-  const companyId = user.company_id;
+  const companyId = user_session.company_id;
 
   try {
     logger.info(`Rendering manager employees details`);
@@ -179,12 +163,13 @@ export const getManagerEmployeesDetails = async (
       loggedUser: uid,
       nonce: res.locals.nonce,
       companyId: companyId,
-      accountType: user.account_type,
+      accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
     });
   } catch (error) {
     logger.error(`Error rendering manager employees details: ${error}`);
-    res.status(500).send("Error rendering manager employees details");
+    res.status(500);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -195,34 +180,24 @@ export const getManagerSingleEmployeeDetails = async (
 ) => {
   const logger: Logger = res.locals.logger;
 
-  const user = req.session.user;
-  if (!user) {
+  const user_session = req.session.user!;
+
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
     logger.error(`Session data not found`);
     res.status(400);
-    return next(new Error("Session data not found"));
+    return next(new Error("Requested resources not found"));
   }
 
-  const uid = user.uid;
-  if (!uid) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
+  const { uid, account_type } = user_session;
 
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  if (!user.company_id) {
+  if (!user_session.company_id) {
     try {
       return res.render("manager/single-emp-details", {
         baseUrl: `${process.env.BASE_URL}`,
         loggedUser: uid,
         nonce: res.locals.nonce,
         companyId: null,
-        accountType: user.account_type,
+        accountType: user_session.account_type,
         jrequestsPending: req.session.jrequests_pending,
       });
     } catch (error) {
@@ -232,7 +207,7 @@ export const getManagerSingleEmployeeDetails = async (
     }
   }
 
-  const companyId = user.company_id;
+  const companyId = user_session.company_id;
 
   const employee_id = req.params.employee_id;
 
@@ -251,7 +226,7 @@ export const getManagerSingleEmployeeDetails = async (
   } catch (error) {
     logger.error(`Error checking if employee exists: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   try {
@@ -262,7 +237,7 @@ export const getManagerSingleEmployeeDetails = async (
       nonce: res.locals.nonce,
       companyId: companyId,
       employeeId: employee_id,
-      accountType: user.account_type,
+      accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
     });
   } catch (error) {
@@ -272,297 +247,15 @@ export const getManagerSingleEmployeeDetails = async (
   }
 };
 
-export const getManagerEmployeesDetailsJSON = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const logger: Logger = res.locals.logger;
-
-  const { company_id, month, year } = req.query;
-
-  if (!company_id || !month || !year) {
-    logger.error(`Missing required query parameters`);
-    return res.status(400).json({ error: "Missing required query parameters" });
-  } //TODO validation should happen in route validators
-
-  try {
-    const date = `${year}-${month.toString().padStart(2, "0")}-01`;
-    const results = await AppDataSource.getRepository(User).query(
-      `
-                   SELECT 
-    e.id AS id,               
-    u.name AS first_name,
-    u.last_name AS last_name,
-    sh.salary_per_hour,
-    sh.retirement_contributions,
-    sh.disability_contributions,
-    sh.healthcare_contributions,
-    sh.income_tax,
-    sh.bonus,
-    sh.days_sick_leave,
-    sh.days_vacation,
-    sh.days_on_demand_leave,
-    c.hours_per_day,
-    c.sick_leave_percent_factor,
-    c.vacation_percent_factor,
-    c.on_demand_percent_factor,
-    (c.hours_per_day * sh.days_sick_leave) AS hours_on_sick_leave,
-    (c.hours_per_day * sh.days_vacation ) AS hours_on_vacation,
-    (c.hours_per_day * sh.days_on_demand_leave) AS hours_on_demand_leave,
-    (c.hours_per_day * sh.days_worked) AS hours_present_in_month,
-    DATE_PART('month', AGE($1::DATE, first_entry.first_period)) 
-        + DATE_PART('year', AGE($1::DATE, first_entry.first_period)) * 12 AS employment_duration_months
-FROM 
-    public.users u
-INNER JOIN 
-    public.employees e ON u.id = e."userId" 
-INNER JOIN  
-    public.companies c ON e."companyId" = c.id
-INNER JOIN (
-    SELECT * 
-    FROM public.salary_history 
-    WHERE EXTRACT(MONTH FROM period) = $3 AND EXTRACT(YEAR FROM period) = $4 
-) AS sh ON e.id = sh."employeeId"
-INNER JOIN (
-    SELECT "employeeId", MIN(period) AS first_period
-    FROM public.salary_history
-    GROUP BY "employeeId"
-) AS first_entry ON e.id = first_entry."employeeId"
-WHERE 
-    e."companyId" = $2
-GROUP BY 
-    u.name, u.last_name, sh.salary_per_hour, sh.retirement_contributions, 
-    sh.disability_contributions, sh.healthcare_contributions, sh.income_tax, sh.days_sick_leave, sh.days_vacation, sh.days_on_demand_leave, sh.bonus,
-     c.hours_per_day, sh.days_worked, e.id, first_entry.first_period, c.sick_leave_percent_factor, c.vacation_percent_factor, c.on_demand_percent_factor, sh.days_sick_leave, sh.days_vacation, sh.days_on_demand_leave;
-        `, //TODO adjust to the new schema
-      [date, company_id, month, year]
-    );
-
-    const employees_data = results;
-
-    employees_data.forEach((employee: any) => {
-      employee.retirement_contributions = Number(
-        employee.retirement_contributions
-      );
-      employee.disability_contributions = Number(
-        employee.disability_contributions
-      );
-      employee.healthcare_contributions = Number(
-        employee.healthcare_contributions
-      );
-      employee.income_tax = Number(employee.income_tax);
-      employee.salary_per_hour = Number(employee.salary_per_hour);
-      employee.bonus = Number(employee.bonus);
-      employee.hours_present_in_month = Number(employee.hours_present_in_month);
-      employee.hours_on_sick_leave = Number(employee.hours_on_sick_leave);
-      employee.hours_on_vacation = Number(employee.hours_on_vacation);
-      employee.hours_on_demand_leave = Number(employee.hours_on_demand_leave);
-      employee.sick_leave_percent_factor = Number(
-        employee.sick_leave_percent_factor
-      );
-      employee.vacation_percent_factor = Number(
-        employee.vacation_percent_factor
-      );
-      employee.on_demand_percent_factor = Number(
-        employee.on_demand_percent_factor
-      );
-
-      employee.total_pay =
-        employee.salary_per_hour *
-          (employee.hours_present_in_month +
-            employee.hours_on_sick_leave * employee.sick_leave_percent_factor +
-            employee.hours_on_vacation * employee.vacation_percent_factor +
-            employee.hours_on_demand_leave *
-              employee.on_demand_percent_factor) +
-        employee.bonus;
-
-      employee.net_pay =
-        employee.total_pay -
-        (employee.retirement_contributions +
-          employee.disability_contributions +
-          employee.healthcare_contributions +
-          employee.income_tax);
-
-      // employee.net_pay =
-      //   employee.salary_per_hour * employee.hours_present_in_month +
-      //   employee.bonus;
-      // employee.total_pay =
-      //   employee.net_pay +
-      //   employee.retirement_contributions +
-      //   employee.disability_contributions +
-      //   employee.healthcare_contributions +
-      //   employee.income_tax;
-    });
-
-    return res.json(employees_data);
-  } catch (error) {
-    logger.error(`Error getting employees details: ${error}`);
-    return res.status(500).json({ error: "Error getting employees details" });
-  }
-};
-
-export const getManagerSingleEmpDetailsJSON = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const logger: Logger = res.locals.logger;
-
-  logger.info("Getting Single Employee Details");
-
-  const { month, year, company_id, employee_id, with_details } = req.query;
-
-  let default_read_mask = `
-    json_agg(e.health_insurance_metadata) AS health_insurance_metadata,
-    sh.salary_per_hour,
-    sh.bonus,
-    (c.hours_per_day * sh.days_sick_leave) AS hours_on_sick_leave,
-    (c.hours_per_day * sh.days_vacation ) AS hours_on_vacation,
-    (c.hours_per_day * sh.days_on_demand_leave) AS hours_on_demand_leave,
-    (c.hours_per_day * sh.days_worked) AS hours_present_in_month,
-    c.sick_leave_percent_factor AS sick_leave_percent_factor,
-    c.vacation_percent_factor AS vacation_percent_factor,
-    c.on_demand_percent_factor AS on_demand_percent_factor,
-    sh.retirement_contributions,
-    sh.disability_contributions,
-    sh.healthcare_contributions,
-    sh.income_tax,
-    (c.hours_per_day * sh.days_worked) AS hours_present_in_month,
-    DATE_PART('month', AGE($1::DATE, first_entry.first_period)) 
-        + DATE_PART('year', AGE($1::DATE, first_entry.first_period)) * 12 AS employment_duration_months
-  `;
-  let mask;
-  if (with_details) {
-    mask =
-      `
-      u.name AS first_name,
-    u.last_name AS last_name,
-    u.email,
-    u.phone_number,
-    u.home_address,
-    u.date_of_birth,
-    ` + default_read_mask;
-    logger.info("Requested /manager/single-emp-details with personal details");
-  } else {
-    mask = default_read_mask;
-    logger.info(
-      "Requested /manager/single-emp-details without personal details"
-    );
-  }
-
-  if (!company_id || !employee_id || !month || !year) {
-    logger.error(`Missing required query parameters`);
-    return res.status(400).json({ error: "Missing required query parameters" });
-  } //TODO this should also be validated earlier (Vulnerability)
-
-  try {
-    const date = `${year}-${month.toString().padStart(2, "0")}-01`;
-
-    const results = await AppDataSource.query(
-      `
-        SELECT 
-   ${mask}
-FROM 
-    public.users u
-INNER JOIN 
-    public.employees e ON u.id = e."userId"
-INNER JOIN
-    public.companies c ON e."companyId" = c.id
-LEFT JOIN (
-    SELECT * 
-    FROM public.salary_history 
-    WHERE EXTRACT(MONTH FROM period) = $2 AND EXTRACT(YEAR FROM period) = $3
-) AS sh ON e.id = sh."employeeId"
-INNER JOIN (
-    SELECT "employeeId", MIN(period) AS first_period
-    FROM public.salary_history
-    GROUP BY "employeeId"
-) AS first_entry ON e.id = first_entry."employeeId"
-WHERE 
-    e."companyId" = $4
-    AND e.id = $5
-GROUP BY 
-    u.name, u.last_name, u.email, u.phone_number, u.home_address, u.date_of_birth, 
-    sh.salary_per_hour, sh.retirement_contributions, 
-    sh.disability_contributions, sh.healthcare_contributions, sh.income_tax, 
-     c.hours_per_day, sh.days_worked, sh.bonus, e.id, first_entry.first_period, sh.days_sick_leave, sh.days_vacation, sh.days_on_demand_leave, c.sick_leave_percent_factor, c.vacation_percent_factor, c.on_demand_percent_factor;
-      `,
-      [date, month, year, company_id, employee_id]
-    );
-
-    const employee_data = results[0];
-
-    if (!employee_data) {
-      logger.error("No employee data found");
-      return res.status(404).json({ error: "No employee data found" });
-    }
-
-    employee_data.bonus = Number(employee_data.bonus);
-    employee_data.retirement_contributions = Number(
-      employee_data.retirement_contributions
-    );
-    employee_data.disability_contributions = Number(
-      employee_data.disability_contributions
-    );
-    employee_data.healthcare_contributions = Number(
-      employee_data.healthcare_contributions
-    );
-    employee_data.income_tax = Number(employee_data.income_tax);
-    employee_data.salary_per_hour = Number(employee_data.salary_per_hour);
-
-    employee_data.total_pay =
-      employee_data.salary_per_hour *
-        (employee_data.hours_present_in_month +
-          employee_data.hours_on_sick_leave *
-            employee_data.sick_leave_percent_factor +
-          employee_data.hours_on_vacation *
-            employee_data.vacation_percent_factor +
-          employee_data.hours_on_demand_leave *
-            employee_data.on_demand_percent_factor) +
-      employee_data.bonus;
-
-    employee_data.net_pay =
-      employee_data.total_pay -
-      (employee_data.retirement_contributions +
-        employee_data.disability_contributions +
-        employee_data.healthcare_contributions +
-        employee_data.income_tax);
-
-    // employee_data.net_pay =
-    //   employee_data.salary_per_hour * employee_data.hours_present_in_month +
-    //   employee_data.bonus;
-
-    // employee_data.total_pay =
-    //   employee_data.net_pay +
-    //   employee_data.retirement_contributions +
-    //   employee_data.disability_contributions +
-    //   employee_data.healthcare_contributions +
-    //   employee_data.income_tax;
-
-    logger.info("gathered employee data correctly");
-    return res.json(employee_data);
-  } catch (err) {
-    logger.error("gathering employee data failed");
-    return res
-      .status(500)
-      .json({ error: "Error getting single employee details" });
-  }
-};
-
 export const postUpdateEmployeePresentEarnings = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const logger: Logger = res.locals.logger;
+  const query_runner = AppDataSource.createQueryRunner();
 
   logger.info("Received employee present earnings update request");
-
-  const update_dependency_map = new Map<string, string>();
-
-  // update_dependency_map.set("salary_update", "salary_per_hour,bonus");
-  // update_dependency_map.set("hours_update", "hours_change");
 
   const employee_id = req.params.employee_id;
   const { type, hours_change, salary, bonus } = req.body as {
@@ -600,6 +293,8 @@ export const postUpdateEmployeePresentEarnings = async (
 
   if (type == "salary_update") {
     try {
+      await query_runner.connect();
+      await query_runner.startTransaction();
       await updatePresentMonthEmployeeSalary(employee_id, salary, logger);
       await updatePresentMonthEmployeeSalaryHistoryByBonus(
         employee_id,
@@ -607,85 +302,20 @@ export const postUpdateEmployeePresentEarnings = async (
         logger
       );
 
+      await query_runner.commitTransaction();
+
       return res.redirect(`/manager/single-emp-details/${employee_id}`);
     } catch (err) {
+      await query_runner.rollbackTransaction();
       logger.error(`Error updating present employee details: ${err}`);
       res.status(500);
       return next(new Error("Internal server error"));
+    } finally {
+      await query_runner.release();
     }
   }
-
-  //TODO -> utilize this as update hours when employee request it
-  // try {
-  //   await updatePresentMonthEmployeeSalaryHistoryByHours(
-  //     employee_id,
-  //     hours_change,
-  //     logger
-  //   );
-
-  //   return res.json({ success: true });
-  // } catch (err) {
-  //   logger.error(`Error updating present employee details: ${err}`);
-  //   return res.status(500).json({ success: false });
-  // }
-
-  // if (!update_dependency_map.has(type)) {
-  //   logger.error("Invalid type");
-  //   return res.status(400).json({success: false, message: "Invalid type"});
-  // }
 };
 
-//TODO -> utilize this also
-// const updatePresentMonthEmployeeSalaryHistoryByHours = async (
-//   employee_id: string,
-//   hours_change: HoursChange,
-//   logger: Logger
-// ) => {
-//   logger.info("Updating present employee details with given hours change");
-
-//   const base_retirement_factor = `c.retirement_rate * e.salary_per_hour`;
-//   const base_disability_factor = `c.disability_rate * e.salary_per_hour`;
-//   const base_healthcare_factor = `c.healthcare_rate * e.salary_per_hour`;
-//   const base_income_tax_factor = `c.income_tax_rate * e.salary_per_hour`;
-
-//   try {
-//     await AppDataSource.query(
-//       `
-//         UPDATE salary_history sh
-//         SET days_worked = sh.days_worked + $1,
-//         days_sick_leave = sh.days_sick_leave + $2,
-//         days_vacation = sh.days_vacation + $3,
-//         days_on_demand_leave = sh.days_on_demand_leave + $4
-//         WHERE DATE_TRUNC('month', sh.period) = DATE_TRUNC('month', CURRENT_DATE)
-//         AND sh."employeeId" = $5
-//       `,
-//       [
-//         hours_change.day_worked,
-//         hours_change.day_sick_leave,
-//         hours_change.day_vacation,
-//         hours_change.day_on_demand_leave,
-//         employee_id,
-//       ]
-//     );
-//   } catch (err) {
-//     logger.error(`Error updating present employee details: ${err}`);
-//     throw err;
-//   }
-
-//   try {
-//     const [test] = await AppDataSource.query(
-//       `SELECT bonus FROM salary_history WHERE "employeeId" = $1 AND period = DATE_TRUNC('month', CURRENT_DATE)`,
-//       [employee_id]
-//     );
-
-//     const bonus = test.bonus;
-
-//     await updatePresentMonthEmployeeSalaryHistoryByBonus(employee_id, bonus, logger);
-//   } catch (error) {
-//     logger.error(`Error updating present employee details: ${error}`);
-//     throw error;
-//   }
-// };
 const updatePresentMonthEmployeeSalary = async (
   employee_id: string,
   salary: number,
@@ -832,41 +462,29 @@ export const getManagerRaports = async (
 ) => {
   const logger: Logger = res.locals.logger;
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
     logger.error(`Session data not found`);
     res.status(400);
-    return next(new Error("Session data not found"));
+    return next(new Error("Bad request"));
   }
 
-  const uid = user.uid;
-
-  if (!uid) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
+  const { uid, account_type } = user_session;
 
   try {
     logger.info(`Rendering manager raports`);
     return res.render("manager/raports", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: uid,
+      loggedUser: user_session,
       nonce: res.locals.nonce,
-      accountType: user.account_type,
+      accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
     });
   } catch (err) {
     logger.error(`Error getting manager raports: ${err}`);
     res.status(500);
-    return next(err);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -957,25 +575,15 @@ export const getManagerSettings = async (
 
   const user_repo = AppDataSource.getRepository(User);
 
-  if (!req.session.user) {
+  const user_session = req.session.user!;
+
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
     logger.error(`Session data not found`);
     res.status(400);
     return next(new Error("Session data not found"));
   }
 
-  const { uid } = req.session.user;
-
-  if (!uid) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (req.session.user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
+  const { uid, account_type } = user_session;
 
   let user;
   try {
@@ -984,13 +592,13 @@ export const getManagerSettings = async (
   } catch (error) {
     logger.error(`Error getting user data: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   if (!user) {
     logger.error(`User not found`);
     res.status(404);
-    return next(new Error("User not found"));
+    return next(new Error("Requested resources not found"));
   }
 
   const is_2fa_enabled = user.two_fa_secret ? true : false;
@@ -1002,34 +610,40 @@ export const getManagerSettings = async (
     logger.warn(`Error happened before rendering settings page: ${error}`);
     return res.status(400).render("manager/settings", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.user.uid,
+      loggedUser: user_session,
       user: user,
       is2faEnabled: is_2fa_enabled,
       nonce: res.locals.nonce,
-      accountType: req.session.user.account_type,
+      accountType: account_type,
       error: error,
       jrequestsPending: req.session.jrequests_pending,
     });
   }
 
-  if (!req.session.user.company_id) {
-    return res.status(200).render("manager/settings", {
-      baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.user.uid,
-      user: user,
-      is2faEnabled: is_2fa_enabled,
-      nonce: res.locals.nonce,
-      accountType: req.session.user.account_type,
-      error: null,
-      company: null,
-      jrequestsPending: req.session.jrequests_pending,
-    });
+  if (!user_session.company_id) {
+    try {
+      return res.status(200).render("manager/settings", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: user_session,
+        user: user,
+        is2faEnabled: is_2fa_enabled,
+        nonce: res.locals.nonce,
+        accountType: user_session.account_type,
+        error: null,
+        company: null,
+        jrequestsPending: req.session.jrequests_pending,
+      });
+    } catch (error) {
+      logger.error(`Error rendering employee settings page: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
   }
 
   let company;
   try {
     company = await AppDataSource.getRepository(Company).findOneBy({
-      id: req.session.user.company_id as number,
+      id: user_session.company_id as number,
     });
 
     company!.sick_leave_percent_factor =
@@ -1040,32 +654,21 @@ export const getManagerSettings = async (
     company!.disability_rate = company!.disability_rate * 100;
     company!.healthcare_rate = company!.healthcare_rate * 100;
     company!.income_tax_rate = company!.income_tax_rate * 100;
-
-    // company_to_return = {
-    //   ...company,
-    //   sick_leave_percent_factor: `${company!.sick_leave_percent_factor * 100}`,
-    //   vacation_percent_factor: `${company!.vacation_percent_factor * 100}%`,
-    //   on_demand_percent_factor: `${company!.on_demand_percent_factor * 100}%`,
-    //   retirement_rate: `${company!.retirement_rate * 100}%`,
-    //   disability_rate: `${company!.disability_rate * 100}%`,
-    //   healthcare_rate: `${company!.healthcare_rate * 100}%`,
-    //   income_tax_rate: `${company!.income_tax_rate * 100}%`,
-    // };
   } catch (error) {
     logger.error(`Error getting company data: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   try {
     logger.info(`Rendering employee settings page`);
     res.render("manager/settings", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.user.uid,
+      loggedUser: user_session,
       user: user,
       is2faEnabled: is_2fa_enabled,
       nonce: res.locals.nonce,
-      accountType: req.session.user.account_type,
+      accountType: account_type,
       error: null,
       company,
       jrequestsPending: req.session.jrequests_pending,
@@ -1073,7 +676,7 @@ export const getManagerSettings = async (
   } catch (error) {
     logger.error(`Error rendering employee settings page: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -1086,21 +689,20 @@ export const postUpdateCompanySettings = async (
 
   logger.info(`Updating company settings`);
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
+  if (
+    !userInSessionFieldsExist(
+      ["uid", "account_type", "company_id"],
+      user_session
+    )
+  ) {
     logger.error(`Session data not found`);
     res.status(400);
     return next(new Error("Session data not found"));
   }
 
-  if (!user.company_id) {
-    logger.error(`Company id not found`);
-    res.status(400);
-    return next(new Error("Company id not found"));
-  }
-
-  const company_id = user.company_id;
+  const { uid, account_type, company_id } = user_session;
 
   let {
     name,
@@ -1149,7 +751,7 @@ export const postUpdateCompanySettings = async (
   income_tax_rate = income_tax_rate / 100;
 
   try {
-    await AppDataSource.getRepository(Company).update(company_id, {
+    await AppDataSource.getRepository(Company).update(company_id!, {
       name,
       hours_per_day,
       sick_leave_percent_factor,
@@ -1239,33 +841,21 @@ export const getManagerCreateCompany = async (
 
   logger.info(`Getting create company page`);
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  const is_company_created = user.company_id ? true : false;
+  const is_company_created = user_session.company_id ? true : false;
 
   if (is_company_created) {
     logger.error(`Company already created`);
     res.status(400);
-    return next(new Error("Company already created"));
+    return next(new Error("Bad request"));
   }
 
   try {
     logger.info(`Rendering create company page`);
     return res.render("manager/create-company", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: user.uid,
+      loggedUser: user_session,
       nonce: res.locals.nonce,
       accountType: "manager",
       jrequestsPending: req.session.jrequests_pending,
@@ -1273,7 +863,7 @@ export const getManagerCreateCompany = async (
   } catch (error) {
     logger.error(`Error rendering create company page: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -1287,26 +877,14 @@ export const postManagerCreateCompany = async (
 
   logger.info(`Creating company`);
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  const is_company_created = user.company_id ? true : false;
+  const is_company_created = user_session.company_id ? true : false;
 
   if (is_company_created) {
     logger.error(`Company already created`);
     res.status(400);
-    return next(new Error("Company already created"));
+    return next(new Error("Requested resources not found"));
   }
 
   let {
@@ -1319,6 +897,7 @@ export const postManagerCreateCompany = async (
     disability_rate,
     healthcare_rate,
     income_tax_rate,
+    max_days_per_month,
   } = req.body as {
     name: string;
     hours_per_day: number;
@@ -1329,6 +908,7 @@ export const postManagerCreateCompany = async (
     disability_rate: number;
     healthcare_rate: number;
     income_tax_rate: number;
+    max_days_per_month: number;
   };
 
   if (
@@ -1340,11 +920,12 @@ export const postManagerCreateCompany = async (
     !retirement_rate ||
     !disability_rate ||
     !healthcare_rate ||
-    !income_tax_rate
+    !income_tax_rate ||
+    !max_days_per_month
   ) {
     logger.error(`Missing required fields`);
     res.status(400);
-    return next(new Error("Missing required fields"));
+    return next(new Error("Bad request"));
   }
 
   const does_company_exist = Boolean(
@@ -1354,7 +935,7 @@ export const postManagerCreateCompany = async (
   if (does_company_exist) {
     logger.error(`Company already exists`);
     res.status(400);
-    return next(new Error("Company already exists"));
+    return next(new Error("Bad request"));
   }
 
   sick_leave_percent_factor = sick_leave_percent_factor / 100;
@@ -1367,13 +948,13 @@ export const postManagerCreateCompany = async (
 
   try {
     const user_from_db = await AppDataSource.getRepository(User).findOneBy({
-      id: user.uid,
+      id: user_session.uid,
     });
 
     if (!user_from_db) {
       logger.error(`User not found`);
       res.status(404);
-      return next(new Error("User not found"));
+      return next(new Error("Requested resources not found"));
     }
 
     const company = company_repo.create({
@@ -1386,6 +967,7 @@ export const postManagerCreateCompany = async (
       disability_rate,
       healthcare_rate,
       income_tax_rate,
+      max_days_per_month,
       manager: user_from_db!,
     });
 
@@ -1397,14 +979,13 @@ export const postManagerCreateCompany = async (
 
     if (!new_company) {
       logger.error(`Newly created company not found`);
-      res.status(404);
-      return next(new Error("Newly created company not found"));
+      res.status(500);
+      return next(new Error("Internal server error"));
     }
 
     user_from_db.company = company;
 
-    //Session user
-    user.company_id = new_company.id;
+    req.session.user!.company_id = new_company.id;
 
     await AppDataSource.getRepository(User).save(user_from_db);
 
@@ -1413,7 +994,7 @@ export const postManagerCreateCompany = async (
   } catch (error) {
     logger.error(`Error creating company: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -1426,24 +1007,24 @@ export const getManagerJoinRequests = async (
 
   logger.info(`Getting join requests`);
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  if (!user.company_id) {
-    logger.error(`Company id not found`);
-    res.status(400);
-    return next(new Error("Company id not found"));
+  if (!user_session.company_id) {
+    logger.info("No join requests, since company not created");
+    try {
+      return res.status(400).render("manager/join-requests", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: user_session,
+        nonce: res.locals.nonce,
+        accountType: user_session.account_type,
+        jrequestsPending: req.session.jrequests_pending,
+        joinRequests: [],
+      });
+    } catch (error) {
+      logger.error(`Error getting join requests: ${error}`);
+      res.status(500);
+      return next(error);
+    }
   }
 
   let join_requests;
@@ -1467,29 +1048,29 @@ WHERE
 
     join_requests = await AppDataSource.query(query, [
       "pending",
-      user.company_id,
+      user_session.company_id,
     ]);
 
     logger.info(`Join requests gathered`);
   } catch (error) {
     logger.error(`Error getting join requests: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   try {
     return res.render("manager/join-requests", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: user.uid,
+      loggedUser: user_session,
       nonce: res.locals.nonce,
-      accountType: user.account_type,
+      accountType: user_session.account_type,
       jrequestsPending: req.session.jrequests_pending,
       joinRequests: join_requests,
     });
   } catch (error) {
     logger.error(`Error getting join requests: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -1502,24 +1083,12 @@ export const getManagerJoinRequest = async (
 
   logger.info(`Getting join request`);
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
+  if (!userInSessionFieldsExist(["account_type", "company_id"], user_session)) {
     logger.error(`Session data not found`);
     res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  if (!user.company_id) {
-    logger.error(`Company id not found`);
-    res.status(400);
-    return next(new Error("Company id not found"));
+    return next(new Error("Bad request"));
   }
 
   const uid = req.params.id;
@@ -1527,7 +1096,7 @@ export const getManagerJoinRequest = async (
   if (!uid) {
     logger.error(`Missing id`);
     res.status(400);
-    return next(new Error("Missing id"));
+    return next(new Error("Bad request"));
   }
 
   let user_from_db;
@@ -1540,29 +1109,29 @@ export const getManagerJoinRequest = async (
     if (!user_from_db) {
       logger.error(`User not found`);
       res.status(404);
-      return next(new Error("User not found"));
+      return next(new Error("Resources not found"));
     }
 
     logger.info(`User found`);
   } catch (error) {
     logger.error(`Error getting user: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   try {
     return res.render("manager/join-request", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: user.uid,
+      loggedUser: user_session,
       nonce: res.locals.nonce,
-      accountType: user.account_type,
+      accountType: user_session.account_type,
       jrequestsPending: req.session.jrequests_pending,
       user: user_from_db,
     });
   } catch (error) {
     logger.error(`Error getting join request: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -1575,24 +1144,12 @@ export const postManagerJoinRequest = async (
 
   logger.info(`Handling join request`);
 
-  const user = req.session.user;
+  const user_session = req.session.user!;
 
-  if (!user) {
+  if (!userInSessionFieldsExist(["account_type", "company_id"], user_session)) {
     logger.error(`Session data not found`);
     res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (user.account_type !== "manager") {
-    logger.error(`User is not a manager`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  if (!user.company_id) {
-    logger.error(`Company id not found`);
-    res.status(400);
-    return next(new Error("Company id not found"));
+    return next(new Error("Bad request"));
   }
 
   const {
@@ -1630,7 +1187,7 @@ export const postManagerJoinRequest = async (
 
   try {
     const company = await AppDataSource.getRepository(Company).findOneBy({
-      id: user.company_id,
+      id: user_session.company_id!,
     });
 
     const user_from_db = await AppDataSource.getRepository(User).findOneBy({
@@ -1691,6 +1248,6 @@ export const postManagerJoinRequest = async (
   } catch (error) {
     logger.error(`Error handling join request: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 };

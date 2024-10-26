@@ -19,9 +19,6 @@ export class SalaryHistory {
   @Column({ type: "decimal", precision: 10, scale: 2, nullable: false })
   salary_per_hour: number;
 
-  // @Column({ type: "int", nullable: false })
-  // hours__per_day: number;
-
   @Column({ type: "int", nullable: false, default: 0 })
   days_worked: number;
 

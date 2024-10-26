@@ -5,19 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PayrollPro</title>
     <link rel="stylesheet" href="/css/main/styles.css" />
-    <link rel="stylesheet" href="/css/main/header.css">
+    <link rel="stylesheet" href="/css/common/header.css">
   </head>
   <body>
-    <!-- <header class="header">
-      <img src="/images/brand.png" alt="PayrollPro Logo" class="logo" />
-      <nav>
-        <a href="">Home</a>
-        <a href="">Features</a>
-        <a href="">About</a>
-        <a href="<% baseUrl%>/login">Login</a>
-      </nav>
-    </header> -->
-    <%- include("../includes/header", {baseUrl, loggedUser}) %>
+    <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
     <br />
     <main>
       <section class="hero">

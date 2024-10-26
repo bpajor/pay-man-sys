@@ -5,8 +5,6 @@ import {
   getResetPassword,
   getSignup,
   getVerify2fa,
-  postDisable2fa,
-  postEnable2fa,
   postForgotPassword,
   postLogin,
   postLoginVerify2fa,
@@ -16,7 +14,7 @@ import {
   postSignup,
 } from "../controllers/auth";
 import { body } from "express-validator";
-import { RoutesGuard } from "./helpers/RoutesGuard";
+import { authenticationRoutesGuard } from "./helpers/RoutesGuard";
 import { Guard2fa } from "./helpers/Guard2fa";
 
 const postSignupValidators = [
@@ -157,7 +155,3 @@ auth_router.post(
 );
 
 auth_router.post("/logout", postLogout);
-
-auth_router.post("/auth/enable-2fa", RoutesGuard, Guard2fa, postEnable2fa as Application);
-
-auth_router.post("/auth/disable-2fa", RoutesGuard, Guard2fa, postDisable2fa as Application);

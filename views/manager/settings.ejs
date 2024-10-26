@@ -218,6 +218,9 @@
               %>
             </p>
             <p>
+              <span class="label">Max marked days in one month: </span> <%= company.max_days_per_month %>
+            </p>
+            <p>
               <span class="label">Sick leave percent rate:</span> <%=
               company.sick_leave_percent_factor%> %
             </p>
@@ -267,6 +270,14 @@
               type="number"
               id="hours-per-day"
               value="<%= company.hours_per_day %>"
+            />
+
+            <label for="max_days_per_month">Max marked days in one month:</label>
+            <input
+              name="max_days_per_month"
+              type="number"
+              id="max-days-per-month"
+              value="<%= company.max_days_per_month %>"
             />
 
             <label for="sick_leave_percent_factor">Sick leave percent rate (%):</label>
@@ -393,32 +404,32 @@
       cancelButton.style.display = "none";
     });
 
-    const editButtonCompany = document.getElementById("edit-button-company");
-    const saveButtonCompany = document.getElementById("save-button-company");
-    const cancelButtonCompany = document.getElementById("cancel-button-company");
+    // const editButtonCompany = document.getElementById("edit-button-company");
+    // const saveButtonCompany = document.getElementById("save-button-company");
+    // const cancelButtonCompany = document.getElementById("cancel-button-company");
 
-    const displayModeCompany = document.getElementById("display-mode-company");
-    const editModeCompany = document.getElementById("edit-mode-company");
+    // const displayModeCompany = document.getElementById("display-mode-company");
+    // const editModeCompany = document.getElementById("edit-mode-company");
 
-    // Function to switch to edit mode
-    editButtonCompany.addEventListener("click", () => {
-      displayModeCompany.style.display = "none";
-      editModeCompany.style.display = "block";
+    // // Function to switch to edit mode
+    // editButtonCompany.addEventListener("click", () => {
+    //   displayModeCompany.style.display = "none";
+    //   editModeCompany.style.display = "block";
 
-      editButtonCompany.style.display = "none";
-      saveButtonCompany.style.display = "inline-block";
-      cancelButtonCompany.style.display = "inline-block";
-    });
+    //   editButtonCompany.style.display = "none";
+    //   saveButtonCompany.style.display = "inline-block";
+    //   cancelButtonCompany.style.display = "inline-block";
+    // });
 
-    // Function to cancel edit mode
-    cancelButtonCompany.addEventListener("click", () => {
-      displayModeCompany.style.display = "block";
-      editModeCompany.style.display = "none";
+    // // Function to cancel edit mode
+    // cancelButtonCompany.addEventListener("click", () => {
+    //   displayModeCompany.style.display = "block";
+    //   editModeCompany.style.display = "none";
 
-      editButtonCompany.style.display = "inline-block";
-      saveButtonCompany.style.display = "none";
-      cancelButtonCompany.style.display = "none";
-    });
+    //   editButtonCompany.style.display = "inline-block";
+    //   saveButtonCompany.style.display = "none";
+    //   cancelButtonCompany.style.display = "none";
+    // });
 
     function showNotification(message, isSuccess) {
       const notificationBar = document.getElementById("notification-bar");
@@ -441,7 +452,7 @@
       // Zablokuj przełącznik
       document.getElementById("2fa-toggle").disabled = true;
 
-      fetch("<% baseUrl %>/auth/enable-2fa", {
+      fetch("<% baseUrl %>/api/auth/enable-2fa", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -493,7 +504,7 @@
       document.getElementById("loading-modal").classList.remove("hidden");
       document.getElementById("2fa-toggle").disabled = true;
 
-      fetch("<% baseUrl %>/auth/disable-2fa", {
+      fetch("<% baseUrl %>/api/auth/disable-2fa", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -23,12 +23,6 @@ export class Employee {
   @Column({ type: "decimal", precision: 10, scale: 2, nullable: false })
   salary_per_hour: number;
 
-  // @Column({ type: "int", nullable: false })
-  // hours_worked: number;
-
-  // @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-  // bonus: number;
-
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   hired_at: Date;
 
@@ -37,21 +31,6 @@ export class Employee {
     (salaryHistory: SalaryHistory) => salaryHistory.employee
   )
   salary_histories: SalaryHistory[];
-
-  // @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-  // retirement_contributions: number;
-
-  // @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-  // disability_contributions: number;
-
-  // @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-  // healthcare_contributions: number;
-
-  // @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-  // income_tax: number;
-
-  // @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-  // net_pay: number;
 
   @Column({ type: "varchar", length: 20, nullable: true })
   phone_number: string;
@@ -69,4 +48,7 @@ export class Employee {
     expiration_date: Date;
     notes: string;
   };
+
+  @Column({type: "date", nullable: true})
+  last_marked_day: Date;
 }

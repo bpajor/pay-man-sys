@@ -44,7 +44,8 @@
   <body>
     <%- include("../includes/header", { baseUrl, loggedUser, accountType }) %>
     <main>
-      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType,
+      jrequestsPending}) %>
       <section class="content">
         <header class="content-header">
           <div class="header-left">
@@ -293,7 +294,7 @@
 
       function fetchEmployeeDetails() {
         const monthParam = currentMonth + 1; // Adjust for 1-based month
-        const url = `http://localhost:8000/manager/single-emp-details-json?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}&with_details=true`;
+        const url = `<%=baseUrl%>/api/manager/single-emp-details?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}&with_details=true`;
 
         fetch(url)
           .then((response) => response.json())
@@ -309,7 +310,7 @@
 
       function fetchEmployeeData() {
         const monthParam = currentMonth + 1; // Adjust for 1-based month
-        const url = `http://localhost:8000/manager/single-emp-details-json?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}`;
+        const url = `http://<%=baseUrl%>/api/manager/single-emp-details?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}`;
 
         fetch(url)
           .then((response) => response.json())

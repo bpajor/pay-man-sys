@@ -100,10 +100,19 @@
             action="<%= baseUrl %>/manager/company/create"
           >
             <label for="name">Name:</label>
-            <input name="name" type="text" id="company-name" />
+            <input name="name" type="text" id="company-name" required/>
 
             <label for="hours_per_day">Daily hours:</label>
-            <input name="hours_per_day" type="number" id="hours-per-day" />
+            <input name="hours_per_day" type="number" id="hours-per-day" required/>
+
+            <label for="max_days_per_month">Max days per month</label>
+            <input
+              name="max_days_per_month"
+              type="number"
+              id="max-days-per-month"
+              max="31"
+              required
+            />
 
             <label for="sick_leave_percent_factor"
               >Sick leave percent rate (%):</label
@@ -114,6 +123,7 @@
               id="sick-leave-percent"
               min="0"
               max="100"
+              required
             />
 
             <label for="vacation_percent_factor"
@@ -125,6 +135,7 @@
               id="vacation-leave-percent"
               min="0"
               max="100"
+              required
             />
 
             <label for="on_demand_percent_factor"
@@ -136,6 +147,7 @@
               id="on-demand-leave-percent"
               min="0"
               max="100"
+              required
             />
 
             <label for="retirement_rate">Retirement rate (%):</label>
@@ -145,6 +157,7 @@
               id="retirement-rate"
               min="0"
               max="100"
+              required
             />
 
             <label for="disability_rate">Disability rate (%):</label>
@@ -154,6 +167,7 @@
               id="disability-rate"
               min="0"
               max="100"
+              required
             />
 
             <label for="healthcare_rate">Healthcare rate (%):</label>
@@ -163,6 +177,7 @@
               id="healthcare-rate"
               min="0"
               max="100"
+              required
             />
 
             <label for="income_tax_rate">Income tax rate (%):</label>
@@ -172,6 +187,7 @@
               id="income-tax-rate"
               min="0"
               max="100"
+              required
             />
 
             <button type="submit" class="save-button" id="save-button-company">

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap");
 
 .header {
   background-color: #0a8080;
@@ -13,19 +13,26 @@ nav a, .logout-btn {
   text-decoration: none;
   padding: 10px;
   font-family: "Roboto", sans-serif;
+  font-size: 16px; /* Zapewnia spójny rozmiar czcionki */
+  display: inline-block;
 }
 
 .logout-btn {
   background: none;
   border: none;
-  font-size: 16px; /* Dopasuj rozmiar do pozostałych linków */
+  font-size: 16px;
   cursor: pointer;
 }
 
 nav {
-  display: flex;;
+  display: flex;
+  gap: 15px; /* Dodaje odstęp między linkami */
 }
 
 .logo {
   width: 86px;
+}
+
+.logout-form {
+  margin: 0;
 }

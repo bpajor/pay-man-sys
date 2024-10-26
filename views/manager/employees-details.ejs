@@ -105,7 +105,7 @@
       async function fetchEmployeeData() {
         try {
           const response = await fetch(
-            `<%= baseUrl %>/manager/employees-details/json?month=${
+            `<%= baseUrl %>/api/manager/employees-details?month=${
               currentMonth + 1
             }&year=${currentYear}&company_id=${companyId}`,
             {
@@ -212,7 +212,7 @@
         const message = document.createElement("div");
         message.className = "no-company-message";
         message.innerHTML = `
-          <p>You haven't defined your company. Please do that here: <a href="<%= baseUrl %>/company-settings">Company Settings</a>.</p>
+          <p>You haven't defined your company. Please do that here: <a href="<%= baseUrl %>/manager/company/create">Create company</a>.</p>
         `;
         messageContainer.appendChild(message);
       }

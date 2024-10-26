@@ -7,12 +7,16 @@ import { encode } from "hi-base32";
 import QRCode from "qrcode";
 import { Employee } from "../entity/Employee";
 import { Company } from "../entity/Company";
+import { SalaryHistory } from "../entity/SalaryHistory";
+import { JoinRequest } from "../entity/JoinRequest";
+import { Between } from "typeorm";
+import { userInSessionFieldsExist } from "./helpers/validator";
 
-type HoursChange = {
-  day_worked: 0 | 1;
-  day_sick_leave: 0 | 1;
-  day_vacation: 0 | 1;
-  day_on_demand_leave: 0 | 1;
+type EmployeeDaysChange = {
+  days_sick_leave: 0 | 1;
+  days_on_demand_leave: 0 | 1;
+  days_vacation: 0 | 1;
+  days_worked: 0 | 1;
 };
 
 export const getMainPage = (req: Request, res: Response) => {
@@ -39,51 +43,175 @@ export const getEmployeeMainPage = async (
   const logger: Logger = res.locals.logger;
   const userRepo = AppDataSource.getRepository(User);
 
-  if (!req.session.user) {
-    logger.error(`Session data not found`);
-    return res.status(400).send("Session data not found"); //TODO here and in other places - should be next(new Error("Session data not found"))
+  const user_session = req.session.user!;
+
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
+    logger.error(`User session data not found`);
+    return next(new Error("Bad request"));
   }
 
-  const { uid, account_type } = req.session.user;
-
-  if (account_type !== "employee") {
-    logger.error(`User is not an employee`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
-
-  if (!uid) {
-    logger.error(`Session data not found`);
-    return res.status(400).send("Session data not found");
-  }
+  const { uid, account_type } = user_session;
 
   // TODO -> should just show message that employee is not entitled to any company
-  if (!req.session.user.company_id) {
-    logger.error(`Company not found`);
-    res.status(404);
-    return next(new Error("Company not found"));
+  if (!user_session.company_id || !user_session.employee_id) {
+    logger.info(`Employee is not entitled to any company`);
+
+    let user;
+    try {
+      user = await userRepo.findOneBy({ id: uid });
+
+      if (!user) {
+        logger.error(`User not found`);
+        res.status(404);
+        return next(new Error("User not found"));
+      }
+    } catch (error) {
+      logger.error(`Error getting user data: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+
+    let is_jrequest_pending = false;
+    try {
+      is_jrequest_pending = await AppDataSource.getRepository(
+        JoinRequest
+      ).exists({
+        where: { user: { id: uid }, status: "pending" },
+      });
+    } catch (error) {
+      logger.error(`Error getting join request: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+    try {
+      return res.render("employee/main", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: user,
+        nonce: res.locals.nonce,
+        accountType: account_type,
+        jrequestsPending: null,
+        company: null,
+        salaryHistory: null,
+        earnings: null,
+        isAttendanceMarked: false,
+        isJrequestPending: is_jrequest_pending,
+      });
+    } catch (error) {
+      logger.error(`Error getting user data: ${error}`);
+      res.status(500);
+      return next(error);
+    }
   }
 
   let user;
+
+  // const test = await AppDataSource.getRepository(SalaryHistory).find({where: {period: new Date("2024-10-01"), employee: {id: 1}}})
   try {
     logger.info(`Getting user data`);
     user = await userRepo.findOneBy({ id: uid });
   } catch (error) {
     logger.error(`Error getting user data: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   let company;
   try {
     logger.info(`Getting company data`);
     company = await AppDataSource.getRepository(Company).findOneBy({
-      id: req.session.user.company_id!,
-    })
+      id: user_session.company_id!,
+    });
   } catch (error) {
     logger.error(`Error getting company data: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
+  }
+
+  const present_month = new Date().getMonth() + 1;
+  let employee_salary_history: SalaryHistory;
+  try {
+    logger.info(`Getting employee salary history`);
+    const query = `
+      SELECT days_sick_leave, days_on_demand_leave, days_vacation FROM salary_history where EXTRACT(MONTH FROM period::DATE) = $1 AND "employeeId" = $2;
+    `;
+
+    const [rows] = await AppDataSource.query(query, [
+      present_month,
+      user_session.employee_id!,
+    ]);
+    employee_salary_history = rows;
+  } catch (error) {
+    logger.error(`Error getting employee salary history: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  let earnings;
+  try {
+    const query = `
+SELECT 
+  TO_CHAR(months.month, 'FMMonth') AS month_name,  -- Nazwa miesiąca bez dodatkowych spacji
+  COALESCE(SUM(
+    sh.salary_per_hour * c.hours_per_day * (
+      sh.days_worked + 
+      sh.days_vacation * c.vacation_percent_factor + 
+      sh.days_sick_leave * c.sick_leave_percent_factor + 
+      sh.days_on_demand_leave * c.on_demand_percent_factor
+    ) + sh.bonus
+  ), 0) AS total_salary
+FROM 
+  generate_series('2024-01-01'::date, '2024-12-01'::date, '1 month') AS months(month)  -- Generowanie wszystkich miesięcy
+LEFT JOIN 
+  salary_history sh 
+    ON EXTRACT(YEAR FROM sh.period) = $1
+    AND EXTRACT(MONTH FROM sh.period) = EXTRACT(MONTH FROM months.month) 
+    AND sh."employeeId" = $2
+LEFT JOIN 
+  employees e 
+    ON sh."employeeId" = e.id 
+LEFT JOIN 
+  companies c 
+    ON e."companyId" = c.id 
+GROUP BY 
+  months.month
+ORDER BY 
+  months.month;
+
+    `;
+    const rows = await AppDataSource.query(query, [
+      new Date().getFullYear(),
+      user_session.employee_id!,
+    ]);
+
+    earnings = rows;
+  } catch (error) {
+    logger.error(`Error getting employee salary history: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  let isAttendanceMarked = false;
+
+  try {
+    const result = await AppDataSource.getRepository(Employee).findOne({
+      where: { id: user_session.employee_id! },
+      select: ["last_marked_day"],
+    });
+
+    if (result) {
+      const last_marked_day = result.last_marked_day;
+
+      const today = `${new Date().getFullYear()}-${
+        new Date().getMonth() + 1
+      }-${new Date().getDate()}`;
+      if (last_marked_day && last_marked_day.toString() === today) {
+        isAttendanceMarked = true;
+      }
+    }
+  } catch (error) {
+    logger.error(`Error getting employee attendance: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
   }
 
   try {
@@ -92,14 +220,17 @@ export const getEmployeeMainPage = async (
       baseUrl: `${process.env.BASE_URL}`,
       loggedUser: user,
       nonce: res.locals.nonce,
-      accountType: req.session.user.account_type,
+      accountType: user_session.account_type,
       jrequestsPending: null,
-      company
+      company,
+      salaryHistory: employee_salary_history,
+      earnings,
+      isAttendanceMarked,
     });
   } catch (error) {
     logger.error(`Error rendering employee main page: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -113,25 +244,15 @@ export const getEmployeeSettings = async (
 
   const user_repo = AppDataSource.getRepository(User);
 
-  if (!req.session.user) {
-    logger.error(`Session data not found`);
+  const user_session = req.session.user!;
+
+  if (!userInSessionFieldsExist(["uid"], user_session)) {
+    logger.error(`User session data not found`);
     res.status(400);
-    return next(new Error("Session data not found"));
+    return next(new Error("Bad request"));
   }
 
-  const { uid } = req.session.user;
-
-  if (!uid) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  if (req.session.user.account_type !== "employee") {
-    logger.error(`User is not an employee`);
-    res.status(403);
-    return next(new Error("Unauthorized"));
-  }
+  const { uid } = user_session;
 
   let user;
   try {
@@ -140,142 +261,720 @@ export const getEmployeeSettings = async (
   } catch (error) {
     logger.error(`Error getting user data: ${error}`);
     res.status(500);
-    return next(error);
+    return next(new Error("Internal server error"));
   }
 
   if (!user) {
     logger.error(`User not found`);
     res.status(404);
-    return next(new Error("User not found"));
+    return next(new Error("Requested reseource not found"));
   }
 
   const is_2fa_enabled = user.two_fa_secret ? true : false;
 
-  const {error} = req.query;
+  const { error } = req.query;
 
   if (error) {
     logger.warn(`Error happened before rendering settings page: ${error}`);
-    return res.status(400).render("manager/settings", {
-      baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.user.uid,
-      user: user,
-      is2faEnabled: is_2fa_enabled,
-      nonce: res.locals.nonce,
-      accountType: req.session.user.account_type,
-      error: error,
-    })
+    try {
+      return res.status(400).render("manager/settings", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: req.session.user,
+        user: user,
+        is2faEnabled: is_2fa_enabled,
+        nonce: res.locals.nonce,
+        accountType: user_session.account_type,
+        error: error,
+        jrequestsPending: null,
+        company: null,
+      });
+    } catch (error) {
+      logger.error(`Error rendering employee settings page: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
   }
 
   try {
     logger.info(`Rendering employee settings page`);
     res.render("employee/settings", {
       baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: req.session.user.uid,
+      loggedUser: req.session.user,
       user: user,
       is2faEnabled: is_2fa_enabled,
       nonce: res.locals.nonce,
-      accountType: req.session.user.account_type,
-      error: null
+      accountType: user_session.account_type,
+      error: null,
     });
   } catch (error) {
     logger.error(`Error rendering employee settings page: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+};
+
+export const getEmployeeJoinRequest = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+
+  logger.info(`Getting employee join request`);
+
+  const user_session = req.session.user!;
+
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
+    logger.error(`User session data not found`);
+    return res.status(400).send("User session data not found");
+  }
+
+  const { uid, account_type } = user_session;
+
+  if (!user_session.company_id || !user_session.employee_id) {
+    let companies: Array<string> = [];
+    try {
+      logger.info(`Getting companies data`);
+      const rows = await AppDataSource.getRepository(Company).find({
+        select: ["name"],
+      });
+
+      rows.forEach((row) => {
+        companies.push(row.name);
+      });
+    } catch (error) {
+      logger.error(`Error rendering join request page: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
+
+    let is_jrequest_pending = false;
+    try {
+      is_jrequest_pending = await AppDataSource.getRepository(
+        JoinRequest
+      ).exists({
+        where: { user: { id: uid }, status: "pending" },
+      });
+    } catch (error) {
+      logger.error(`Error getting join request: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
+
+    try {
+      return res.render("employee/join-request", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: uid,
+        nonce: res.locals.nonce,
+        accountType: account_type,
+        jrequestsPending: null,
+        isUserEntitled: false,
+        companiesNames: companies,
+        isJrequestPending: is_jrequest_pending,
+      });
+    } catch (error) {
+      logger.error(`Error rendering join request page: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
+  }
+
+  try {
+    return res.render("employee/join-request", {
+      baseUrl: `${process.env.BASE_URL}`,
+      loggedUser: uid,
+      nonce: res.locals.nonce,
+      accountType: account_type,
+      jrequestsPending: null,
+      isUserEntitled: true,
+    });
+  } catch (error) {
+    logger.error(`Error rendering join request page: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+};
+
+export const postEmployeeJoinRequest = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+  logger.info(`Sending employee join request`);
+
+  const user_repo = AppDataSource.getRepository(User);
+
+  const user_session = req.session.user!;
+
+  if (
+    !userInSessionFieldsExist(
+      ["uid", "company_id", "employee_id"],
+      user_session
+    )
+  ) {
+    logger.error(`User session data not found`);
+    res.status(400);
+    return next(new Error("Bad request"));
+  }
+
+  const { uid, company_id, employee_id } = user_session;
+
+  const { company_name } = req.body;
+
+  if (!company_name) {
+    logger.error(`Company data not found`);
+    res.status(400);
+    return next(new Error("Bad request"));
+  }
+
+  try {
+    logger.info(`Creating join request`);
+    const company = await AppDataSource.getRepository(Company).findOneBy({
+      name: company_name,
+    });
+
+    if (!company) {
+      logger.error(`Company not found`);
+      res.status(404);
+      return next(new Error("Company not found"));
+    }
+
+    const user = await user_repo.findOneBy({ id: uid });
+
+    if (!user) {
+      logger.error(`User not found`);
+      res.status(404);
+      return next(new Error("User not found"));
+    }
+
+    const join_request = new JoinRequest();
+    join_request.company = company;
+    join_request.user = user;
+
+    await AppDataSource.getRepository(JoinRequest).save(join_request);
+
+    return res.redirect("/employee/dashboard");
+  } catch (error) {
+    logger.error(`Error creating join request: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+};
+
+export const getEmployeeEarnings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+  logger.info(`Getting employee earnings`);
+
+  const user_session = req.session.user!;
+
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
+    logger.error(`User session data not found`);
+    res.status(400);
+    return next(new Error("Bad request"));
+  }
+
+  const { uid, account_type } = user_session;
+
+  try {
+    return res.render("employee/earnings", {
+      baseUrl: `${process.env.BASE_URL}`,
+      loggedUser: uid,
+      nonce: res.locals.nonce,
+      accountType: account_type,
+      jrequestsPending: null,
+    });
+  } catch (error) {
+    logger.error(`Error rendering employee earnings page: ${error}`);
     res.status(500);
     return next(error);
   }
 };
 
-// export const postEnable2fa = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   const logger: Logger = res.locals.logger;
-//   const user_repo = AppDataSource.getRepository(User);
+export const getEmployeeAttendance = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
 
-//   logger.info(`Enabling 2fa`);
+  logger.info(`Getting employee attendance`);
 
-//   if (!req.session.user) {
-//     logger.error(`Session data not found`);
-//     res.status(400);
-//     return next(new Error("Session data not found"));
-//   }
+  const user_session = req.session.user!;
 
-//   const { email, uid } = req.session.user;
+  if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
+    logger.error(`User session data not found`);
+    res.status(400);
+    return next(new Error("Bad request"));
+  }
 
-//   if (!email || !uid) {
-//     logger.error(`Session data not found`);
-//     return res.status(400).json({ success: false });
-//   }
+  const { uid, account_type } = user_session;
 
-//   const { secret, otpauthURL } = generate2FASecret(email);
+  const employee_id = user_session.employee_id;
 
-//   let qrCodeDataUrl;
-//   try {
-//     logger.info(`Generating QR code`);
-//     qrCodeDataUrl = await QRCode.toDataURL(otpauthURL);
-//   } catch (error) {
-//     logger.error(`Error generating QR code: ${error}`);
-//     return res.status(500).json({ success: false });
-//   }
+  if (!employee_id) {
+    logger.error(`Employee id not found`);
+    res.status(400);
+    return res.render("employee/attendance", {
+      baseUrl: `${process.env.BASE_URL}`,
+      loggedUser: req.session.user,
+      nonce: res.locals.nonce,
+      accountType: account_type,
+      jrequestsPending: null,
+      attendanceData: null,
+      errorInfo: null,
+    });
+  }
 
-//   try {
-//     logger.info(`Updating user with 2fa secret`);
-//     await user_repo.update({ id: uid }, { two_fa_secret: secret });
-//   } catch (error) {
-//     logger.error(`Error updating user with 2fa secret: ${error}`);
-//     return res.status(500).json({ success: false });
-//   }
+  let does_present_month_sh_exist;
+  try {
+    const startOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      0
+    );
 
-//   return res.json({
-//     success: true,
-//     qrCode: qrCodeDataUrl,
-//   });
-// };
+    does_present_month_sh_exist = await AppDataSource.getRepository(
+      SalaryHistory
+    ).existsBy({
+      employee: { id: employee_id },
+      period: Between(startOfMonth, endOfMonth),
+    });
+  } catch (error) {
+    logger.error(
+      `Error checking if present month salary history exists: ${error}`
+    );
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
 
-// export const postDisable2fa = async (req: Request, res: Response) => {
-//   const logger = res.locals.logger;
-//   logger.info(`Disabling 2fa`);
+  if (!does_present_month_sh_exist) {
+    try {
+      const new_salary_history = new SalaryHistory();
 
-//   const user_repo = AppDataSource.getRepository(User);
+      const employee = await AppDataSource.getRepository(Employee).findOneBy({
+        id: employee_id,
+      });
 
-//   if (!req.session.user) {
-//     logger.error(`Session data not found`);
-//     return res.status(400).json({ success: false });
-//   }
+      if (!employee) {
+        logger.error(`Employee not found`);
+        res.status(404);
+        return next(new Error("Requested resource not found"));
+      }
 
-//   const { uid } = req.session.user;
+      new_salary_history.employee = employee;
+      new_salary_history.period = new Date();
+      new_salary_history.bonus = 0;
+      new_salary_history.salary_per_hour = employee.salary_per_hour;
 
-//   if (!uid) {
-//     logger.error(`Session data not found`);
-//     return res.status(400).json({ success: false });
-//   }
+      await AppDataSource.getRepository(SalaryHistory).save(new_salary_history);
+    } catch (error) {
+      logger.error(`Error creating new salary history: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
+  }
 
-//   try {
-//     logger.info(`Disabling 2fa for user`);
-//     await user_repo.update({ id: uid }, { two_fa_secret: null });
-//   } catch (error) {
-//     logger.error(`Error disabling 2fa for user: ${error}`);
-//     return res.status(500).json({ success: false });
-//   }
+  const query = `
+SELECT 
+  sh.days_sick_leave, 
+  sh.days_on_demand_leave, 
+  sh.days_worked, 
+  sh.days_vacation, 
+  SUM(
+    sh.days_sick_leave + sh.days_on_demand_leave + sh.days_worked + sh.days_vacation
+  ) AS days_total, 
+  c.max_days_per_month, 
+  c.sick_leave_percent_factor * 100 as sick_leave_percent_factor, 
+  c.vacation_percent_factor * 100 as vacation_percent_factor, 
+  c.on_demand_percent_factor * 100 as on_demand_percent_factor 
+FROM 
+  salary_history sh 
+  JOIN employees e ON sh."employeeId" = e.id 
+  JOIN companies c ON e."companyId" = c.id 
+WHERE 
+  date_trunc('month', sh.period) = date_trunc('month', current_date) 
+  AND sh."employeeId" = $1 
+GROUP BY 
+  c.max_days_per_month, 
+  c.sick_leave_percent_factor, 
+  c.vacation_percent_factor, 
+  c.on_demand_percent_factor, 
+  sh.days_sick_leave, 
+  sh.days_on_demand_leave, 
+  sh.days_worked, 
+  sh.days_vacation;
+  `;
 
-//   return res.json({ success: true });
-// };
+  let attendance_data;
+  try {
+    [attendance_data] = await AppDataSource.query(query, [employee_id]);
 
-// const generate2FASecret = (userEmail: string) => {
-//   // Utwórz obiekt OTPAuth.TOTP (czasowy kod jednorazowy)
-//   const totp = new OTPAuth.TOTP({
-//     issuer: "PayrollPro", // Nazwa Twojej aplikacji
-//     label: userEmail, // Email użytkownika jako identyfikator
-//     algorithm: "SHA1",
-//     digits: 6,
-//     period: 30,
-//   });
+    if (!attendance_data) {
+      logger.error(`Attendance data not found`);
+      res.status(404);
+      return next(new Error("Requested resource not found"));
+    }
 
-//   // Wygeneruj tajny klucz (base32 encoded)
-//   const secret = encode(totp.secret.bytes);
+    if (attendance_data.days_total >= attendance_data.max_days_per_month) {
+      logger.info(`Employee has already marked maximum days for the month`);
+      return res.render("employee/attendance", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: user_session,
+        nonce: res.locals.nonce,
+        accountType: user_session.account_type,
+        jrequestsPending: null,
+        attendanceData: attendance_data,
+        errorInfo: "You've marked maximum amount of days for this month",
+      });
+    }
+  } catch (error) {
+    logger.error(`Error getting employee attendance: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
 
-//   // Utwórz URL dla aplikacji uwierzytelniającej
-//   const otpauthURL = totp.toString();
+  const { error } = req.query;
 
-//   return { secret, otpauthURL };
-// };
+  if (error) {
+    try {
+      switch (error) {
+        case "marked_attendance":
+          logger.info(`Employee has already marked attendance for today`);
+          return res.render("employee/attendance", {
+            baseUrl: `${process.env.BASE_URL}`,
+            loggedUser: user_session,
+            nonce: res.locals.nonce,
+            accountType: user_session.account_type,
+            jrequestsPending: null,
+            attendanceData: null,
+            errorInfo: "You've already marked attendance for today",
+          });
+        case "days_exceeded":
+          logger.info(`Employee has already marked maximum days for the month`);
+          return res.render("employee/attendance", {
+            baseUrl: `${process.env.BASE_URL}`,
+            loggedUser: user_session.uid,
+            nonce: res.locals.nonce,
+            accountType: user_session.account_type,
+            jrequestsPending: null,
+            attendanceData: null,
+            errorInfo: "You've marked maximum amount of days for this month",
+          });
+      }
+    } catch (error) {
+      logger.error(
+        `Error rendering employee attendance page with known error: ${error}`
+      );
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
+  }
+
+  try {
+    const has_employee_marked_attendance_today =
+      await AppDataSource.getRepository(Employee).existsBy({
+        id: employee_id,
+        last_marked_day: new Date(),
+      });
+
+    if (has_employee_marked_attendance_today) {
+      logger.info(`Employee has already marked attendance for today`);
+      return res.render("employee/attendance", {
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: req.session.user,
+        nonce: res.locals.nonce,
+        accountType: user_session.account_type,
+        jrequestsPending: null,
+        attendanceData: attendance_data,
+        errorInfo: "You've already marked attendance for today",
+      });
+    }
+  } catch (error) {
+    logger.error(
+      `Error checking if employee has already marked attendance: ${error}`
+    );
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  try {
+    return res.render("employee/attendance", {
+      baseUrl: `${process.env.BASE_URL}`,
+      loggedUser: req.session.user,
+      nonce: res.locals.nonce,
+      accountType: user_session.account_type,
+      jrequestsPending: null,
+      attendanceData: attendance_data,
+      errorInfo: null,
+    });
+  } catch (error) {
+    logger.error(`Error rendering employee attendance page: ${error}`);
+    res.status(500);
+    return next(error);
+  }
+};
+
+// TODO -> also check if user has already marked his attendance for today
+// TODO -> also check if user has marked maximum days for the month
+export const postEmployeeAttendace = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const logger: Logger = res.locals.logger;
+
+  logger.info(`Marking employee attendance`);
+
+  const queryRunner = AppDataSource.createQueryRunner();
+
+  const user_session = req.session.user!;
+
+  if (!userInSessionFieldsExist(["uid", "employee_id"], user_session)) {
+    logger.error(`User session data not found`);
+    res.status(400);
+    return next(new Error("Bad request"));
+  }
+
+  const { uid, employee_id } = user_session;
+
+  const { attendance_type } = req.body;
+
+  const days_change: EmployeeDaysChange = {
+    days_sick_leave: attendance_type === "sick" ? 1 : 0,
+    days_on_demand_leave: attendance_type === "on_demand" ? 1 : 0,
+    days_vacation: attendance_type === "vacation" ? 1 : 0,
+    days_worked: attendance_type === "normal" ? 1 : 0,
+  };
+
+  let does_present_month_sh_exist;
+  try {
+    const startOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      0
+    );
+
+    does_present_month_sh_exist = await AppDataSource.getRepository(
+      SalaryHistory
+    ).existsBy({
+      employee: { id: employee_id! },
+      period: Between(startOfMonth, endOfMonth),
+    });
+  } catch (error) {
+    logger.error(
+      `Error checking if present month salary history exists: ${error}`
+    );
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  if (!does_present_month_sh_exist) {
+    try {
+      const new_salary_history = new SalaryHistory();
+
+      const employee = await AppDataSource.getRepository(Employee).findOneBy({
+        id: employee_id!,
+      });
+
+      if (!employee) {
+        logger.error(`Employee not found`);
+        res.status(404);
+        return next(new Error("Requested resources not found"));
+      }
+
+      new_salary_history.employee = employee;
+      new_salary_history.period = new Date();
+      new_salary_history.bonus = 0;
+      new_salary_history.salary_per_hour = employee.salary_per_hour;
+
+      await AppDataSource.getRepository(SalaryHistory).save(new_salary_history);
+    } catch (error) {
+      logger.error(`Error creating new salary history: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
+  }
+
+  try {
+    const has_employee_marked_attendance_today =
+      await AppDataSource.getRepository(Employee).existsBy({
+        id: employee_id!,
+        last_marked_day: new Date(),
+      });
+
+    if (has_employee_marked_attendance_today) {
+      logger.info(`Employee has already marked attendance for today`);
+      return res.redirect("/employee/attendance?error=marked_attendance");
+    }
+  } catch (error) {
+    logger.error(
+      `Error checking if employee has already marked attendance: ${error}`
+    );
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  try {
+    const query = `
+    SELECT 
+  SUM(
+    sh.days_sick_leave + sh.days_on_demand_leave + sh.days_worked + sh.days_vacation
+  ) AS days_total, 
+  c.max_days_per_month 
+FROM 
+  salary_history sh 
+  JOIN employees e ON sh."employeeId" = e.id 
+  JOIN companies c ON e."companyId" = c.id 
+WHERE 
+  date_trunc('month', sh.period) = date_trunc('month', current_date) 
+  AND sh."employeeId" = $1 
+GROUP BY 
+  c.max_days_per_month, 
+  sh.days_sick_leave, 
+  sh.days_on_demand_leave, 
+  sh.days_worked, 
+  sh.days_vacation;
+
+    `;
+
+    const [row] = await AppDataSource.query(query, [employee_id]);
+
+    row.days_total = Number(row.days_total);
+
+    if (row.days_total >= row.max_days_per_month) {
+      logger.info(`Employee has already marked maximum days for the month`);
+      return res.redirect("/employee/attendance?error=days_exceeded");
+    }
+  } catch (error) {
+    logger.error(
+      `Error checking if employee has already marked maximum days for the month: ${error}`
+    );
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  // 1) Query to update days in sh
+  // 2) Query to update last_marked_day in employees
+
+  const first_query = `
+    UPDATE salary_history SET 
+  days_worked = salary_history.days_worked + 1 * $1, 
+  days_sick_leave = salary_history.days_sick_leave * 1 * $2, 
+  days_vacation = salary_history.days_vacation * 1 * $3, 
+  days_on_demand_leave = salary_history.days_on_demand_leave * 1 * $4
+FROM 
+  employees e 
+  JOIN companies c ON e."companyId" = c.id 
+WHERE 
+  salary_history."employeeId" = $5
+  AND date_trunc('month', salary_history.period) = date_trunc('month', current_date) 
+  AND e.id = salary_history."employeeId" 
+  AND e."companyId" = c.id;
+  `;
+
+  const base_retirement_factor = `c.retirement_rate * e.salary_per_hour`;
+  const base_disability_factor = `c.disability_rate * e.salary_per_hour`;
+  const base_healthcare_factor = `c.healthcare_rate * e.salary_per_hour`;
+  const base_income_tax_factor = `c.income_tax_rate * e.salary_per_hour`;
+
+  const retiremet_contributions_assignment = `
+    retirement_contributions = ${base_retirement_factor} * 
+    (sh.days_worked * c.hours_per_day +
+    sh.days_sick_leave * c.sick_leave_percent_factor +
+    sh.days_vacation * c.vacation_percent_factor +
+    sh.days_on_demand_leave * c.on_demand_percent_factor),
+  `;
+
+  const disability_contributions_assignment = `
+    disability_contributions = ${base_disability_factor} * 
+    (sh.days_worked * c.hours_per_day +
+    sh.days_sick_leave * c.sick_leave_percent_factor +
+    sh.days_vacation * c.vacation_percent_factor +
+    sh.days_on_demand_leave * c.on_demand_percent_factor),
+  `;
+
+  const healthcare_contributions_assignment = `
+    healthcare_contributions = ${base_healthcare_factor} * 
+    (sh.days_worked * c.hours_per_day +
+    sh.days_sick_leave * c.sick_leave_percent_factor +
+    sh.days_vacation * c.vacation_percent_factor +
+    sh.days_on_demand_leave * c.on_demand_percent_factor),
+  `;
+
+  const income_tax_assignment = `
+    income_tax = ${base_income_tax_factor} * 
+    (sh.days_worked * c.hours_per_day +
+    sh.days_sick_leave * c.sick_leave_percent_factor +
+    sh.days_vacation * c.vacation_percent_factor +
+    sh.days_on_demand_leave * c.on_demand_percent_factor)
+  `;
+
+  const second_query = `
+    UPDATE salary_history sh
+    SET
+    ${retiremet_contributions_assignment}
+    ${disability_contributions_assignment}
+    ${healthcare_contributions_assignment}
+    ${income_tax_assignment}
+    FROM employees e
+    JOIN companies c ON c.id = e."companyId"
+    WHERE sh."employeeId" = e.id
+    AND DATE_TRUNC('month', sh.period) = DATE_TRUNC('month', CURRENT_DATE)
+    AND sh."employeeId" = $1
+  `;
+
+  try {
+    await queryRunner.startTransaction();
+
+    await queryRunner.query(first_query, [
+      days_change.days_worked,
+      days_change.days_sick_leave,
+      days_change.days_vacation,
+      days_change.days_on_demand_leave,
+      employee_id,
+    ]);
+
+    await queryRunner.query(second_query, [employee_id]);
+
+    await queryRunner.commitTransaction();
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    logger.error(`Error updating employee attendance: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  } finally {
+    await queryRunner.release();
+  }
+
+  try {
+    await AppDataSource.getRepository(Employee).update(
+      {
+        id: employee_id!,
+      },
+      {
+        last_marked_day: new Date(),
+      }
+    );
+
+    return res.redirect("/employee/attendance");
+  } catch (error) {
+    logger.error(`Error updating employee attendance: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+};

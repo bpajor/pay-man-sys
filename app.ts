@@ -188,6 +188,9 @@ AppDataSource.initialize()
       res.status(404).render("error/error", {
         code: 404,
         message: "Page not found. Please check the URL and try again.",
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: req.session.user ? req.session.user.uid : null,
+        accountType: req.session.user ? req.session.user.account_type : null,
       });
     });
 

@@ -125,10 +125,15 @@ export const postLogin = async (
 
   if (user.company) {
     company_id = user.company.id;
-  } else if (user.employees[0].company) {
+  } else if (user.employees[0]?.company) {
     company_id = user.employees[0].company.id;
   } else {
     company_id = null;
+  }
+
+  let employee_id = null;
+  if (user.employees[0]) {
+    employee_id = user.employees[0].id;
   }
 
   let user_to_session = {
@@ -136,10 +141,11 @@ export const postLogin = async (
     email: user.email,
     account_type: user.account_type as "employee" | "manager",
     company_id,
+    employee_id,
   };
   req.session.user = user_to_session;
 
-  if (user.account_type === "manager") {
+  if (user.account_type === "manager" && user.company) {
     try {
       const jrequests_pending = await AppDataSource.getRepository(
         JoinRequest
@@ -210,8 +216,17 @@ export const postSignup = async (
     });
   }
 
-  const { name, last_name, email, password, confirm_password, account_type } =
-    req.body;
+  const {
+    name,
+    last_name,
+    email,
+    password,
+    confirm_password,
+    account_type,
+    phone,
+    address,
+    date_of_birth,
+  } = req.body;
 
   if (password !== confirm_password) {
     logger.error(`Passwords do not match`);
@@ -255,6 +270,9 @@ export const postSignup = async (
     new_user.email = email;
     new_user.password_hash = hashed_password;
     new_user.account_type = account_type;
+    new_user.phone_number = phone;
+    new_user.home_address = address;
+    new_user.date_of_birth = new Date(date_of_birth);
 
     // Save the user
     await user_repo.save(new_user);
@@ -453,6 +471,17 @@ export const postResetPassword = async (
   try {
     logger.info("Finding user by reset token");
     user = await user_repo.findOneBy({ email: email });
+
+    if (!user) {
+      logger.error(`User with email ${email} not found`);
+      return res.status(400).render("auth/reset-password", {
+        baseUrl: `${process.env.BASE_URL}`,
+        error: `Failed fetching ${email} data. It may not exist.`,
+        success: null,
+        nonce: res.locals.nonce,
+        token,
+      });
+    }
   } catch (err) {
     logger.error(`Error finding user by reset token: ${err}`);
     res.status(500);
@@ -460,7 +489,6 @@ export const postResetPassword = async (
   }
 
   if (
-    !user ||
     !user.reset_token_expiration ||
     user.reset_token_expiration < new Date()
   ) {
@@ -611,23 +639,23 @@ export const postLoginVerify2fa = async (
     });
   }
 
-  const { code } = req.body as { code: number };
-
-  if (!req.session.user!.uid || !req.session.user!.email) {
+  if (!req.session.user?.uid || !req.session.user?.email) {
     logger.error(`Session data not found`);
     return res.redirect("/login");
   }
 
+  const { code } = req.body as { code: number };
+
   if (!req.session.pending_2fa) {
     logger.error(`2fa not pending`);
     if (req.session.user!.uid) {
-      return res.redirect("/employee/dashboard");
+      return res.redirect(`/${req.session.user?.account_type}/dashboard`);
     }
     return res.redirect("/");
   }
 
   // Session is already set, but not verified
-  const { uid, email } = req.session.user!;
+  const { uid, email } = req.session.user;
 
   let attempts_key: string;
   let lock_key: string;
@@ -684,7 +712,7 @@ export const postLoginVerify2fa = async (
   if (!user.two_fa_secret) {
     logger.error(`2fa not enabled for user`);
     if (req.session.user!.uid) {
-      return res.redirect("/employee/dashboard");
+      return res.redirect(`/${req.session.user.account_type}/dashboard`);
     }
 
     return res.redirect("/");
@@ -708,7 +736,7 @@ export const postLoginVerify2fa = async (
     logger.info(`2fa code verified`);
     try {
       logger.info(`Redirecting to dashboard`);
-      return res.redirect("/employee/dashboard");
+      return res.redirect(`/${req.session.user?.account_type}/dashboard`);
     } catch (error) {
       logger.error(`Error redirecting to dashboard: ${error}`);
       res.status(500);
@@ -891,83 +919,6 @@ export const postLogout = async (
     logger.info(`Session destroyed`);
     res.redirect("/login");
   });
-};
-
-export const postEnable2fa = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const logger: Logger = res.locals.logger;
-  const user_repo = AppDataSource.getRepository(User);
-
-  logger.info(`Enabling 2fa`);
-
-  if (!req.session.user) {
-    logger.error(`Session data not found`);
-    res.status(400);
-    return next(new Error("Session data not found"));
-  }
-
-  const { email, uid } = req.session.user;
-
-  if (!email || !uid) {
-    logger.error(`Session data not found`);
-    return res.status(400).json({ success: false });
-  }
-
-  const { secret, otpauthURL } = generate2FASecret(email);
-
-  let qrCodeDataUrl;
-  try {
-    logger.info(`Generating QR code`);
-    qrCodeDataUrl = await QRCode.toDataURL(otpauthURL);
-  } catch (error) {
-    logger.error(`Error generating QR code: ${error}`);
-    return res.status(500).json({ success: false });
-  }
-
-  try {
-    logger.info(`Updating user with 2fa secret`);
-    await user_repo.update({ id: uid }, { two_fa_secret: secret });
-  } catch (error) {
-    logger.error(`Error updating user with 2fa secret: ${error}`);
-    return res.status(500).json({ success: false });
-  }
-
-  return res.json({
-    success: true,
-    qrCode: qrCodeDataUrl,
-  });
-};
-
-export const postDisable2fa = async (req: Request, res: Response) => {
-  const logger = res.locals.logger;
-  logger.info(`Disabling 2fa`);
-
-  const user_repo = AppDataSource.getRepository(User);
-
-  if (!req.session.user) {
-    logger.error(`Session data not found`);
-    return res.status(400).json({ success: false });
-  }
-
-  const { uid } = req.session.user;
-
-  if (!uid) {
-    logger.error(`Session data not found`);
-    return res.status(400).json({ success: false });
-  }
-
-  try {
-    logger.info(`Disabling 2fa for user`);
-    await user_repo.update({ id: uid }, { two_fa_secret: null });
-  } catch (error) {
-    logger.error(`Error disabling 2fa for user: ${error}`);
-    return res.status(500).json({ success: false });
-  }
-
-  return res.json({ success: true });
 };
 
 const generate2FASecret = (userEmail: string) => {

@@ -98,26 +98,6 @@
             </div>
           </div>
 
-          <!-- Commented out previous card with departments -->
-          <!--
-          <div class="card">
-            <h2>Salary Expenses</h2>
-            <div class="card-content">
-              <div class="summary-item">
-                <span class="label">Total salary expenses:</span>
-                <span class="value">$100,000</span>
-              </div>
-              <div class="summary-item">
-                <span class="label">Average salary per employee:</span>
-                <span class="value">$5,000</span>
-              </div>
-              <div class="chart">
-                <canvas id="barChart"></canvas>
-              </div>
-            </div>
-          </div>
-          -->
-
           <div class="card">
             <h2>
               Average Gross Salary and Bonuses Trends (<span
@@ -151,7 +131,6 @@
 
     <%- include("../includes/manager_left_dashboard_listener", { nonce }) %>
 
-    <!-- <script src="../../../common/scripts/dates.js"></script> -->
     <script nonce="<%= nonce %>">
       let currentDate = new Date();
       let currentMonth = currentDate.getMonth(); // 0 = January
@@ -257,7 +236,6 @@
 
         // Initialize charts
         const pie_ctx = document.getElementById("pieChart").getContext("2d");
-        // const bar_ctx = document.getElementById("barChart").getContext("2d");
         const line_ctx = document.getElementById("lineChart").getContext("2d");
         const salaryBonusTrend_ctx = document
           .getElementById("salaryBonusTrendChart")
@@ -268,7 +246,6 @@
 
         // Initialize the pie chart with empty data
         pieChart = new Chart(pie_ctx, config);
-        // new Chart(bar_ctx, barConfig); // Commented out
         lineChart = new Chart(line_ctx, lineConfig);
         salaryBonusTrendChart = new Chart(
           salaryBonusTrend_ctx,
@@ -430,9 +407,6 @@
       }
 
       function updateTrendAnalysisChart(data) {
-        // const netPays = data.map(item => item.net_without_bonus_pay);
-        // const bonuses = data.map(item => item.total_bonuses);
-        // const contributions = data.map(item => item.total_contributions);
         const netPays = new Array(12).fill(0);
         const bonuses = new Array(12).fill(0);
         const contributions = new Array(12).fill(0);
@@ -474,7 +448,6 @@
 
       // Function to update the hours worked chart
       function updateHoursWorkedChart(data) {
-        // Prepare the data for the chart
         const monthNames = [
           "January",
           "February",
@@ -499,7 +472,6 @@
           }
         });
 
-        // Update the chart data
         hoursWorkedChart.data.labels = monthNames;
         hoursWorkedChart.data.datasets[0].data = chartData;
         hoursWorkedChart.update();
@@ -512,7 +484,6 @@
       }
 
       function updateSalaryBonusTrendChart(data) {
-        // Prepare the data for the chart
         const monthNames = [
           "January",
           "February",
@@ -539,7 +510,6 @@
           }
         });
 
-        // Update the chart data
         salaryBonusTrendChart.data.labels = monthNames;
         salaryBonusTrendChart.data.datasets[0].data = salaryData;
         salaryBonusTrendChart.data.datasets[1].data = bonusData;
@@ -557,7 +527,7 @@
         datasets: [
           {
             label: "Expense Distribution",
-            data: [0, 0, 0],
+            data: [0, 0, 0], // Zeros by default
             backgroundColor: [
               "rgba(75, 192, 192, 0.2)",
               "rgba(255, 99, 132, 0.2)",
@@ -592,7 +562,7 @@
         },
       };
 
-      // Line chart data for Trend Analysis (updated)
+      // Line chart data for Trend Analysis (initialized with zeros)
       const lineData = {
         labels: [
           "January",
@@ -611,10 +581,7 @@
         datasets: [
           {
             label: "Net pays (without bonuses)",
-            data: [
-              6000, 6200, 6400, 6600, 6800, 7000, 7200, 7400, 7600, 7800, 8000,
-              8200,
-            ],
+            data: new Array(12).fill(0), // Zeros by default
             borderColor: "rgba(75, 192, 192, 1)",
             backgroundColor: "rgba(75, 192, 192, 0.2)",
             fill: false,
@@ -622,10 +589,7 @@
           },
           {
             label: "Bonuses",
-            data: [
-              1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
-              1550,
-            ],
+            data: new Array(12).fill(0), // Zeros by default
             borderColor: "rgba(255, 99, 132, 1)",
             backgroundColor: "rgba(255, 99, 132, 0.2)",
             fill: false,
@@ -633,10 +597,7 @@
           },
           {
             label: "Contributions",
-            data: [
-              1500, 1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000,
-              2050,
-            ],
+            data: new Array(12).fill(0), // Zeros by default
             borderColor: "rgba(54, 162, 235, 1)",
             backgroundColor: "rgba(54, 162, 235, 0.2)",
             fill: false,
@@ -669,7 +630,7 @@
         },
       };
 
-      // Average Gross Salary and Bonuses Trends data (unchanged)
+      // Average Gross Salary and Bonuses Trends data (initialized with zeros)
       const salaryBonusTrendData = {
         labels: [
           "January",
@@ -688,10 +649,7 @@
         datasets: [
           {
             label: "Average Gross Salary",
-            data: [
-              5000, 5100, 5200, 5300, 5400, 5500, 5600, 5700, 5800, 5900, 6000,
-              6100,
-            ],
+            data: new Array(12).fill(0), // Zeros by default
             borderColor: "rgba(75, 192, 192, 1)",
             backgroundColor: "rgba(75, 192, 192, 0.2)",
             fill: false,
@@ -699,10 +657,7 @@
           },
           {
             label: "Average Bonus",
-            data: [
-              1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
-              1550,
-            ],
+            data: new Array(12).fill(0), // Zeros by default
             borderColor: "rgba(255, 99, 132, 1)",
             backgroundColor: "rgba(255, 99, 132, 0.2)",
             fill: false,
@@ -754,7 +709,7 @@
         datasets: [
           {
             label: "Total Hours Worked",
-            data: new Array(12).fill(0),
+            data: new Array(12).fill(0), // Zeros by default
             borderColor: "rgba(54, 162, 235, 1)",
             backgroundColor: "rgba(54, 162, 235, 0.2)",
             fill: false,

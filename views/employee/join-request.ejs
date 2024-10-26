@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/employee/main/styles.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <title>Employee Dashboard</title>
+    <style>
+      .container {
+        margin-top: 130px;
+        margin-bottom: 260px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 500px; /* Stała wysokość kontenera */
+        background-color: white;
+      }
+
+      .form-box {
+        text-align: center;
+        border: 2px solid #006d6a;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        width: 50%;
+        height: 350px; /* Stała wysokość form-box */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Zachowanie miejsca między elementami */
+      }
+
+      .form-box h2 {
+        color: #333;
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .form-box input[type="text"] {
+        width: 80%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      .suggestions {
+        list-style: none;
+        padding: 0;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        width: 80%;
+        max-height: 150px; /* Maksymalna wysokość dla sugestii */
+        min-height: 150px; /* Minimalna wysokość dla sugestii */
+        overflow-y: auto;
+        background-color: #fff;
+        text-align: left;
+        border-radius: 4px;
+        display: none; /* Ukrywanie listy domyślnie */
+      }
+
+      .suggestions li {
+        padding: 10px;
+        cursor: pointer;
+      }
+
+      .suggestions li:hover {
+        background-color: #f0f0f0;
+      }
+
+      .form-box button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #006d6a;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .form-box button:hover {
+        background-color: #004f4d;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav.ejs", {baseUrl, accountType,
+      jrequestsPending}) %>
+      <section class="content">
+        <% if (!isUserEntitled) {%>
+        <div class="container">
+          <form class="form-box" method="post" action="/employee/join-request">
+            <h2>Join to company</h2>
+            <input
+              name="company_name"
+              type="text"
+              id="companyInput"
+              placeholder="Type in company name..."
+              required
+            />
+            <ul id="suggestions" class="suggestions"></ul>
+            <button type="submit">Join</button>
+          </form>
+        </div>
+        <%} else {%> <% if (isJrequestPending) {%>
+        <div class="container">
+          <div class="form-box">
+            <h2>Join request</h2>
+            <p>Your request is pending</p>
+            <p>Wait for the company to accept it</p>
+          </div>
+        </div>
+        <% } else {%>
+        <div class="container">
+          <div class="form-box">
+            <h2>Join request</h2>
+            <p>You are already entitled to the company</p>
+            <p>We are assuming that you do not want to leave it :D</p>
+          </div>
+        </div>
+        <% } %> <% } %>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+  </body>
+
+  <script nonce="<%= nonce %>">
+    // const companies = [
+    //   'WP Engine', 'Wordpress', 'Google', 'Microsoft', 'Amazon', 'Apple', 'Facebook', 'Twitter', 'Tesla', 'Spotify',
+    //   'Airbnb', 'Adobe', 'Salesforce', 'IBM', 'Netflix', 'Slack', 'Shopify', 'Uber', 'Zoom', 'Reddit',
+    //   'Stripe', 'Dropbox', 'Pinterest', 'LinkedIn', 'Oracle', 'Yahoo', 'Snapchat', 'GitHub', 'Asana', 'Bitbucket',
+    //   'Trello', 'Basecamp', 'DigitalOcean', 'Heroku', 'Kinsta', 'Squarespace', 'Wix', 'Cloudflare', 'Weebly', 'GoDaddy'
+    // ];
+    const companies = <%- JSON.stringify(companiesNames) %>;
+
+
+    document.getElementById('companyInput').addEventListener('input', showSuggestions);
+
+    function showSuggestions() {
+      const input = document.getElementById('companyInput').value.toLowerCase();
+      const suggestionsList = document.getElementById('suggestions');
+      suggestionsList.innerHTML = ''; // Resetujemy poprzednie sugestie
+
+      if (input.length === 0) {
+        suggestionsList.style.display = 'none'; // Ukryj listę, jeśli pole jest puste
+        return;
+      }
+
+      // Filtrujemy firmy na podstawie wpisanego tekstu, ograniczając wynik do 5
+      const filteredCompanies = companies.filter(company =>
+        company.toLowerCase().startsWith(input)
+      ).slice(0, 5);
+
+      // Pokaż listę tylko, jeśli są dopasowania
+      if (filteredCompanies.length > 0) {
+        suggestionsList.style.display = 'block';
+      } else {
+        suggestionsList.style.display = 'none'; // Ukryj, jeśli brak wyników
+      }
+
+      // Wyświetlamy sugerowane firmy
+      filteredCompanies.forEach(company => {
+        const li = document.createElement('li');
+        li.textContent = company;
+        li.onclick = function() {
+          document.getElementById('companyInput').value = company;
+          suggestionsList.innerHTML = ''; // Po kliknięciu resetujemy listę
+          suggestionsList.style.display = 'none'; // Ukryj listę po wyborze
+        };
+        suggestionsList.appendChild(li);
+      });
+    }
+  </script>
+</html>

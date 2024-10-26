@@ -8,17 +8,62 @@
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
     <title>Employee Dashboard</title>
+    <style>
+      .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 400px; /* dostosowane do przestrzeni na obrazku */
+      background-color: white;
+    }
+
+    .message-box {
+      text-align: center;
+      padding: 30px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      margin-top: 150px;
+      margin-bottom: 470px;
+    }
+
+    .message-box h2 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .message-box p {
+      color: #555;
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .message-box a {
+      text-decoration: none;
+      background-color: #006d6a; /* dopasowanie do designu */
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .message-box a:hover {
+      background-color: #004f4d;
+    }
+    </style>
   </head>
   <body>
     <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
     <main>
-     <%- include("../includes/left-dashboard-nav.ejs", {baseUrl, accountType, jrequestsPending}) %>
+      <%- include("../includes/left-dashboard-nav.ejs", {baseUrl, accountType, jrequestsPending}) %>
       <section class="content">
+        <% if (company) {%>
         <section class="info">
           <div>
             <div class="box big">
               <h2>Personal info</h2>
-              <p>Name: <%= loggedUser.name%> <%=loggedUser.last_name%></p>
+              <p>Name: <%= loggedUser.name %> <%= loggedUser.last_name %></p>
               <p>Email: <%= loggedUser.email %></p>
               <p>Company name: <%= company.name %></p>
             </div>
@@ -29,19 +74,34 @@
           <div>
             <div class="box small">
               <h2>Leave balances</h2>
-              <p>On demand leave: 0 days</p>
-              <p>Sick leave: 10 days</p>
-              <p>Vacation leave: 5 days</p>
+              <p>On demand leave: <%= salaryHistory.days_on_demand_leave %> days</p>
+              <p>Sick leave: <%= salaryHistory.days_sick_leave %> days</p>
+              <p>Vacation leave: <%= salaryHistory.days_vacation %> days</p>
             </div>
           </div>
         </section>
         <section class="attend-notify">
+          <% if(!isAttendanceMarked) {%>
           <p>You have an unmarked attendance for today!</p>
-          <a class="mark-button" href="">
-            <img src="/images/calendar.png" alt="gowno" id="calendar-icon-2"/>
+          <a class="mark-button" href="<%=baseUrl%>/employee/attendance">
+            <img src="/images/calendar.png" alt="calendar" id="calendar-icon-2"/>
             <span class="mark">Mark it here!</span>
           </a>
+          <%}%>
         </section>
+        <%} else {%>
+          <% if (isJrequestPending) {%>
+          <div class="message-box">
+            <h2>Join request</h2>
+            <p>Your join request is pending. Please wait for the manager to accept it.</p>
+          <% } else {%>
+            <div class="message-box">
+              <h1>Hello, <%=loggedUser.name%> !</h1>
+              <p>You are not entitled to any company yet! Click below to get entitled:</p>
+              <a href="/join-company">Enitle to company</a>
+            </div>
+            <%} %>
+          <% } %>
       </section>
     </main>
     <footer>
@@ -49,34 +109,26 @@
     </footer>
   </body>
 
+  <%- include("../includes/manager_left_dashboard_listener") %>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js" nonce="<%= nonce %>"></script>
   <script nonce="<%= nonce %>">
     const ctx = document.getElementById("earnings-chart").getContext("2d");
 
+    // Przekazanie dynamicznych danych z EJS
+    const earningsData = <%- JSON.stringify(earnings) %>;
+
+    const labels = earningsData.map(e => e.month_name.trim());
+    const data = earningsData.map(e => parseFloat(e.total_salary));
+
     const earningsChart = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ],
+        labels: labels,
         datasets: [
           {
             label: "Your Earnings",
-            data: [
-              1200, 1500, 1000, 2000, 1700, 2500, 1900, 1200, 1500, 1000, 2000,
-              1700, 2500, 1900,
-            ],
+            data: data,
             backgroundColor: "#F1DBDB",
             borderColor: "rgba(75, 192, 192, 1)",
             color: "#fff",
@@ -109,5 +161,3 @@
     });
   </script>
 </html>
-
-<!-- TODO add left nav style -->

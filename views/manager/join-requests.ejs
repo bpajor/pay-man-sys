@@ -56,6 +56,20 @@
       .btn-reject:hover {
         background-color: #c82333;
       }
+
+       /* Dodajemy podstawową stylizację dla komunikatu */
+       .no-company-message {
+        padding: 20px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      .no-company-message a {
+        color: #721c24;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
@@ -64,6 +78,7 @@
       <%- include("../includes/left-dashboard-nav", {baseUrl, accountType,
       jrequestsPending}) %>
       <section class="content">
+        <div id="messageContainer"></div>
         <h2>Employee Join Requests</h2>
         <table class="join-requests-table">
           <thead>
@@ -111,8 +126,24 @@
       <p>© 2024 PayrollPro. All rights reserved.</p>
     </footer>
 
+    <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
+
     <script nonce="<%= nonce %>">
       document.addEventListener("DOMContentLoaded", function () {
+
+        const company_id = '<%= loggedUser.company_id %>';
+
+        if (company_id.length === 0) {
+          displayNoCompanyMessage();
+          return;
+        }
+        // const join_requests = '<%= JSON.stringify(joinRequests) %>';
+
+        // if (join_requests === '[]') {
+        //   displayNoCompanyMessage();
+        //   return;
+        // }
+        
         // Pobieramy wszystkie przyciski "Accept" i "Reject"
         const acceptButtons = document.querySelectorAll(".btn-accept");
         const rejectButtons = document.querySelectorAll(".btn-reject");
@@ -154,6 +185,16 @@
           });
         });
       });
+
+      function displayNoCompanyMessage() {
+        const messageContainer = document.getElementById("messageContainer");
+        const message = document.createElement("div");
+        message.className = "no-company-message";
+        message.innerHTML = `
+          <p>You haven't defined your company. Please do that here: <a href="<%= baseUrl %>/manager/company/create">Create Company</a>.</p>
+        `;
+        messageContainer.appendChild(message);
+      }
     </script>
   </body>
 </html>

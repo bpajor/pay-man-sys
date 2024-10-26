@@ -9,7 +9,6 @@ import {
 import { User } from "./User";
 import { Employee } from "./Employee";
 import { JoinRequest } from "./JoinRequest";
-import { BudgetHistory } from "./BudgetHistory";
 
 @Entity("companies")
 export class Company {
@@ -21,6 +20,9 @@ export class Company {
 
   @Column({ type: "int", nullable: false })
   hours_per_day: number;
+
+  @Column({type: "int", nullable: false, default: 20})
+  max_days_per_month: number;
 
   @OneToOne(() => User, (user: User) => user.company)
   @JoinColumn()
@@ -100,10 +102,4 @@ export class Company {
     (joinRequest: JoinRequest) => joinRequest.company
   )
   join_requests: JoinRequest[];
-
-  @OneToMany(
-    () => BudgetHistory,
-    (budgetHistory: BudgetHistory) => budgetHistory.company
-  )
-  budget_histories: BudgetHistory[];
 }
