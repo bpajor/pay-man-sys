@@ -32,10 +32,8 @@
     "@types/nodemailer": "^6.4.16",
     "@types/qrcode": "^1.5.5",
     "axios": "^1.7.7",
-    "faker": "^6.6.6",
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.2",
-    "typeorm-seeding": "^1.6.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
