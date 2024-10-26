@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- ... pozostałe meta dane i linki do stylów ... -->
+    <link rel="stylesheet" href="/css/manager/employees_details/styles.css" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/common/date-picker.css" />
+    <title>Employee Details</title>
+    <style>
+      /* Dodajemy podstawową stylizację dla komunikatu */
+      .no-company-message {
+        padding: 20px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      .no-company-message a {
+        color: #721c24;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
+      <section class="content">
+        <header class="content-header">
+          <div class="header-left">
+            <h1>Employees details</h1>
+          </div>
+          <div class="header-right">
+            <div class="date-picker">
+              <span class="date-arrow" id="prev-arrow">&#9664;</span>
+              <span class="date-text" id="date-text"></span>
+              <span class="date-arrow" id="next-arrow">&#9654;</span>
+            </div>
+            <button class="export-btn">
+              Export to CSV<span> &#128229;</span>
+            </button>
+          </div>
+        </header>
+        <!-- Dodajemy kontener na komunikat -->
+        <div id="messageContainer"></div>
+        <div class="card" id="employeeCard" style="display: none">
+          <h2>Employee List</h2>
+          <table id="employeeTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-column="0">Name</th>
+                <th class="sortable" data-column="1">Hourly Gross Pay</th>
+                <th class="sortable" data-column="2">Total pay</th>
+                <th>Deductions</th>
+                <th>Attendance Hours</th>
+                <th class="sortable" data-column="4">
+                  Employee Tenure (months)
+                </th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody">
+              <!-- Rows will be generated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
+
+    <script nonce="<%= nonce %>">
+      // Przekazujemy companyId z serwera do klienta
+      // const companyId = <%= companyId ? `'${companyId}'` : null %>;
+      const companyId = "<%= companyId %>" ? "<%= companyId %>" : null;
+
+      let currentDate = new Date();
+      let currentMonth = currentDate.getMonth(); // 0 = January
+      let currentYear = currentDate.getFullYear();
+
+      function formatDateRange(month, year) {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        return `01 ${monthNames[month]} - ${lastDay} ${monthNames[month]} ${year}`;
+      }
+
+      async function fetchEmployeeData() {
+        try {
+          const response = await fetch(
+            `<%= baseUrl %>/api/manager/employees-details?month=${
+              currentMonth + 1
+            }&year=${currentYear}&company_id=${companyId}`,
+            {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const data = await response.json();
+          renderTable(data);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+
+      function renderTable(data) {
+        const tableBody = document.getElementById("employeeTableBody");
+        tableBody.innerHTML = ""; // Clear existing rows
+        data.forEach((employee) => {
+          const row = document.createElement("tr");
+
+          row.innerHTML = `
+            <td><a href="<%baseUrl%>/manager/single-emp-details/${employee.id}">${employee.first_name} ${employee.last_name}</a></td>
+            <td>$${employee.salary_per_hour}</td>
+            <td>$${employee.total_pay}</td>
+            <td>
+              <table class="inner-table">
+                <tr><td class="title retirement">Retirement:</td><td class="highlight retirement">$${employee.retirement_contributions}</td></tr>
+                <tr><td class="title disability">Disability:</td><td class="highlight disability">$${employee.disability_contributions}</td></tr>
+                <tr><td class="title healthcare">Healthcare:</td><td class="highlight healthcare">$${employee.healthcare_contributions}</td></tr>
+                <tr><td class="title income-tax">Income Tax:</td><td class="highlight income-tax">$${employee.income_tax}</td></tr>
+                <tr><td class="title net-pay">Net Pay:</td><td class="highlight net-pay">$${employee.net_pay}</td></tr>
+              </table>
+            </td>
+            <td>
+              <table class="inner-table">
+                <tr><td class="title retirement">Hours present in this month:</td><td class="highlight retirement">${employee.hours_present_in_month}</td></tr>
+                <tr><td class="title disability">Hours on sick leave:</td><td class="highlight disability">${employee.hours_on_sick_leave}</td></tr>
+                <tr><td class="title healthcare">Hours on vacation:</td><td class="highlight healthcare">${employee.hours_on_vacation}</td></tr>
+                <tr><td class="title income-tax">Hours on demand leave:</td><td class="highlight income-tax">${employee.hours_on_demand_leave}</td></tr>
+              </table>
+            </td>
+            <td>${employee.employment_duration_months}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      function updateDateText() {
+        const dateText = document.getElementById("date-text");
+        dateText.textContent = formatDateRange(currentMonth, currentYear);
+      }
+
+      function prevMonth() {
+        if (currentMonth === 0) {
+          currentMonth = 11;
+          currentYear--;
+        } else {
+          currentMonth--;
+        }
+        updateDateText();
+        if (companyId) {
+          fetchEmployeeData();
+        }
+      }
+
+      function nextMonth() {
+        if (currentMonth === 11) {
+          currentMonth = 0;
+          currentYear++;
+        } else {
+          currentMonth++;
+        }
+        updateDateText();
+        if (companyId) {
+          fetchEmployeeData();
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("prev-arrow")
+          .addEventListener("click", prevMonth);
+        document
+          .getElementById("next-arrow")
+          .addEventListener("click", nextMonth);
+
+        updateDateText(); // Wyświetla bieżący miesiąc na starcie
+
+        if (companyId) {
+          // Jeśli companyId jest zdefiniowane, pobierz dane i pokaż kartę
+          document.getElementById("employeeCard").style.display = "block";
+          fetchEmployeeData();
+        } else {
+          // Jeśli companyId jest null, pokaż komunikat
+          displayNoCompanyMessage();
+        }
+      });
+
+      function displayNoCompanyMessage() {
+        const messageContainer = document.getElementById("messageContainer");
+        const message = document.createElement("div");
+        message.className = "no-company-message";
+        message.innerHTML = `
+          <p>You haven't defined your company. Please do that here: <a href="<%= baseUrl %>/manager/company/create">Create company</a>.</p>
+        `;
+        messageContainer.appendChild(message);
+      }
+    </script>
+  </body>
+</html>
+
+<!--TODO: add sorting
+    TODO: add exporting to excel
+    TODO: add pagination to json-->

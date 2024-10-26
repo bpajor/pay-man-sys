@@ -9,7 +9,9 @@
     "start": "npm run build && node build/app.js",
     "dev": "tsc && nodemon --watch . --exec ts-node --transpile-only app.ts",
     "heroku-postbuild": "npm run build",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js"
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "seed:config": "ts-node ./node_modules/typeorm-seeding/dist/cli.js config",
+    "seed:run": "ts-node ./node_modules/typeorm-seeding/dist/cli.js seed"
   },
   "repository": {
     "type": "git",
@@ -22,6 +24,7 @@
   },
   "homepage": "https://github.com/bpajor/pay-man-sys#readme",
   "devDependencies": {
+    "@faker-js/faker": "^9.0.3",
     "@types/bcrypt": "^5.0.2",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/express": "^5.0.0",
@@ -29,8 +32,10 @@
     "@types/nodemailer": "^6.4.16",
     "@types/qrcode": "^1.5.5",
     "axios": "^1.7.7",
+    "faker": "^6.6.6",
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.2",
+    "typeorm-seeding": "^1.6.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {

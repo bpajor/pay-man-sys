@@ -6,13 +6,10 @@
     <link rel="stylesheet" href="/css/common/settings/styles.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
-    <link rel="stylesheet" href="/css/employee/main/styles.css" />
-    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/employee/main/styles.css">
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css">
     <title>Ustawienia konta</title>
     <style>
-      .content {
-        margin-bottom: 240px;
-      }
       .user-details-section {
         background-color: #fff;
         padding: 20px;
@@ -50,22 +47,6 @@
         top: 20px;
       }
 
-      .leave-button {
-        background-color: #f44336; /* Kolor czerwony jak przycisk "Cancel" */
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        position: absolute;
-        top: 20px;
-        right: 140px; /* Ustaw pozycję na lewo od przycisku "Edit" */
-      }
-
-      .leave-button:hover {
-        background-color: #d32f2f;
-      }
-
       .edit-button {
         right: 20px;
       }
@@ -90,19 +71,25 @@
       input[type="email"],
       input[type="tel"],
       input[type="date"],
-      input[type="number"] {
+      input[type="number"]
+      {
         width: 100%;
         padding: 8px;
         margin-bottom: 15px;
         border: 1px solid #ccc;
         border-radius: 4px;
       }
+
+      .company-create {
+        color: #008cba;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
-    <%- include("../includes/header", { baseUrl, loggedUser, accountType }) %>
+    <%- include("../includes/header", { baseUrl, loggedUser , accountType}) %>
     <main>
-      <%- include("../includes/left-dashboard-nav") %>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
       <section class="content">
         <div id="notification-bar" class="notification hidden"></div>
         <h2>Security settings</h2>
@@ -216,13 +203,169 @@
           </form>
 
           <!-- Buttons -->
-          <% if (loggedUser.employee_id) { %>
-          <button class="leave-button" id="leave-button">Leave Company</button>
-          <% } %>
           <button class="edit-button" id="edit-button">Edit</button>
           <button class="cancel-button" id="cancel-button">Cancel</button>
         </section>
+        <br />
+        <% if (company) {%>
+        <section class="user-details-section">
+          <h2>Company Settings</h2>
 
+          <div id="display-mode-company">
+            <p><span class="label">Name:</span> <%= company.name %></p>
+            <p>
+              <span class="label">Daily hours:</span> <%= company.hours_per_day
+              %>
+            </p>
+            <p>
+              <span class="label">Max marked days in one month: </span> <%= company.max_days_per_month %>
+            </p>
+            <p>
+              <span class="label">Sick leave percent rate:</span> <%=
+              company.sick_leave_percent_factor%> %
+            </p>
+            <p>
+              <span class="label">Vacation leave percent rate:</span> <%=
+              company.vacation_percent_factor %> %
+            </p>
+            <p>
+              <span class="label">On demand leave percent facor</span> <%=
+              company.on_demand_percent_factor %> %
+            </p>
+            <p>
+              <span class="label">Retirement rate:</span> <%=
+              company.retirement_rate %> %
+            </p>
+            <p>
+              <span class="label">Disability rate:</span> <%=
+              company.disability_rate%> %
+            </p>
+            <p>
+              <span class="label">Healthcare rate:</span> <%=
+              company.healthcare_rate %> %
+            </p>
+            <p>
+              <span class="label">Income tax rate:</span> <%=
+              company.income_tax_rate %> %
+            </p>
+          </div>
+
+          <form
+            id="edit-mode-company"
+            style="display: none"
+            method="post"
+            action="<%= baseUrl %>/manager/settings/update-company-settings"
+          >
+            <label for="name">Name:</label>
+            <input
+              name="name"
+              type="text"
+              id="company-name"
+              value="<%= company.name %>"
+            />
+
+            <label for="hours_per_day">Daily hours:</label>
+            <input
+              name="hours_per_day"
+              type="number"
+              id="hours-per-day"
+              value="<%= company.hours_per_day %>"
+            />
+
+            <label for="max_days_per_month">Max marked days in one month:</label>
+            <input
+              name="max_days_per_month"
+              type="number"
+              id="max-days-per-month"
+              value="<%= company.max_days_per_month %>"
+            />
+
+            <label for="sick_leave_percent_factor">Sick leave percent rate (%):</label>
+            <input
+              name="sick_leave_percent_factor"
+              type="number"
+              id="sick-leave-percent"
+              value="<%= company.sick_leave_percent_factor %>"
+              min="0"
+              max="100"
+            />
+
+            <label for="vacation_percent_factor">Vacation leave percent rate (%):</label>
+            <input
+              name="vacation_percent_factor"
+              type="number"
+              id="vacation-leave-percent"
+              value="<%= company.vacation_percent_factor %>"
+              min="0"
+              max="100"
+            />
+
+            <label for="on_demand_percent_factor">On demand leave percent factor (%)</label>
+            <input
+              name="on_demand_percent_factor"
+              type="number"
+              id="on-demand-leave-percent"
+              value="<%= company.on_demand_percent_factor %>"
+              min="0"
+              max="100"
+
+            />
+
+            <label for="retirement_rate">Retirement rate (%):</label>
+            <input
+              name="retirement_rate"
+              type="number"
+              id="retirement-rate"
+              value="<%= company.retirement_rate %>"
+              min="0"
+              max="100"
+            />
+
+            <label for="disability_rate">Disability rate (%):</label>
+            <input
+              name="disability_rate"
+              type="number"
+              id="disability-rate"
+              value="<%= company.disability_rate %>"
+              min="0"
+              max="100"
+            />
+
+            <label for="healthcare_rate">Healthcare rate (%):</label>
+            <input
+              name="healthcare_rate"
+              type="number"
+              id="healthcare-rate"
+              value="<%= company.healthcare_rate %>"
+              min="0"
+              max="100"
+            />
+
+            <label for="income_tax_rate">Income tax rate (%):</label>
+            <input
+              name="income_tax_rate"
+              type="number"
+              id="income-tax-rate"
+              value="<%= company.income_tax_rate %>"
+              min="0"
+              max="100"
+            />
+
+            <button type="submit" class="save-button" id="save-button-company">
+              Save
+            </button>
+          </form>
+
+          <button class="edit-button" id="edit-button-company">Edit</button>
+          <button class="cancel-button" id="cancel-button-company">Cancel</button>
+        </section>
+        <% } else {%>
+          <section class="user-details-section">
+            <h1>You haven't defined your company yet!</h1>
+            <label>Follow the link to create one: </label>
+            <a class="company-create" href="<%= baseUrl %>/manager/company/create"> Create company</a>
+          </section>
+        <% } %>
         <!-- Możesz dodać więcej opcji ustawień -->
       </section>
     </main>
@@ -231,51 +374,9 @@
     </footer>
   </body>
 
-  <%- include("../includes/manager_left_dashboard_listener") %>
+  <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
 
   <script nonce="<%= nonce %>">
-    <% if (loggedUser.employee_id) { %>
-    document
-      .getElementById("leave-button")
-      .addEventListener("click", function () {
-        const confirmLeave = confirm(
-          "Are you sure you want to leave the company?"
-        );
-        if (confirmLeave) {
-          // Tu możesz dodać logikę np. do wysłania żądania do serwera
-          fetch("<%= baseUrl %>/api/employee/delete", {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              console.log(data);
-              if (data.success) {
-                showNotification("You have left the company.", true);
-                setTimeout(() => {
-                  window.location.href = "<%= baseUrl %>/employee/dashboard";
-                }, 3000);
-              } else {
-                showNotification(
-                  "Error leaving company: " + data.message,
-                  false
-                );
-              }
-            })
-            .catch((error) => {
-              console.log(error);
-              showNotification(
-                "Internal server error. Please try again later.",
-                false
-              );
-            });
-        }
-      });
-      <% } %>
-
     const editButton = document.getElementById("edit-button");
     const saveButton = document.getElementById("save-button");
     const cancelButton = document.getElementById("cancel-button");
@@ -285,10 +386,6 @@
 
     // Function to switch to edit mode
     editButton.addEventListener("click", () => {
-      <% if (loggedUser.employee_id) { %>
-      const leaveButton = document.getElementById("leave-button");
-      leaveButton.style.display = "none";
-      <% } %>
       displayMode.style.display = "none";
       editMode.style.display = "block";
 
@@ -299,10 +396,6 @@
 
     // Function to cancel edit mode
     cancelButton.addEventListener("click", () => {
-      <% if (loggedUser.employee_id) { %>
-      const leaveButton = document.getElementById("leave-button");
-      leaveButton.style.display = "inline-block";
-      <% } %>
       displayMode.style.display = "block";
       editMode.style.display = "none";
 
@@ -313,9 +406,7 @@
 
     // const editButtonCompany = document.getElementById("edit-button-company");
     // const saveButtonCompany = document.getElementById("save-button-company");
-    // const cancelButtonCompany = document.getElementById(
-    //   "cancel-button-company"
-    // );
+    // const cancelButtonCompany = document.getElementById("cancel-button-company");
 
     // const displayModeCompany = document.getElementById("display-mode-company");
     // const editModeCompany = document.getElementById("edit-mode-company");

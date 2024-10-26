@@ -9,6 +9,11 @@ import { incrementFailedAttempts } from "./helpers/ddos";
 import { getAllowedHosts, transporter } from "./helpers/transporter";
 import crypto, { verify } from "crypto";
 import { verify2fa } from "./helpers/twoFA";
+import { Company } from "../entity/Company";
+import OTPAuth from "otpauth";
+import { encode } from "hi-base32";
+import QRCode from "qrcode";
+import { JoinRequest } from "../entity/JoinRequest";
 
 export const getLogin = (req: Request, res: Response) => {
   const logger: Logger = res.locals.logger;
@@ -71,7 +76,15 @@ export const postLogin = async (
   }
 
   try {
-    user = await user_repo.findOne({ where: { email: email } });
+    // user = await user_repo.findOne({ where: { email: email } });
+    user = await user_repo
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.company", "company")
+      .leftJoinAndSelect("user.employees", "employee")
+      .leftJoinAndSelect("employee.company", "employeeCompany")
+      .where("user.email = :email", { email })
+      .getOne();
+
     if (!user) {
       logger.error(`User with email ${email} not found`);
 
@@ -108,13 +121,49 @@ export const postLogin = async (
     return next(error);
   }
 
-  req.session.uid = user.id;
-  req.session.email = user.email;
-  req.session.account_type = user.account_type as "employee" | "manager";
+  let company_id;
+
+  if (user.company) {
+    company_id = user.company.id;
+  } else if (user.employees[0]?.company) {
+    company_id = user.employees[0].company.id;
+  } else {
+    company_id = null;
+  }
+
+  let employee_id = null;
+  if (user.employees[0]) {
+    employee_id = user.employees[0].id;
+  }
+
+  let user_to_session = {
+    uid: user.id,
+    email: user.email,
+    account_type: user.account_type as "employee" | "manager",
+    company_id,
+    employee_id,
+  };
+  req.session.user = user_to_session;
+
+  if (user.account_type === "manager" && user.company) {
+    try {
+      const jrequests_pending = await AppDataSource.getRepository(
+        JoinRequest
+      ).exists({
+        where: { company: { id: user.company.id }, status: "pending" },
+      });
+
+      req.session.jrequests_pending = jrequests_pending;
+    } catch (error) {
+      logger.error(`Error checking for pending join requests: ${error}`);
+      res.status(500);
+      return next(error);
+    }
+  }
 
   await redisClient.del(attemptsKey);
 
-  if (user.twoFASecret) {
+  if (user.two_fa_secret) {
     logger.info(`2fa pending for user ${email}`);
     req.session.pending_2fa = true;
     logger.info(`Redirecting to 2fa verification page`);
@@ -123,7 +172,12 @@ export const postLogin = async (
 
   logger.info(`User ${email} successfully logged in`);
 
-  return res.redirect("/employee/dashboard");
+  const redirect_path =
+    user.account_type === "manager"
+      ? "/manager/dashboard"
+      : "/employee/dashboard";
+
+  return res.redirect(redirect_path);
 };
 
 export const getSignup = (req: Request, res: Response) => {
@@ -162,8 +216,17 @@ export const postSignup = async (
     });
   }
 
-  const { name, last_name, email, password, confirm_password, account_type } =
-    req.body;
+  const {
+    name,
+    last_name,
+    email,
+    password,
+    confirm_password,
+    account_type,
+    phone,
+    address,
+    date_of_birth,
+  } = req.body;
 
   if (password !== confirm_password) {
     logger.error(`Passwords do not match`);
@@ -207,6 +270,9 @@ export const postSignup = async (
     new_user.email = email;
     new_user.password_hash = hashed_password;
     new_user.account_type = account_type;
+    new_user.phone_number = phone;
+    new_user.home_address = address;
+    new_user.date_of_birth = new Date(date_of_birth);
 
     // Save the user
     await user_repo.save(new_user);
@@ -302,8 +368,8 @@ export const postForgotPassword = async (
   try {
     logger.info(`Assigning token to user`);
     await user_repo.update(user.id, {
-      resetToken: hashed_token,
-      resetTokenExpiration: token_expiration,
+      reset_token: hashed_token,
+      reset_token_expiration: token_expiration,
     });
   } catch (err) {
     logger.error(`Error assigning token to user: ${err}`);
@@ -405,6 +471,17 @@ export const postResetPassword = async (
   try {
     logger.info("Finding user by reset token");
     user = await user_repo.findOneBy({ email: email });
+
+    if (!user) {
+      logger.error(`User with email ${email} not found`);
+      return res.status(400).render("auth/reset-password", {
+        baseUrl: `${process.env.BASE_URL}`,
+        error: `Failed fetching ${email} data. It may not exist.`,
+        success: null,
+        nonce: res.locals.nonce,
+        token,
+      });
+    }
   } catch (err) {
     logger.error(`Error finding user by reset token: ${err}`);
     res.status(500);
@@ -412,9 +489,8 @@ export const postResetPassword = async (
   }
 
   if (
-    !user ||
-    !user.resetTokenExpiration ||
-    user.resetTokenExpiration < new Date()
+    !user.reset_token_expiration ||
+    user.reset_token_expiration < new Date()
   ) {
     logger.error(`Invalid or expired token`);
     return res.status(400).render("auth/reset-password", {
@@ -429,7 +505,7 @@ export const postResetPassword = async (
   try {
     const is_token_valid = await bcrypt.compare(
       token,
-      user.resetToken as string
+      user.reset_token as string
     );
     if (!is_token_valid) {
       logger.error(`Invalid token`);
@@ -456,13 +532,13 @@ export const postResetPassword = async (
     return next(error);
   }
 
-  if (!user.twoFASecret) {
+  if (!user.two_fa_secret) {
     try {
       logger.info(`Updating user password`);
       await user_repo.update(user.id, {
         password_hash: hashed_password,
-        resetToken: null,
-        resetTokenExpiration: null,
+        reset_token: null,
+        reset_token_expiration: null,
       });
     } catch (error) {
       logger.error(`Error updating user password: ${error}`);
@@ -563,23 +639,23 @@ export const postLoginVerify2fa = async (
     });
   }
 
-  const { code } = req.body as { code: number };
-
-  if (!req.session.uid || !req.session.email) {
+  if (!req.session.user?.uid || !req.session.user?.email) {
     logger.error(`Session data not found`);
     return res.redirect("/login");
   }
 
+  const { code } = req.body as { code: number };
+
   if (!req.session.pending_2fa) {
     logger.error(`2fa not pending`);
-    if (req.session.uid) {
-      return res.redirect("/employee/dashboard");
+    if (req.session.user!.uid) {
+      return res.redirect(`/${req.session.user?.account_type}/dashboard`);
     }
     return res.redirect("/");
   }
 
   // Session is already set, but not verified
-  const { uid, email } = req.session;
+  const { uid, email } = req.session.user;
 
   let attempts_key: string;
   let lock_key: string;
@@ -633,10 +709,10 @@ export const postLoginVerify2fa = async (
     return next(new Error("User not found"));
   }
 
-  if (!user.twoFASecret) {
+  if (!user.two_fa_secret) {
     logger.error(`2fa not enabled for user`);
-    if (req.session.uid) {
-      return res.redirect("/employee/dashboard");
+    if (req.session.user!.uid) {
+      return res.redirect(`/${req.session.user.account_type}/dashboard`);
     }
 
     return res.redirect("/");
@@ -648,7 +724,7 @@ export const postLoginVerify2fa = async (
     logger.info(`Verifying 2fa code`);
 
     // We assume that twoFASecret is available here
-    verified = await verify2fa(user.twoFASecret as string, code.toString());
+    verified = await verify2fa(user.two_fa_secret as string, code.toString());
   } catch (error) {
     logger.error(`Error verifying 2fa code: ${error}`);
     res.status(500);
@@ -660,7 +736,7 @@ export const postLoginVerify2fa = async (
     logger.info(`2fa code verified`);
     try {
       logger.info(`Redirecting to dashboard`);
-      return res.redirect("/employee/dashboard");
+      return res.redirect(`/${req.session.user?.account_type}/dashboard`);
     } catch (error) {
       logger.error(`Error redirecting to dashboard: ${error}`);
       res.status(500);
@@ -762,7 +838,7 @@ export const postResetPasswordVerify2fa = async (
     return next(new Error("User not found"));
   }
 
-  if (!user.twoFASecret) {
+  if (!user.two_fa_secret) {
     logger.error(`2fa not enabled for user`);
     return res.redirect("/login");
   }
@@ -772,7 +848,7 @@ export const postResetPasswordVerify2fa = async (
     logger.info(`Verifying 2fa code`);
 
     // We assume that twoFASecret is available here
-    verified = await verify2fa(user.twoFASecret as string, code.toString());
+    verified = await verify2fa(user.two_fa_secret as string, code.toString());
   } catch (error) {
     logger.error(`Error verifying 2fa code: ${error}`);
     res.status(500);
@@ -794,8 +870,8 @@ export const postResetPasswordVerify2fa = async (
       logger.info(`Updating user password`);
       await user_repo.update(user.id, {
         password_hash: hashed_password,
-        resetToken: null,
-        resetTokenExpiration: null,
+        reset_token: null,
+        reset_token_expiration: null,
       });
     } catch (error) {
       logger.error(`Error updating user password: ${error}`);
@@ -843,4 +919,23 @@ export const postLogout = async (
     logger.info(`Session destroyed`);
     res.redirect("/login");
   });
+};
+
+const generate2FASecret = (userEmail: string) => {
+  // Utwórz obiekt OTPAuth.TOTP (czasowy kod jednorazowy)
+  const totp = new OTPAuth.TOTP({
+    issuer: "PayrollPro", // Nazwa Twojej aplikacji
+    label: userEmail, // Email użytkownika jako identyfikator
+    algorithm: "SHA1",
+    digits: 6,
+    period: 30,
+  });
+
+  // Wygeneruj tajny klucz (base32 encoded)
+  const secret = encode(totp.secret.bytes);
+
+  // Utwórz URL dla aplikacji uwierzytelniającej
+  const otpauthURL = totp.toString();
+
+  return { secret, otpauthURL };
 };

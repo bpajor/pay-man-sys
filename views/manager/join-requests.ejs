@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- ... pozostałe meta dane i linki do stylów ... -->
+    <link rel="stylesheet" href="/css/common/settings/styles.css" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <title>Employee Details</title>
+    <style>
+      .join-requests-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      .join-requests-table th,
+      .join-requests-table td {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+
+      .join-requests-table th {
+        background-color: #f4f4f4;
+      }
+
+      .join-requests-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      .btn-accept {
+        display: inline-block;
+        padding: 8px 12px;
+        background-color: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        border: none;
+      }
+
+      .btn-accept:hover {
+        background-color: #218838;
+      }
+
+      .btn-reject {
+        display: inline-block;
+        padding: 8px 12px;
+        background-color: #dc3545;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        border: none;
+      }
+
+      .btn-reject:hover {
+        background-color: #c82333;
+      }
+
+       /* Dodajemy podstawową stylizację dla komunikatu */
+       .no-company-message {
+        padding: 20px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      .no-company-message a {
+        color: #721c24;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType,
+      jrequestsPending}) %>
+      <section class="content">
+        <div id="messageContainer"></div>
+        <h2>Employee Join Requests</h2>
+        <table class="join-requests-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone Number</th>
+              <th>Date of Birth</th>
+              <th>Email</th>
+              <th>Home Address</th>
+              <th>Accept</th>
+              <th>Reject</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% joinRequests.forEach(function(request, index) { %>
+            <tr>
+              <td><%= request.name %> <%= request.last_name %></td>
+              <td><%= request.phone_number %></td>
+              <td>
+                <%= new Date(request.date_of_birth).toLocaleDateString() %>
+              </td>
+              <td><%= request.email %></td>
+              <td><%= request.home_address %></td>
+              <td>
+                <button
+                  class="btn-accept"
+                  data-email="<%= request.email %>"
+                  data-id="<%= request.id %>"
+                >
+                  Accept
+                </button>
+              </td>
+              <td>
+                <button class="btn-reject" data-email="<%= request.email %>">
+                  Reject
+                </button>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
+
+    <script nonce="<%= nonce %>">
+      document.addEventListener("DOMContentLoaded", function () {
+
+        const company_id = '<%= loggedUser.company_id %>';
+
+        if (company_id.length === 0) {
+          displayNoCompanyMessage();
+          return;
+        }
+        // const join_requests = '<%= JSON.stringify(joinRequests) %>';
+
+        // if (join_requests === '[]') {
+        //   displayNoCompanyMessage();
+        //   return;
+        // }
+        
+        // Pobieramy wszystkie przyciski "Accept" i "Reject"
+        const acceptButtons = document.querySelectorAll(".btn-accept");
+        const rejectButtons = document.querySelectorAll(".btn-reject");
+
+        // Iterujemy po wszystkich przyciskach "Accept" i przypisujemy event listener
+        acceptButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            const jr_id = button.getAttribute("data-id");
+            // Przekierowanie na stronę akceptacji z emailem jako parametrem
+            window.location.href = `<%= baseUrl %>/manager/join-request/${jr_id}`;
+          });
+        });
+
+        // Iterujemy po wszystkich przyciskach "Reject" i przypisujemy event listener
+        rejectButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            const email = button.getAttribute("data-email");
+            fetch(`<%= baseUrl %>/api/manager/delete/join_request`, {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email: email }),
+              credentials: "include",
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  alert("Request rejected for: " + email);
+                  const row = button.parentElement.parentElement;
+                  row.remove();
+                } else {
+                  alert("Failed to reject request: " + data.message);
+                }
+              })
+              .catch((error) => {
+                alert("Error: " + error.message);
+              });
+          });
+        });
+      });
+
+      function displayNoCompanyMessage() {
+        const messageContainer = document.getElementById("messageContainer");
+        const message = document.createElement("div");
+        message.className = "no-company-message";
+        message.innerHTML = `
+          <p>You haven't defined your company. Please do that here: <a href="<%= baseUrl %>/manager/company/create">Create Company</a>.</p>
+        `;
+        messageContainer.appendChild(message);
+      }
+    </script>
+  </body>
+</html>

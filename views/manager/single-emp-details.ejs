@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta tags and links -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/common/header.css" />
+    <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/common/date-picker.css" />
+    <link rel="stylesheet" href="/css/manager/single_emp_details/styles.css" />
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js"
+      nonce="<%= nonce %>"
+    ></script>
+    <title>Employee Details</title>
+    <style>
+      /* Basic styling for the no-company message */
+      .no-company-message {
+        padding: 20px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      .no-company-message a {
+        color: #721c24;
+        text-decoration: underline;
+      }
+
+      /* Style for the "Card data is not available" message */
+      .no-data-message {
+        display: none; /* Hidden by default */
+        padding: 20px;
+        background-color: #ffeeba;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include("../includes/header", { baseUrl, loggedUser, accountType }) %>
+    <main>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType,
+      jrequestsPending}) %>
+      <section class="content">
+        <header class="content-header">
+          <div class="header-left">
+            <h1></h1>
+          </div>
+          <div class="header-right">
+            <div class="date-picker">
+              <span class="date-arrow" id="prev-arrow">&#9664;</span>
+              <span class="date-text" id="date-text"></span>
+              <span class="date-arrow" id="next-arrow">&#9654;</span>
+            </div>
+            <button class="export-btn">
+              Export to CSV<span> &#128229;</span>
+            </button>
+          </div>
+        </header>
+        <section class="cards">
+          <div id="messageContainer"></div>
+          <div class="card" id="personal-info-card">
+            <div class="card-header">
+              <p>Personal Information</p>
+            </div>
+            <div class="card-content">
+              <p class="no-data-message">Card data is not available</p>
+              <div>
+                <label>Name:</label>
+                <span>John Doe</span>
+              </div>
+              <div>
+                <label>Email:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Phone Number:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Home Address:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Date of Birth:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Hours worked:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Hours on sick leave</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Hours on vacation</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Hours on demand leave</label>
+                <span></span>
+              </div>
+            </div>
+          </div>
+          <div class="card" id="health-info-card">
+            <div class="card-header">
+              <p>Health Information</p>
+            </div>
+            <div class="card-content">
+              <p class="no-data-message">Card data is not available</p>
+              <div>
+                <label>Health Insurance:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Policy Number:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Healthcare Provider:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Policy Expiry Date:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Notes:</label>
+                <span></span>
+              </div>
+            </div>
+          </div>
+          <div class="card" id="compensation-card">
+            <div class="card-header">
+              <p>Compensation Details</p>
+              <button class="edit-button">Edit</button>
+            </div>
+            <div class="card-content">
+              <p class="no-data-message">Card data is not available</p>
+              <form
+                method="POST"
+                action="<%= baseUrl %>/manager/update-employee-payment-details/<%= employeeId %>"
+              >
+                <input type="hidden" name="type" value="salary_update" />
+                <div>
+                  <label>Hourly Gross Pay:</label>
+                  <span></span>
+                  <input type="text" name="salary" style="display: none" />
+                </div>
+                <div>
+                  <label>Bonus:</label>
+                  <span></span>
+                  <input type="text" name="bonus" style="display: none" />
+                </div>
+                <div>
+                  <label>Net pay</label>
+                  <span></span>
+                </div>
+                <div>
+                  <label>Total pay</label>
+                  <span></span>
+                </div>
+                <button type="submit" class="save-button" style="display: none">
+                  Save
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="card" id="contributions-card">
+            <div class="card-header">
+              <p>Contributions Details</p>
+            </div>
+            <div class="card-content">
+              <p class="no-data-message">Card data is not available</p>
+              <div>
+                <label>Retirement Contribution:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Disability Contribution:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Healthcare Contribution:</label>
+                <span></span>
+              </div>
+              <div>
+                <label>Income Tax:</label>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer>
+      <p>© 2024 PayrollPro. All rights reserved.</p>
+    </footer>
+
+    <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>x
+
+    <script nonce="<%= nonce %>">
+      const companyId = "<%= companyId %>" ? "<%= companyId %>" : null;
+      const employeeId = "<%= employeeId %>" ? "<%= employeeId %>" : null;
+
+      let currentDate = new Date();
+      let currentMonth = currentDate.getMonth(); // 0 = January
+      let currentYear = currentDate.getFullYear();
+
+      // Define today's date and month
+      let today = new Date();
+      let todayMonth = today.getMonth();
+      let todayYear = today.getFullYear();
+
+      function formatDateRange(month, year) {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        return `01 ${monthNames[month]} - ${lastDay} ${monthNames[month]} ${year}`;
+      }
+
+      function updateDateText() {
+        const dateText = document.getElementById("date-text");
+        dateText.textContent = formatDateRange(currentMonth, currentYear);
+      }
+
+      function updateEditButtons() {
+        const editButtons = document.querySelectorAll(".edit-button");
+        const saveButtons = document.querySelectorAll(".save-button");
+
+        if (currentMonth === todayMonth && currentYear === todayYear) {
+          editButtons.forEach((button) => {
+            button.style.display = "block";
+          });
+        } else {
+          editButtons.forEach((button) => {
+            button.style.display = "none";
+          });
+          saveButtons.forEach((button) => {
+            button.style.display = "none";
+          });
+        }
+      }
+
+      function prevMonth() {
+        currentMonth--;
+        if (currentMonth < 0) {
+          currentMonth = 11;
+          currentYear--;
+        }
+        updateDateText();
+        fetchEmployeeData();
+        updateEditButtons(); // Update edit buttons visibility
+      }
+
+      function nextMonth() {
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+        updateDateText();
+        fetchEmployeeData();
+        updateEditButtons(); // Update edit buttons visibility
+      }
+
+      function displayNoCompanyMessage() {
+        const messageContainer = document.getElementById("messageContainer");
+        const message = document.createElement("div");
+        message.className = "no-company-message";
+        message.innerHTML = `
+          <p>You haven't defined your company. Please do that here: <a href="<%= baseUrl %>/company-settings">Company Settings</a>.</p>
+        `;
+        messageContainer.appendChild(message);
+      }
+
+      function fetchEmployeeDetails() {
+        const monthParam = currentMonth + 1; // Adjust for 1-based month
+        const url = `<%=baseUrl%>/api/manager/single-emp-details?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}&with_details=true`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Data fetched:", data);
+            populateCards(data);
+            setEmployeeUserName(data);
+          })
+          .catch((error) =>
+            console.error("Error fetching employee details:", error)
+          );
+      }
+
+      function fetchEmployeeData() {
+        const monthParam = currentMonth + 1; // Adjust for 1-based month
+        const url = `http://<%=baseUrl%>/api/manager/single-emp-details?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Data fetched:", data);
+            updateFields(data);
+          })
+          .catch((error) =>
+            console.error("Error fetching employee data:", error)
+          );
+      }
+
+      function setEmployeeUserName(data) {
+        const employeeData = data || {};
+        const employeeName = `${employeeData.first_name} ${employeeData.last_name}`;
+        document.querySelector(".header-left h1").textContent = employeeName;
+      }
+
+      function populateCards(data) {
+        const employeeData = data || {};
+        console.log("Populating cards with data:", employeeData);
+
+        // Personal Information Card
+        const personalInfoCard = document.getElementById("personal-info-card");
+        const personalNoDataMessage =
+          personalInfoCard.querySelector(".no-data-message");
+        const personalContentDivs =
+          personalInfoCard.querySelectorAll(".card-content div");
+
+        if (Object.keys(employeeData).length === 0) {
+          personalNoDataMessage.style.display = "block";
+          personalContentDivs.forEach((div) => (div.style.display = "none"));
+        } else {
+          console.log("Employee data:", employeeData);
+
+          personalNoDataMessage.style.display = "none";
+          personalContentDivs.forEach((div) => (div.style.display = "flex"));
+          const personalFields = personalContentDivs;
+          personalFields[0].querySelector(
+            "span"
+          ).textContent = `${employeeData.first_name} ${employeeData.last_name}`;
+          personalFields[1].querySelector("span").textContent =
+            employeeData.email || "N/A";
+          personalFields[2].querySelector("span").textContent =
+            employeeData.phone_number || "N/A";
+          personalFields[3].querySelector("span").textContent =
+            employeeData.home_address || "N/A";
+          personalFields[4].querySelector("span").textContent =
+            employeeData.date_of_birth || "N/A";
+          personalFields[5].querySelector("span").textContent =
+            employeeData.hours_present_in_month || 0;
+          personalFields[6].querySelector("span").textContent =
+            employeeData.hours_on_sick_leave || 0;
+          personalFields[7].querySelector("span").textContent =
+            employeeData.hours_on_vacation || 0;
+          personalFields[8].querySelector("span").textContent =
+            employeeData.hours_on_demand_leave || 0;
+        }
+
+        // Health Information Card
+        const healthInfoCard = document.getElementById("health-info-card");
+        const healthNoDataMessage =
+          healthInfoCard.querySelector(".no-data-message");
+        const healthContentDivs =
+          healthInfoCard.querySelectorAll(".card-content div");
+        const healthInfo = employeeData.health_insurance_metadata
+          ? employeeData.health_insurance_metadata[0]
+          : {};
+
+        if (Object.keys(healthInfo).length === 0) {
+          healthNoDataMessage.style.display = "block";
+          healthContentDivs.forEach((div) => (div.style.display = "none"));
+        } else {
+          healthNoDataMessage.style.display = "none";
+          healthContentDivs.forEach((div) => (div.style.display = "flex"));
+          const healthFields = healthContentDivs;
+          healthFields[0].querySelector("span").textContent = healthInfo
+            ? "Yes"
+            : "No";
+          healthFields[1].querySelector("span").textContent =
+            healthInfo.policy_number || "N/A";
+          healthFields[2].querySelector("span").textContent =
+            healthInfo.provider || "N/A";
+          healthFields[3].querySelector("span").textContent =
+            healthInfo.expiration_date || "N/A";
+          healthFields[4].querySelector("span").textContent =
+            healthInfo.notes || "N/A";
+        }
+
+        // Compensation Details Card
+        const compensationCard = document.getElementById("compensation-card");
+        const compensationNoDataMessage =
+          compensationCard.querySelector(".no-data-message");
+        const compensationContentDivs =
+          compensationCard.querySelectorAll(".card-content div");
+
+        if (employeeData.salary_per_hour === undefined) {
+          compensationNoDataMessage.style.display = "block";
+          compensationContentDivs.forEach(
+            (div) => (div.style.display = "none")
+          );
+        } else {
+          compensationNoDataMessage.style.display = "none";
+          compensationContentDivs.forEach(
+            (div) => (div.style.display = "flex")
+          );
+          const compensationFields = compensationContentDivs;
+          compensationFields[0].querySelector("span").textContent =
+            employeeData.salary_per_hour || "N/A";
+          compensationFields[0].querySelector("input").value =
+            employeeData.salary_per_hour || "";
+          compensationFields[1].querySelector("span").textContent =
+            employeeData.bonus || 0;
+          compensationFields[1].querySelector("input").value =
+            employeeData.bonus || "";
+          compensationFields[2].querySelector("span").textContent =
+            employeeData.net_pay || "N/A";
+          compensationFields[3].querySelector("span").textContent =
+            employeeData.total_pay || "N/A";
+        }
+
+        // Contributions Details Card
+        const contributionsCard = document.getElementById("contributions-card");
+        const contributionsNoDataMessage =
+          contributionsCard.querySelector(".no-data-message");
+        const contributionsContentDivs =
+          contributionsCard.querySelectorAll(".card-content div");
+
+        if (
+          employeeData.retirement_contributions === undefined &&
+          employeeData.disability_contributions === undefined &&
+          employeeData.healthcare_contributions === undefined &&
+          employeeData.income_tax === undefined
+        ) {
+          contributionsNoDataMessage.style.display = "block";
+          contributionsContentDivs.forEach(
+            (div) => (div.style.display = "none")
+          );
+        } else {
+          contributionsNoDataMessage.style.display = "none";
+          contributionsContentDivs.forEach(
+            (div) => (div.style.display = "flex")
+          );
+          const contributionsFields = contributionsContentDivs;
+          contributionsFields[0].querySelector("span").textContent =
+            employeeData.retirement_contributions || 0;
+          contributionsFields[1].querySelector("span").textContent =
+            employeeData.disability_contributions || 0;
+          contributionsFields[2].querySelector("span").textContent =
+            employeeData.healthcare_contributions || 0;
+          contributionsFields[3].querySelector("span").textContent =
+            employeeData.income_tax || 0;
+        }
+      }
+
+      function updateFields(data) {
+        const employeeData = data || {};
+        console.log("Updating fields with data:", employeeData);
+
+        // Personal Information Card
+        const personalInfoCard = document.getElementById("personal-info-card");
+        const personalNoDataMessage =
+          personalInfoCard.querySelector(".no-data-message");
+        const personalContentDivs =
+          personalInfoCard.querySelectorAll(".card-content div");
+
+        if (Object.keys(employeeData).length === 0) {
+          personalNoDataMessage.style.display = "block";
+          personalContentDivs.forEach((div) => (div.style.display = "none"));
+        } else {
+          personalNoDataMessage.style.display = "none";
+          personalContentDivs.forEach((div) => (div.style.display = "flex"));
+          const personalFields = personalContentDivs;
+          personalFields[5].querySelector("span").textContent =
+            employeeData.hours_present_in_month || "N/A";
+          personalFields[6].querySelector("span").textContent =
+            employeeData.hours_on_sick_leave || "N/A";
+          personalFields[7].querySelector("span").textContent =
+            employeeData.hours_on_vacation || "N/A";
+          personalFields[8].querySelector("span").textContent =
+            employeeData.hours_on_demand_leave || "N/A";
+        }
+
+        // Contributions Details Card
+        const contributionsCard = document.getElementById("contributions-card");
+        const contributionsNoDataMessage =
+          contributionsCard.querySelector(".no-data-message");
+        const contributionsContentDivs =
+          contributionsCard.querySelectorAll(".card-content div");
+
+        if (
+          employeeData.retirement_contributions === undefined &&
+          employeeData.disability_contributions === undefined &&
+          employeeData.healthcare_contributions === undefined &&
+          employeeData.income_tax === undefined
+        ) {
+          contributionsNoDataMessage.style.display = "block";
+          contributionsContentDivs.forEach(
+            (div) => (div.style.display = "none")
+          );
+        } else {
+          contributionsNoDataMessage.style.display = "none";
+          contributionsContentDivs.forEach(
+            (div) => (div.style.display = "flex")
+          );
+          const contributionsFields = contributionsContentDivs;
+          contributionsFields[0].querySelector("span").textContent =
+            employeeData.retirement_contributions || 0;
+          contributionsFields[1].querySelector("span").textContent =
+            employeeData.disability_contributions || 0;
+          contributionsFields[2].querySelector("span").textContent =
+            employeeData.healthcare_contributions || 0;
+          contributionsFields[3].querySelector("span").textContent =
+            employeeData.income_tax || 0;
+        }
+
+        // Health Information Card
+        const healthcareCard = document.getElementById("health-info-card");
+        const healthcareNoDataMessage =
+          healthcareCard.querySelector(".no-data-message");
+        const healthcareContentDivs =
+          healthcareCard.querySelectorAll(".card-content div");
+
+        if (employeeData.health_insurance_metadata === undefined) {
+          healthcareNoDataMessage.style.display = "block";
+          healthcareContentDivs.forEach((div) => (div.style.display = "none"));
+        } else {
+          healthcareNoDataMessage.style.display = "none";
+          healthcareContentDivs.forEach((div) => (div.style.display = "flex"));
+          const healthcareFields = healthcareContentDivs;
+          healthcareFields[0].querySelector("span").textContent = employeeData
+            .health_insurance_metadata[0]
+            ? "Yes"
+            : "No";
+          healthcareFields[1].querySelector("span").textContent =
+            employeeData.health_insurance_metadata[0].policy_number || "N/A";
+          healthcareFields[2].querySelector("span").textContent =
+            employeeData.health_insurance_metadata[0].provider || "N/A";
+          healthcareFields[3].querySelector("span").textContent =
+            employeeData.health_insurance_metadata[0].expiration_date || "N/A";
+          healthcareFields[4].querySelector("span").textContent =
+            employeeData.health_insurance_metadata[0].notes || "N/A";
+        }
+
+        // Compensation Details Card
+        const compensationCard = document.getElementById("compensation-card");
+        const compensationNoDataMessage =
+          compensationCard.querySelector(".no-data-message");
+        const compensationContentDivs =
+          compensationCard.querySelectorAll(".card-content div");
+
+        if (
+          employeeData.salary_per_hour === undefined &&
+          employeeData.bonus === undefined &&
+          employeeData.net_pay === undefined
+        ) {
+          compensationNoDataMessage.style.display = "block";
+          compensationContentDivs.forEach(
+            (div) => (div.style.display = "none")
+          );
+        } else {
+          compensationNoDataMessage.style.display = "none";
+          compensationContentDivs.forEach(
+            (div) => (div.style.display = "flex")
+          );
+          const compensationFields = compensationContentDivs;
+          compensationFields[0].querySelector("span").textContent =
+            employeeData.salary_per_hour || "N/A";
+          compensationFields[0].querySelector("input").value =
+            employeeData.salary_per_hour || "";
+          compensationFields[1].querySelector("span").textContent =
+            employeeData.bonus || 0;
+          compensationFields[1].querySelector("input").value =
+            employeeData.bonus || "";
+          compensationFields[2].querySelector("span").textContent =
+            employeeData.net_pay || "N/A";
+          compensationFields[3].querySelector("span").textContent =
+            employeeData.total_pay || "N/A";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("prev-arrow")
+          .addEventListener("click", prevMonth);
+        document
+          .getElementById("next-arrow")
+          .addEventListener("click", nextMonth);
+
+        if (companyId && employeeId) {
+          fetchEmployeeDetails();
+        } else {
+          console.log("Should render no company message");
+          displayNoCompanyMessage();
+        }
+
+        updateDateText(); // Display the current month on start
+        updateEditButtons(); // Update edit buttons visibility
+
+        // Edit/Save functionality
+        const editButtons = document.querySelectorAll(".edit-button");
+        const saveButtons = document.querySelectorAll(".save-button");
+
+        editButtons.forEach((button) => {
+          button.addEventListener("click", () => editCard(button));
+        });
+
+        saveButtons.forEach((button) => {
+          button.addEventListener("click", () => saveCard(button));
+        });
+      });
+
+      function editCard(button) {
+        // Sprawdź, czy edycja jest dozwolona
+        if (currentMonth !== todayMonth || currentYear !== todayYear) {
+          return; // Nie rób nic, jeśli to nie jest bieżący miesiąc
+        }
+
+        const card = button.closest(".card");
+        const saveButton = card.querySelector(".save-button");
+        const editButton = card.querySelector(".edit-button");
+
+        // Pobierz wszystkie pola (div) w ramach formularza
+        const fields = card.querySelectorAll(".card-content form div");
+
+        fields.forEach((field) => {
+          const span = field.querySelector("span");
+          const input = field.querySelector("input");
+
+          if (input) {
+            span.style.display = "none";
+            input.style.display = "block";
+          }
+        });
+
+        saveButton.style.display = "block";
+        editButton.style.display = "none";
+      }
+
+      function saveCard(button) {
+        // Sprawdź, czy zapis jest dozwolony
+        if (currentMonth !== todayMonth || currentYear !== todayYear) {
+          return; // Nie rób nic, jeśli to nie jest bieżący miesiąc
+        }
+
+        const card = button.closest(".card");
+        const saveButton = card.querySelector(".save-button");
+        const editButton = card.querySelector(".edit-button");
+
+        // Pobierz wszystkie pola (div) w ramach formularza
+        const fields = card.querySelectorAll(".card-content form div");
+
+        fields.forEach((field) => {
+          const span = field.querySelector("span");
+          const input = field.querySelector("input");
+
+          if (input) {
+            span.textContent = input.value;
+            span.style.display = "inline";
+            input.style.display = "none";
+          }
+        });
+
+        saveButton.style.display = "none";
+        editButton.style.display = "block";
+
+        // Formularz zostanie automatycznie wysłany dzięki type="submit"
+      }
+    </script>
+  </body>
+</html>
+
+<!--TODO: add hiding loading by backend OR fetch initial data in backend-->

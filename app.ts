@@ -3,6 +3,9 @@ import Express, { NextFunction, Request, Response } from "express";
 import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
 import { auth_router as auth_routes } from "./routes/auth";
+import { manager_router as manager_routes } from "./routes/manager";
+import { api_router as api_routes } from "./routes/api";
+import {user_router as user_routes} from "./routes/user";
 import rateLimit from "express-rate-limit";
 import { generateScriptNonce } from "./middlewares/generateScriptNonce";
 import { customHelmet } from "./middlewares/customHelmet";
@@ -125,14 +128,14 @@ AppDataSource.initialize()
 
     app.set("trust proxy", 1); // trust only first proxy
 
-    const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      limit: 100, // limit each IP to 100 requests per windowMs
-      message:
-        "Too many requests from this IP, please try again after 15 minutes",
-    });
+    // const limiter = rateLimit({
+    //   windowMs: 15 * 60 * 1000, // 15 minutes
+    //   limit: 100, // limit each IP to 100 requests per windowMs
+    //   message:
+    //     "Too many requests from this IP, please try again after 15 minutes",
+    // });
 
-    app.use(limiter);
+    // app.use(limiter);
 
     app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -176,12 +179,18 @@ AppDataSource.initialize()
 
     app.use(auth_routes);
     app.use(employee_routes);
+    app.use(manager_routes);
+    app.use(api_routes);
+    app.use(user_routes);
 
     // Obsługa błędu 404 - nieznaleziono strony
     app.use((req: Request, res: Response) => {
       res.status(404).render("error/error", {
         code: 404,
         message: "Page not found. Please check the URL and try again.",
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: req.session.user ? req.session.user.uid : null,
+        accountType: req.session.user ? req.session.user.account_type : null,
       });
     });
 
@@ -198,6 +207,9 @@ AppDataSource.initialize()
       res.status(statusCode).render("error/error", {
         code: statusCode,
         message: errorMessage,
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: req.session.user ? req.session.user.uid : null,
+        accountType: req.session.user ? req.session.user.account_type : null,
       });
     });
 

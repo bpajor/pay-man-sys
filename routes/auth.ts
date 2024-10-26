@@ -14,6 +14,8 @@ import {
   postSignup,
 } from "../controllers/auth";
 import { body } from "express-validator";
+import { authenticationRoutesGuard } from "./helpers/RoutesGuard";
+import { Guard2fa } from "./helpers/Guard2fa";
 
 const postSignupValidators = [
   body("name")

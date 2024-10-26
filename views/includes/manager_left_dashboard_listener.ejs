@@ -1,0 +1,43 @@
+<script nonce="<%= nonce %>">
+  const dashboard_div = document.getElementById("dashboard-div");
+  const settings_div = document.getElementById("settings-div");
+  <% if (accountType === 'manager') {%>
+  const employees_div = document.getElementById("employees-div");
+  const jrequests_div = document.getElementById("jrequests-div");
+  const raports_div = document.getElementById("raports-div");
+  <% } else { %>
+  const attendance_div = document.getElementById("attendance-div");
+  const earnings_div = document.getElementById("earnings-div");
+  <% } %>
+
+  dashboard_div.addEventListener("click", () => {
+    window.location.href = "/<%= accountType %>/dashboard";
+  });
+
+  settings_div.addEventListener("click", () => {
+    window.location.href = "/<%= accountType %>/settings";
+  });
+
+  <% if (accountType === 'manager') {%>
+  employees_div.addEventListener("click", () => {
+    window.location.href = "/manager/employees-details";
+  });
+
+  jrequests_div.addEventListener("click", () => {
+    window.location.href = "/manager/join-requests";
+  });
+
+  raports_div.addEventListener("click", () => {
+    window.location.href = "/manager/raports";
+  });
+  <% } else {%>
+  attendance_div.addEventListener("click", () => {
+    window.location.href = "/employee/attendance";
+  });
+
+  earnings_div.addEventListener("click", () => {
+    window.location.href = "/employee/earnings";
+  });
+  <% } %>
+
+</script>
