@@ -112,7 +112,9 @@ auth_router.post(
 auth_router.get("/signup", getSignup);
 
 // Use Application type to avoid ts complaints
-auth_router.post("/signup", postSignupValidators, postSignup as Application);
+// auth_router.post("/signup", postSignupValidators, postSignup as Application);
+
+auth_router.post("/signup", postSignup as Application);
 
 auth_router.get("/forgot-password", getForgotPassword);
 
