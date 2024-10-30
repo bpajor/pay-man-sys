@@ -14,8 +14,21 @@ import OTPAuth from "otpauth";
 import { encode } from "hi-base32";
 import QRCode from "qrcode";
 import { JoinRequest } from "../entity/JoinRequest";
+import session from "express-session";
+import { Employee } from "../entity/Employee";
 
-export const getLogin = (req: Request, res: Response) => {
+export const getLogin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.session.pending_2fa) {
+    req.session.destroy((err) => {
+      if (err) {
+        logger.error(`Error destroying session: ${err}`);
+
+        res.status(500);
+        return next(new Error("Internal server error"));
+      }
+    });
+  }
+
   const logger: Logger = res.locals.logger;
   try {
     logger.info(`Rendering login page`);
@@ -25,7 +38,8 @@ export const getLogin = (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error(`Error rendering login page: ${error}`);
-    res.status(500).send("Error rendering login page");
+    res.status(500);
+    return next(new Error("Internal server error"));
   }
 };
 
@@ -136,12 +150,31 @@ export const postLogin = async (
     employee_id = user.employees[0].id;
   }
 
+  let authorized_employees_ids: number[] = [];
+  if (user.account_type === "manager" && company_id) {
+    try {
+      const response = await AppDataSource.getRepository(Employee).find({
+        where: { company: { id: company_id } },
+        select: ["id"],
+      });
+
+      authorized_employees_ids = response.map((employee) =>
+        Number(employee.id)
+      );
+    } catch (error) {
+      logger.error(`Error getting authorized employees: ${error}`);
+      res.status(500);
+      return next(new Error("Internal server error"));
+    }
+  }
+
   let user_to_session = {
     uid: user.id,
     email: user.email,
     account_type: user.account_type as "employee" | "manager",
     company_id,
     employee_id,
+    authorized_employees_ids,
   };
   req.session.user = user_to_session;
 

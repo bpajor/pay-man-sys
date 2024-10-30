@@ -197,6 +197,7 @@ export const getManagerSingleEmployeeDetails = async (
         loggedUser: uid,
         nonce: res.locals.nonce,
         companyId: null,
+        employeeId: null,
         accountType: user_session.account_type,
         jrequestsPending: req.session.jrequests_pending,
       });
@@ -210,6 +211,12 @@ export const getManagerSingleEmployeeDetails = async (
   const companyId = user_session.company_id;
 
   const employee_id = req.params.employee_id;
+
+  if (!req.session.user!.authorized_employees_ids.includes(Number(employee_id))) {
+    logger.warn("Unauthorized");
+    res.status(403);
+    return next(new Error("Unauthorized"));
+  }
 
   let does_employee_exist: Boolean;
 
@@ -1233,6 +1240,7 @@ export const postManagerJoinRequest = async (
     });
 
     req.session.jrequests_pending = jrequests_pending;
+    req.session.user?.authorized_employees_ids.push(employee.id);
 
     const new_salary_history_record = new SalaryHistory();
     new_salary_history_record.employee = employee;

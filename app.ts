@@ -1,11 +1,11 @@
 import path from "path";
-import Express, { NextFunction, Request, Response } from "express";
+import Express, { Application, NextFunction, Request, Response } from "express";
 import bodyParser from "body-parser";
 import { employee_router as employee_routes } from "./routes/employee";
 import { auth_router as auth_routes } from "./routes/auth";
 import { manager_router as manager_routes } from "./routes/manager";
 import { api_router as api_routes } from "./routes/api";
-import {user_router as user_routes} from "./routes/user";
+import { user_router as user_routes } from "./routes/user";
 import rateLimit from "express-rate-limit";
 import { generateScriptNonce } from "./middlewares/generateScriptNonce";
 import { customHelmet } from "./middlewares/customHelmet";
@@ -141,6 +141,35 @@ AppDataSource.initialize()
 
     app.use(Express.json());
 
+    app.get("/css/:account_type/*",
+      (req: Express.Request, res: Express.Response, next: NextFunction) => {
+        console.log("In middleware")
+        let account_type;
+        if (req.session.user) {
+          account_type = req.session.user.account_type;
+        }
+
+        const is_css_route = req.path.startsWith("/css");
+
+        if (is_css_route) {
+          const acc_type_from_path = req.path.split("/")[2];
+
+          if (["manager", "employee"].includes(acc_type_from_path)) {
+            if (acc_type_from_path !== account_type) {
+              logger.error("Unauthorized access to CSS file");
+              res.status(403);
+              return next(new Error("Unauthorized"));
+            }
+            return next();
+          }
+
+          return next();
+        }
+
+        return next();
+      }
+    );
+
     const publicPath =
       process.env.NODE_ENVIRONMENT === "local"
         ? path.join(__dirname, "public")
@@ -177,6 +206,7 @@ AppDataSource.initialize()
     //   }
     // });
 
+    
     app.use(auth_routes);
     app.use(employee_routes);
     app.use(manager_routes);

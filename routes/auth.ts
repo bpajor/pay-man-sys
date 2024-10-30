@@ -16,6 +16,7 @@ import {
 import { body } from "express-validator";
 import { authenticationRoutesGuard } from "./helpers/RoutesGuard";
 import { Guard2fa } from "./helpers/Guard2fa";
+import { authenticatedUserGuard } from "./helpers/AuthenticatedUserGuard";
 
 const postSignupValidators = [
   body("name")
@@ -100,7 +101,7 @@ const postSignupValidators = [
 
 export const auth_router = Router();
 
-auth_router.get("/login", getLogin);
+auth_router.get("/login", authenticatedUserGuard, getLogin);
 
 // Let's use third and fourth validators from signup validators to not write unnecessary code only for login
 auth_router.post(
@@ -109,15 +110,21 @@ auth_router.post(
   postLogin as Application
 );
 
-auth_router.get("/signup", getSignup);
+auth_router.get("/signup", authenticatedUserGuard, getSignup);
 
-auth_router.post("/signup", postSignupValidators, postSignup as Application);
+auth_router.post(
+  "/signup",
+  postSignupValidators,
+  authenticatedUserGuard,
+  postSignup as Application
+);
 
-auth_router.get("/forgot-password", getForgotPassword);
+auth_router.get("/forgot-password", authenticatedUserGuard, getForgotPassword);
 
 auth_router.post(
   "/forgot-password",
   postSignupValidators[2],
+  authenticatedUserGuard,
   postForgotPassword as Application
 );
 
@@ -128,6 +135,7 @@ auth_router.post(
   postSignupValidators[2],
   postSignupValidators[3],
   postSignupValidators[4],
+  authenticatedUserGuard,
   postResetPassword as Application
 );
 
@@ -140,6 +148,7 @@ auth_router.post(
     .withMessage("Verification code is required")
     .isInt({ min: 100000, max: 999999 })
     .withMessage("Verification code must be a 6-digit number"),
+  authenticatedUserGuard,
   postLoginVerify2fa
 );
 
@@ -150,6 +159,7 @@ auth_router.post(
     .withMessage("Verification code is required")
     .isInt({ min: 100000, max: 999999 })
     .withMessage("Verification code must be a 6-digit number"),
+    authenticatedUserGuard,
   postResetPasswordVerify2fa
 );
 

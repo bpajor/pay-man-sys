@@ -294,7 +294,7 @@
 
       function fetchEmployeeDetails() {
         const monthParam = currentMonth + 1; // Adjust for 1-based month
-        const url = `<%=baseUrl%>/api/manager/single-emp-details?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}&with_details=true`;
+        const url = `<%=baseUrl%>/api/manager/single-emp-details?employee_id=${employeeId}&month=${monthParam}&year=${currentYear}&with_details=true`;
 
         fetch(url)
           .then((response) => response.json())
@@ -310,11 +310,16 @@
 
       function fetchEmployeeData() {
         const monthParam = currentMonth + 1; // Adjust for 1-based month
-        const url = `http://<%=baseUrl%>/api/manager/single-emp-details?company_id=${companyId}&employee_id=${employeeId}&month=${monthParam}&year=${currentYear}`;
+        const url = `<%=baseUrl%>/api/manager/single-emp-details?employee_id=${employeeId}&month=${monthParam}&year=${currentYear}`;
 
         fetch(url)
           .then((response) => response.json())
           .then((data) => {
+            if (data.error) {
+              if (data.error === "Unauthorized") {
+                alert("You are not authorized to view this data.");
+              }
+            }
             console.log("Data fetched:", data);
             updateFields(data);
           })
@@ -340,7 +345,7 @@
         const personalContentDivs =
           personalInfoCard.querySelectorAll(".card-content div");
 
-        if (Object.keys(employeeData).length === 0) {
+        if (Object.keys(employeeData).length === 0 || employeeData.error === "Unauthorized") {
           personalNoDataMessage.style.display = "block";
           personalContentDivs.forEach((div) => (div.style.display = "none"));
         } else {
@@ -380,7 +385,7 @@
           ? employeeData.health_insurance_metadata[0]
           : {};
 
-        if (Object.keys(healthInfo).length === 0) {
+        if (!healthInfo || Object.keys(healthInfo).length === 0) {
           healthNoDataMessage.style.display = "block";
           healthContentDivs.forEach((div) => (div.style.display = "none"));
         } else {
@@ -477,7 +482,7 @@
         const personalContentDivs =
           personalInfoCard.querySelectorAll(".card-content div");
 
-        if (Object.keys(employeeData).length === 0) {
+        if (Object.keys(employeeData).length === 0 || employeeData.error === "Unauthorized") {
           personalNoDataMessage.style.display = "block";
           personalContentDivs.forEach((div) => (div.style.display = "none"));
         } else {
@@ -534,7 +539,7 @@
         const healthcareContentDivs =
           healthcareCard.querySelectorAll(".card-content div");
 
-        if (employeeData.health_insurance_metadata === undefined) {
+        if (employeeData.health_insurance_metadata === undefined || employeeData.health_insurance_metadata[0] === null) {
           healthcareNoDataMessage.style.display = "block";
           healthcareContentDivs.forEach((div) => (div.style.display = "none"));
         } else {

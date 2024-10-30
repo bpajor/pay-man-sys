@@ -11,7 +11,15 @@ import OTPAuth from "otpauth";
 import { encode } from "hi-base32";
 import QRCode from "qrcode";
 import { userInSessionFieldsExist } from "./helpers/validator";
-import { ALL_EARNINGS_DETAILS_PER_YEAR, ALL_EMPLOYEE_EARNINGS_DETAILS_PER_YEAR, ALL_EMPLOYEES_EARNINGS, AVERAGE_SALARY_AND_BONUSES_PER_YEAR, HOURS_WORKED_IN_COMPANY_BY_YEAR } from "./helpers/queries";
+import {
+  ALL_EARNINGS_DETAILS_PER_YEAR,
+  ALL_EMPLOYEE_EARNINGS_DETAILS_PER_YEAR,
+  ALL_EMPLOYEES_EARNINGS,
+  AVERAGE_SALARY_AND_BONUSES_PER_YEAR,
+  HOURS_WORKED_IN_COMPANY_BY_YEAR,
+} from "./helpers/queries";
+import { getPeriod } from "./helpers/builders";
+import { Employee } from "../entity/Employee";
 
 export type HoursWorkedResult = {
   period_month: Date;
@@ -51,7 +59,7 @@ export const getAllExpensesDetailsAPI = async (req: Request, res: Response) => {
 
   const period = getPeriod(year as string, month as string);
 
-  const query = ALL_EMPLOYEES_EARNINGS
+  const query = ALL_EMPLOYEES_EARNINGS;
 
   try {
     const [results]: ExpensesResponse[] = await AppDataSource.query(query, [
@@ -105,7 +113,7 @@ export const getAllHoursWorkedByYearAPI = async (
 
 export const getAverageSalaryAndBonusbByYearAPI = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const logger: Logger = res.locals.logger;
 
@@ -134,7 +142,7 @@ export const getAverageSalaryAndBonusbByYearAPI = async (
 
 export const getAllExpensesDetailsByYearAPI = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const logger: Logger = res.locals.logger;
 
@@ -170,7 +178,7 @@ export const getAllExpensesDetailsByYearAPI = async (
 
 export const deleteJoinRequestByEmailAPI = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const logger: Logger = res.locals.logger;
 
@@ -198,6 +206,27 @@ export const deleteJoinRequestByEmailAPI = async (
     user_id = user_from_db.id;
   } catch (err) {
     logger.error(`Error getting user data: ${err}`);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+
+  try {
+    const employee = await AppDataSource.getRepository(Employee).findOneBy({
+      user: { id: user_id },
+    });
+
+    if (!req.session.user!.authorized_employees_ids.includes(employee!.id)) {
+      logger.error(`Unauthorized`);
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (!employee) {
+      logger.error(`Employee not found`);
+      return res
+        .status(404)
+        .json({ message: "Requested resources cannot be found" });
+    }
+  } catch (err) {
+    logger.error(`Error getting employee data: ${err}`);
     return res.status(500).json({ message: "Internal server error" });
   }
 
@@ -239,7 +268,7 @@ export const getEmployeeEarningsDetailsByYearAPI = async (
     return res.status(400).json({ message: "Bad request" });
   }
 
-  const query = ALL_EMPLOYEE_EARNINGS_DETAILS_PER_YEAR
+  const query = ALL_EMPLOYEE_EARNINGS_DETAILS_PER_YEAR;
 
   try {
     const earnings: EmployeeEarningsResponse = await AppDataSource.query(
@@ -332,7 +361,7 @@ export const postEnable2faAPI = async (
 
   const user = req.session.user!;
 
-  if (userInSessionFieldsExist(["uid", "email"], user)) {
+  if (!userInSessionFieldsExist(["uid", "email"], user)) {
     logger.error(`Session data not found`);
     return res.status(400).json({ success: false });
   }
@@ -372,7 +401,7 @@ export const postDisable2faAPI = async (req: Request, res: Response) => {
 
   const user = req.session.user!;
 
-  if (userInSessionFieldsExist(["uid"], user)) {
+  if (!userInSessionFieldsExist(["uid"], user)) {
     logger.error(`Session data not found`);
     return res.status(400).json({ success: false });
   }
@@ -392,13 +421,22 @@ export const postDisable2faAPI = async (req: Request, res: Response) => {
 
 export const getManagerEmployeesDetailsAPI = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const logger: Logger = res.locals.logger;
 
-  const { company_id, month, year } = req.query;
+  const user = req.session.user!;
 
-  if (!company_id || !month || !year) {
+  if (!userInSessionFieldsExist(["company_id"], user)) {
+    logger.error(`Session data not found`);
+    return res.status(400).json({ error: "Session data not found" });
+  }
+
+  const company_id = user.company_id;
+
+  const { month, year } = req.query;
+
+  if (!month || !year) {
     logger.error(`Missing required query parameters`);
     return res.status(400).json({ error: "Missing required query parameters" });
   } //TODO validation should happen in route validators
@@ -511,13 +549,27 @@ GROUP BY
 
 export const getManagerSingleEmpDetailsAPI = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   const logger: Logger = res.locals.logger;
 
   logger.info("Getting Single Employee Details");
 
-  const { month, year, company_id, employee_id, with_details } = req.query;
+  const user = req.session.user!
+
+  if (!userInSessionFieldsExist(["company_id",], user)) {
+    logger.error(`Session data not found`);
+    return res.status(400).json({ error: "Session data not found" });
+  }
+
+  const company_id = user.company_id;
+
+  const { month, year, with_details, employee_id } = req.query;
+
+  if (!req.session.user?.authorized_employees_ids.includes(Number(employee_id))) {
+    logger.error(`Unauthorized`);
+    return res.status(403).json({ error: "Unauthorized" });
+  }
 
   let default_read_mask = `
     json_agg(e.health_insurance_metadata) AS health_insurance_metadata,
@@ -557,7 +609,7 @@ export const getManagerSingleEmpDetailsAPI = async (
     );
   }
 
-  if (!company_id || !employee_id || !month || !year) {
+  if (!month || !year) {
     logger.error(`Missing required query parameters`);
     return res.status(400).json({ error: "Missing required query parameters" });
   } //TODO this should also be validated earlier (Vulnerability)
