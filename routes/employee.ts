@@ -19,55 +19,55 @@ employee_router.get("/", getMainPage);
 employee_router.get(
   "/employee/dashboard",
   authenticationRoutesGuard,
-  Guard2fa,
   authorizationEmployeeGuard,
+  Guard2fa,
   getEmployeeMainPage as Application
 );
 
 employee_router.get(
   "/employee/settings",
   authenticationRoutesGuard,
-  Guard2fa,
   authorizationEmployeeGuard,
+  Guard2fa,
   getEmployeeSettings as Application
 );
 
 employee_router.get(
   "/employee/join-request",
   authenticationRoutesGuard,
-  Guard2fa,
   authorizationEmployeeGuard,
+  Guard2fa,
   getEmployeeJoinRequest as Application
 )
 
 employee_router.post(
   "/employee/join-request",
   authenticationRoutesGuard,
-  Guard2fa,
   authorizationEmployeeGuard,
+  Guard2fa,
   postEmployeeJoinRequest
 )
 
 employee_router.get(
   "/employee/earnings",
   authenticationRoutesGuard,
-  Guard2fa,
   authorizationEmployeeGuard,
+  Guard2fa,
   getEmployeeEarnings
 )
 
 employee_router.get(
   "/employee/attendance",
   authenticationRoutesGuard,
-  Guard2fa,
   authorizationEmployeeGuard,
+  Guard2fa,
   getEmployeeAttendance
 )
 
 employee_router.post(
   "/employee/attendance",
   authenticationRoutesGuard,
-  Guard2fa,
   authorizationEmployeeGuard,
+  Guard2fa,
   postEmployeeAttendace
 )

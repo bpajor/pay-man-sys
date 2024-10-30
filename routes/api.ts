@@ -23,56 +23,56 @@ export const api_router = Router();
 api_router.get(
   "/api/manager/get-all-expenses-details",
   authenticationAPIRoutesGuard as Application,
-  Guard2fa,
   authorizationManagerAPIGuard as Application,
+  Guard2fa,
   getAllExpensesDetailsAPI as Application
 );
 
 api_router.get(
   "/api/manager/get-hours-worked",
   authenticationAPIRoutesGuard as Application,
-  Guard2fa,
   authorizationManagerAPIGuard as Application,
+  Guard2fa,
   getAllHoursWorkedByYearAPI as Application
 );
 
 api_router.get(
   "/api/manager/get-average-salary-and-bonuses",
   authenticationAPIRoutesGuard as Application,
+  authorizationManagerAPIGuard as Application,
   Guard2fa,
-    authorizationManagerAPIGuard as Application,
   getAverageSalaryAndBonusbByYearAPI as Application
 );
 
 api_router.get(
   "/api/manager/get-year-expenses-details",
   authenticationAPIRoutesGuard as Application,
+  authorizationManagerAPIGuard as Application,
   Guard2fa,
-    authorizationManagerAPIGuard as Application,
   getAllExpensesDetailsByYearAPI as Application
 );
 
 api_router.delete(
   "/api/manager/delete/join_request",
   authenticationAPIRoutesGuard as Application,
+  authorizationManagerAPIGuard as Application,
   Guard2fa,
-    authorizationManagerAPIGuard as Application,
   deleteJoinRequestByEmailAPI as Application
 );
 
 api_router.get(
   "/api/employee/earnings",
   authenticationAPIRoutesGuard as Application,
-  Guard2fa,
   authorizationEmployeeAPIGuard as Application,
+  Guard2fa,
   getEmployeeEarningsDetailsByYearAPI as Application
 );
 
 api_router.delete(
   "/api/employee/delete",
   authenticationAPIRoutesGuard as Application,
+  authorizationEmployeeAPIGuard as Application,
   Guard2fa,
-    authorizationEmployeeAPIGuard as Application,
   deleteEmployeeEmployeeAPI as Application
 );
 
@@ -93,15 +93,15 @@ api_router.post(
 api_router.get(
   "/api/manager/employees-details",
   authenticationAPIRoutesGuard as Application,
-  Guard2fa,
   authorizationManagerAPIGuard as Application,
+  Guard2fa,
   getManagerEmployeesDetailsAPI as Application
 );
 
 api_router.get(
   "/api/manager/single-emp-details",
   authenticationAPIRoutesGuard as Application,
-  Guard2fa,
   authorizationManagerAPIGuard as Application,
+  Guard2fa,
   getManagerSingleEmpDetailsAPI as Application
 );
