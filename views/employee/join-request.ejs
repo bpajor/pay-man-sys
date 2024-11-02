@@ -96,6 +96,7 @@
         <% if (!isUserEntitled) {%>
         <div class="container">
           <form class="form-box" method="post" action="/employee/join-request">
+            <input type="hidden" name="csrf_token" value="<%=csrfToken%>">
             <h2>Join to company</h2>
             <input
               name="company_name"

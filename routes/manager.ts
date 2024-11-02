@@ -15,6 +15,7 @@ import {
 } from "../controllers/manager";
 import { authenticationRoutesGuard, authorizationManagerGuard } from "./helpers/RoutesGuard";
 import { Guard2fa } from "./helpers/Guard2fa";
+import { csrfBodyValidator } from "./helpers/CsrfProtection";
 
 export const manager_router = Router();
 
@@ -47,6 +48,7 @@ manager_router.post(
   authenticationRoutesGuard,
   authorizationManagerGuard,
   Guard2fa,
+  csrfBodyValidator,
   postUpdateEmployeePresentEarnings as Application
 );
 
@@ -63,6 +65,7 @@ manager_router.post(
   authenticationRoutesGuard,
   authorizationManagerGuard,
   Guard2fa,
+  csrfBodyValidator,
   postUpdateCompanySettings
 );
 
@@ -87,6 +90,7 @@ manager_router.post(
   authenticationRoutesGuard,
   authorizationManagerGuard,
   Guard2fa,
+  csrfBodyValidator,
   postManagerCreateCompany
 );
 
@@ -95,6 +99,7 @@ manager_router.get(
   authenticationRoutesGuard,
   authorizationManagerGuard,
   Guard2fa,
+  csrfBodyValidator,
   getManagerJoinRequests
 );
 
@@ -103,6 +108,7 @@ manager_router.get(
   authenticationRoutesGuard,
   authorizationManagerGuard,
   Guard2fa,
+  csrfBodyValidator,
   getManagerJoinRequest
 );
 
@@ -111,5 +117,6 @@ manager_router.post(
   authenticationRoutesGuard,
   authorizationManagerGuard,
   Guard2fa,
+  csrfBodyValidator,
   postManagerJoinRequest
 )

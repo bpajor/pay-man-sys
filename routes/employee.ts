@@ -11,6 +11,7 @@ import {
 } from "../controllers/employee";
 import { Guard2fa } from "./helpers/Guard2fa";
 import { authenticationRoutesGuard, authorizationEmployeeGuard } from "./helpers/RoutesGuard";
+import { csrfBodyValidator } from "./helpers/CsrfProtection";
 
 export const employee_router = Router();
 
@@ -45,6 +46,7 @@ employee_router.post(
   authenticationRoutesGuard,
   authorizationEmployeeGuard,
   Guard2fa,
+  csrfBodyValidator,
   postEmployeeJoinRequest
 )
 
@@ -69,5 +71,6 @@ employee_router.post(
   authenticationRoutesGuard,
   authorizationEmployeeGuard,
   Guard2fa,
+  csrfBodyValidator,
   postEmployeeAttendace
 )

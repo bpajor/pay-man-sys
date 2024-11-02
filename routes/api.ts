@@ -18,6 +18,7 @@ import {
   authorizationManagerAPIGuard,
   authorizationEmployeeAPIGuard,
 } from "./helpers/RoutesGuard";
+import { csrfAPIValidator } from "./helpers/CsrfProtection";
 export const api_router = Router();
 
 api_router.get(
@@ -57,6 +58,7 @@ api_router.delete(
   authenticationAPIRoutesGuard as Application,
   authorizationManagerAPIGuard as Application,
   Guard2fa,
+  csrfAPIValidator as Application,
   deleteJoinRequestByEmailAPI as Application
 );
 
@@ -73,6 +75,7 @@ api_router.delete(
   authenticationAPIRoutesGuard as Application,
   authorizationEmployeeAPIGuard as Application,
   Guard2fa,
+  csrfAPIValidator as Application,
   deleteEmployeeEmployeeAPI as Application
 );
 
@@ -80,6 +83,7 @@ api_router.post(
   "/api/auth/enable-2fa",
   authenticationAPIRoutesGuard as Application,
   Guard2fa,
+  csrfAPIValidator as Application,
   postEnable2faAPI as Application
 );
 
@@ -87,6 +91,7 @@ api_router.post(
   "/api/auth/disable-2fa",
   authenticationAPIRoutesGuard as Application,
   Guard2fa,
+  csrfAPIValidator as Application,
   postDisable2faAPI as Application
 );
 

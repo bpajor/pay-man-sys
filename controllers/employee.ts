@@ -11,6 +11,7 @@ import { SalaryHistory } from "../entity/SalaryHistory";
 import { JoinRequest } from "../entity/JoinRequest";
 import { Between } from "typeorm";
 import { userInSessionFieldsExist } from "./helpers/validator";
+import Tokens from "csrf";
 
 type EmployeeDaysChange = {
   days_sick_leave: 0 | 1;
@@ -21,6 +22,18 @@ type EmployeeDaysChange = {
 
 export const getMainPage = (req: Request, res: Response) => {
   const logger: Logger = res.locals.logger;
+
+  let csrf_token;
+  if (req.session.not_authenticated_csrf_secret) {
+    csrf_token = new Tokens().create(req.session.not_authenticated_csrf_secret);
+  } else if (req.session.csrf_secret) {
+    csrf_token = new Tokens().create(req.session.csrf_secret);
+  } else {
+    req.session.not_authenticated_csrf_secret = new Tokens().secretSync();
+    csrf_token = new Tokens().create(req.session.not_authenticated_csrf_secret);
+  }
+
+  // TODO -> add csrf token since this page are not being rendered by the server
   try {
     logger.info(`Rendering main page`);
     res.render("common/main", {
@@ -28,6 +41,7 @@ export const getMainPage = (req: Request, res: Response) => {
       loggedUser: req.session.user?.uid,
       nonce: res.locals.nonce,
       accountType: req.session.user?.account_type,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.info(`Error rendering main page: ${error}`);
@@ -42,6 +56,9 @@ export const getEmployeeMainPage = async (
 ) => {
   const logger: Logger = res.locals.logger;
   const userRepo = AppDataSource.getRepository(User);
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   const user_session = req.session.user!;
 
@@ -95,6 +112,7 @@ export const getEmployeeMainPage = async (
         earnings: null,
         isAttendanceMarked: false,
         isJrequestPending: is_jrequest_pending,
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error getting user data: ${error}`);
@@ -226,6 +244,7 @@ ORDER BY
       salaryHistory: employee_salary_history,
       earnings,
       isAttendanceMarked,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering employee main page: ${error}`);
@@ -241,6 +260,10 @@ export const getEmployeeSettings = async (
 ) => {
   const logger: Logger = res.locals.logger;
   logger.info(`Getting employee settings`);
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   const user_repo = AppDataSource.getRepository(User);
 
@@ -287,6 +310,7 @@ export const getEmployeeSettings = async (
         error: error,
         jrequestsPending: null,
         company: null,
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error rendering employee settings page: ${error}`);
@@ -305,6 +329,7 @@ export const getEmployeeSettings = async (
       nonce: res.locals.nonce,
       accountType: user_session.account_type,
       error: null,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering employee settings page: ${error}`);
@@ -321,6 +346,10 @@ export const getEmployeeJoinRequest = async (
   const logger: Logger = res.locals.logger;
 
   logger.info(`Getting employee join request`);
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   const user_session = req.session.user!;
 
@@ -371,6 +400,7 @@ export const getEmployeeJoinRequest = async (
         isUserEntitled: false,
         companiesNames: companies,
         isJrequestPending: is_jrequest_pending,
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error rendering join request page: ${error}`);
@@ -387,6 +417,7 @@ export const getEmployeeJoinRequest = async (
       accountType: account_type,
       jrequestsPending: null,
       isUserEntitled: true,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering join request page: ${error}`);
@@ -470,6 +501,10 @@ export const getEmployeeEarnings = async (
   const logger: Logger = res.locals.logger;
   logger.info(`Getting employee earnings`);
 
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
+
   const user_session = req.session.user!;
 
   if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
@@ -487,6 +522,7 @@ export const getEmployeeEarnings = async (
       nonce: res.locals.nonce,
       accountType: account_type,
       jrequestsPending: null,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering employee earnings page: ${error}`);
@@ -503,6 +539,10 @@ export const getEmployeeAttendance = async (
   const logger: Logger = res.locals.logger;
 
   logger.info(`Getting employee attendance`);
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   const user_session = req.session.user!;
 
@@ -527,6 +567,7 @@ export const getEmployeeAttendance = async (
       jrequestsPending: null,
       attendanceData: null,
       errorInfo: null,
+      csrfToken: csrf_token,
     });
   }
 
@@ -635,6 +676,7 @@ GROUP BY
         jrequestsPending: null,
         attendanceData: attendance_data,
         errorInfo: "You've marked maximum amount of days for this month",
+        csrfToken: csrf_token,
       });
     }
   } catch (error) {
@@ -658,6 +700,7 @@ GROUP BY
             jrequestsPending: null,
             attendanceData: null,
             errorInfo: "You've already marked attendance for today",
+            csrfToken: csrf_token,
           });
         case "days_exceeded":
           logger.info(`Employee has already marked maximum days for the month`);
@@ -669,6 +712,7 @@ GROUP BY
             jrequestsPending: null,
             attendanceData: null,
             errorInfo: "You've marked maximum amount of days for this month",
+            csrfToken: csrf_token,
           });
       }
     } catch (error) {
@@ -697,6 +741,7 @@ GROUP BY
         jrequestsPending: null,
         attendanceData: attendance_data,
         errorInfo: "You've already marked attendance for today",
+        csrfToken: csrf_token,
       });
     }
   } catch (error) {
@@ -716,6 +761,7 @@ GROUP BY
       jrequestsPending: null,
       attendanceData: attendance_data,
       errorInfo: null,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering employee attendance page: ${error}`);

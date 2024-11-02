@@ -7,6 +7,7 @@
     <% if (loggedUser) {%>
     <a href="<% baseUrl %>/<%= accountType %>/settings">Settings</a>
     <form method="post" action="<%baseUrl%>/logout" class="logout-form">
+      <input type="hidden" name="csrf_token" value="<%= csrfToken %>" hidden />
       <button type="submit" class="logout-btn">Logout</button>
     </form>
     <% } else {%>

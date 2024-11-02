@@ -165,6 +165,7 @@
               method: "DELETE",
               headers: {
                 "Content-Type": "application/json",
+                "X-CSRF-Token": "<%= csrfToken %>",
               },
               body: JSON.stringify({ email: email }),
               credentials: "include",

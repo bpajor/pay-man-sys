@@ -150,6 +150,12 @@
             method="post"
             action="<%= baseUrl %>/user/update-personal-data"
           >
+            <input
+              type="hidden"
+              name="csrf_token"
+              value="<%=csrfToken%>"
+              hidden
+            />
             <label for="name">Name:</label>
             <input
               name="name"
@@ -256,6 +262,12 @@
             method="post"
             action="<%= baseUrl %>/manager/settings/update-company-settings"
           >
+            <input
+              type="hidden"
+              name="csrf_token"
+              value="<%=csrfToken%>"
+              hidden
+            />
             <label for="name">Name:</label>
             <input
               name="name"
@@ -456,6 +468,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRF-Token": "<%= csrfToken %>",
         },
         credentials: "include",
       })
@@ -508,6 +521,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRF-Token": "<%= csrfToken %>",
         },
         credentials: "include",
       })

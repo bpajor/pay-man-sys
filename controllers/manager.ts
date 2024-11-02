@@ -7,6 +7,7 @@ import { Employee } from "../entity/Employee";
 import { Company } from "../entity/Company";
 import { JoinRequest } from "../entity/JoinRequest";
 import { userInSessionFieldsExist } from "./helpers/validator";
+import Tokens from "csrf";
 
 type PayoutsHistory = {
   month: number;
@@ -27,6 +28,10 @@ export const getManagerDashboard = async (
   next: NextFunction
 ) => {
   const logger: Logger = res.locals.logger;
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   //TODO add case (in frontent also when company_id is null)
 
@@ -50,6 +55,7 @@ export const getManagerDashboard = async (
         payoutsHistory: [],
         accountType: account_type,
         jrequestsPending: req.session.jrequests_pending,
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error rendering manager dashboard: ${error}`);
@@ -109,6 +115,7 @@ export const getManagerDashboard = async (
       companyId: user_session.company_id,
       accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering manager dashboard: ${error}`);
@@ -123,6 +130,10 @@ export const getManagerEmployeesDetails = async (
   next: NextFunction
 ) => {
   const logger: Logger = res.locals.logger;
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   const user_session = req.session.user!;
 
@@ -146,6 +157,7 @@ export const getManagerEmployeesDetails = async (
         companyId: null,
         accountType: account_type,
         jrequestsPending: req.session.jrequests_pending,
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error rendering manager employees details: ${error}`);
@@ -165,6 +177,7 @@ export const getManagerEmployeesDetails = async (
       companyId: companyId,
       accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering manager employees details: ${error}`);
@@ -179,6 +192,10 @@ export const getManagerSingleEmployeeDetails = async (
   next: NextFunction
 ) => {
   const logger: Logger = res.locals.logger;
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   const user_session = req.session.user!;
 
@@ -200,6 +217,7 @@ export const getManagerSingleEmployeeDetails = async (
         employeeId: null,
         accountType: user_session.account_type,
         jrequestsPending: req.session.jrequests_pending,
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error rendering manager single employee details: ${error}`);
@@ -246,6 +264,7 @@ export const getManagerSingleEmployeeDetails = async (
       employeeId: employee_id,
       accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error("Error rendering manager single employee details");
@@ -469,6 +488,9 @@ export const getManagerRaports = async (
 ) => {
   const logger: Logger = res.locals.logger;
 
+  const tokens = new Tokens();
+  const csrf_token = tokens.create(req.session.csrf_secret!);
+
   const user_session = req.session.user!;
 
   if (!userInSessionFieldsExist(["uid", "account_type"], user_session)) {
@@ -487,6 +509,7 @@ export const getManagerRaports = async (
       nonce: res.locals.nonce,
       accountType: account_type,
       jrequestsPending: req.session.jrequests_pending,
+      csrfToken: csrf_token,
     });
   } catch (err) {
     logger.error(`Error getting manager raports: ${err}`);
@@ -580,6 +603,9 @@ export const getManagerSettings = async (
   const logger: Logger = res.locals.logger;
   logger.info(`Getting employee settings`);
 
+  const tokens = new Tokens();
+  const csrf_token = tokens.create(req.session.csrf_secret!);
+
   const user_repo = AppDataSource.getRepository(User);
 
   const user_session = req.session.user!;
@@ -624,6 +650,7 @@ export const getManagerSettings = async (
       accountType: account_type,
       error: error,
       jrequestsPending: req.session.jrequests_pending,
+      csrfToken: csrf_token,
     });
   }
 
@@ -639,6 +666,7 @@ export const getManagerSettings = async (
         error: null,
         company: null,
         jrequestsPending: req.session.jrequests_pending,
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error rendering employee settings page: ${error}`);
@@ -679,6 +707,7 @@ export const getManagerSettings = async (
       error: null,
       company,
       jrequestsPending: req.session.jrequests_pending,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering employee settings page: ${error}`);
@@ -848,6 +877,9 @@ export const getManagerCreateCompany = async (
 
   logger.info(`Getting create company page`);
 
+  const tokens = new Tokens();
+  const csrf_token = tokens.create(req.session.csrf_secret!);
+
   const user_session = req.session.user!;
 
   const is_company_created = user_session.company_id ? true : false;
@@ -866,6 +898,7 @@ export const getManagerCreateCompany = async (
       nonce: res.locals.nonce,
       accountType: "manager",
       jrequestsPending: req.session.jrequests_pending,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering create company page: ${error}`);
@@ -1011,6 +1044,9 @@ export const getManagerJoinRequests = async (
   next: NextFunction
 ) => {
   const logger: Logger = res.locals.logger;
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   logger.info(`Getting join requests`);
 
@@ -1026,6 +1062,7 @@ export const getManagerJoinRequests = async (
         accountType: user_session.account_type,
         jrequestsPending: req.session.jrequests_pending,
         joinRequests: [],
+        csrfToken: csrf_token,
       });
     } catch (error) {
       logger.error(`Error getting join requests: ${error}`);
@@ -1073,6 +1110,7 @@ WHERE
       accountType: user_session.account_type,
       jrequestsPending: req.session.jrequests_pending,
       joinRequests: join_requests,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error getting join requests: ${error}`);
@@ -1089,6 +1127,9 @@ export const getManagerJoinRequest = async (
   const logger: Logger = res.locals.logger;
 
   logger.info(`Getting join request`);
+
+  const tokens = new Tokens();
+  const csrf_token = tokens.create(req.session.csrf_secret!);
 
   const user_session = req.session.user!;
 
@@ -1134,6 +1175,7 @@ export const getManagerJoinRequest = async (
       accountType: user_session.account_type,
       jrequestsPending: req.session.jrequests_pending,
       user: user_from_db,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error getting join request: ${error}`);

@@ -99,6 +99,11 @@
             method="post"
             action="<%= baseUrl %>/manager/company/create"
           >
+            <input
+              type="hidden"
+              name="csrf_token"
+              value="<%= csrfToken %>"
+              hidden />
             <label for="name">Name:</label>
             <input name="name" type="text" id="company-name" required/>
 

@@ -100,6 +100,7 @@
             method="post"
             action="<%= baseUrl %>/manager/join-request/<%= user.id %>"
           >
+            <input type="hidden" name="csrf_token" value="<%=csrfToken%>" hidden />
             <label for="name">Full Name:</label>
             <input name="name" type="text" id="company-name" value="<%= user.name %> <%= user.last_name %>" readonly/>
 

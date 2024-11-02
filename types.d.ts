@@ -9,5 +9,7 @@ declare module "express-session" {
     unlogged_email: string;
     hashed_password: string;
     jrequests_pending: boolean;
+    not_authenticated_csrf_secret: string;
+    csrf_secret: string;
   }
 }

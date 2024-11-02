@@ -147,6 +147,7 @@
                 method="POST"
                 action="<%= baseUrl %>/manager/update-employee-payment-details/<%= employeeId %>"
               >
+                <input type="hidden" name="csrf_token" value="<%= csrfToken %>" hidden/>
                 <input type="hidden" name="type" value="salary_update" />
                 <div>
                   <label>Hourly Gross Pay:</label>

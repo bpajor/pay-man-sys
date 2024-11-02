@@ -158,6 +158,7 @@
           <br>
           <br>
           <form action="/employee/attendance" method="POST">
+            <input type="hidden" name="csrf_token" value="<%=csrfToken%>">
             <div class="attendance-options <%= errorInfo ? 'disabled' : '' %>">
               <div class="attendance-option" data-type="normal" data-value="normal">
                 <h3>Normal Attendance</h3>

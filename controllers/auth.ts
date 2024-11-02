@@ -16,25 +16,22 @@ import QRCode from "qrcode";
 import { JoinRequest } from "../entity/JoinRequest";
 import session from "express-session";
 import { Employee } from "../entity/Employee";
+import Tokens from "csrf";
 
 export const getLogin = (req: Request, res: Response, next: NextFunction) => {
-  if (req.session.pending_2fa) {
-    req.session.destroy((err) => {
-      if (err) {
-        logger.error(`Error destroying session: ${err}`);
-
-        res.status(500);
-        return next(new Error("Internal server error"));
-      }
-    });
-  }
-
   const logger: Logger = res.locals.logger;
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.not_authenticated_csrf_secret!);
+
   try {
     logger.info(`Rendering login page`);
     res.render("auth/login", {
       baseUrl: `${process.env.BASE_URL}`,
       error: null,
+      nonce: res.locals.nonce,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering login page: ${error}`);
@@ -51,8 +48,8 @@ export const postLogin = async (
   const logger: Logger = res.locals.logger;
   const redisClient: RedisClientType = res.locals.redisClient;
   logger.info(`Received login request`);
-
   const user_repo = AppDataSource.getRepository(User);
+  const tokens = new Tokens();
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -200,10 +197,13 @@ export const postLogin = async (
     logger.info(`2fa pending for user ${email}`);
     req.session.pending_2fa = true;
     logger.info(`Redirecting to 2fa verification page`);
-    return res.redirect("/verify-2fa");
+    return res.redirect(`/verify-2fa`);
   }
 
   logger.info(`User ${email} successfully logged in`);
+
+  req.session.not_authenticated_csrf_secret = undefined;
+  req.session.csrf_secret = tokens.secretSync();
 
   const redirect_path =
     user.account_type === "manager"
@@ -215,12 +215,17 @@ export const postLogin = async (
 
 export const getSignup = (req: Request, res: Response) => {
   const logger: Logger = res.locals.logger;
+
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.not_authenticated_csrf_secret!);
   try {
     logger.info(`Rendering signup page`);
     res.render("auth/signup", {
       baseUrl: `${process.env.BASE_URL}`,
       error: null,
       nonce: res.locals.nonce,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering signup page: ${error}`);
@@ -235,6 +240,9 @@ export const postSignup = async (
 ) => {
   const user_repo = AppDataSource.getRepository(User);
   const logger: Logger = res.locals.logger;
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.not_authenticated_csrf_secret!);
 
   logger.info(`Received signup request`);
 
@@ -246,6 +254,7 @@ export const postSignup = async (
       baseUrl: `${process.env.BASE_URL}`,
       error: errors.array()[0].msg,
       nonce: res.locals.nonce,
+      csrfToken: csrf_token,
     });
   }
 
@@ -267,6 +276,7 @@ export const postSignup = async (
       baseUrl: `${process.env.BASE_URL}`,
       error: `Passwords do not match`,
       nonce: res.locals.nonce,
+      csrfToken: csrf_token,
     });
   }
 
@@ -278,6 +288,7 @@ export const postSignup = async (
         baseUrl: `${process.env.BASE_URL}`,
         error: `User with email ${email} already exists`,
         nonce: res.locals.nonce,
+        csrfToken: csrf_token,
       });
     }
   } catch (err) {
@@ -325,6 +336,10 @@ export const getForgotPassword = (
   next: NextFunction
 ) => {
   const logger: Logger = res.locals.logger;
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.not_authenticated_csrf_secret!);
+
   try {
     logger.info(`Rendering forgot password page`);
     res.render("auth/forgot-password", {
@@ -332,6 +347,7 @@ export const getForgotPassword = (
       error: null,
       success: null,
       nonce: res.locals.nonce,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering forgot password page: ${error}`);
@@ -445,6 +461,10 @@ export const getResetPassword = async (
   const logger: Logger = res.locals.logger;
   logger.info(`Rendering reset password page`);
 
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.not_authenticated_csrf_secret!);
+
   const { token } = req.query;
 
   res.render("auth/reset-password", {
@@ -453,6 +473,7 @@ export const getResetPassword = async (
     success: null,
     nonce: res.locals.nonce,
     token,
+    csrfToken: csrf_token,
   });
 };
 
@@ -629,6 +650,10 @@ export const getVerify2fa = (
   const logger: Logger = res.locals.logger;
   const { unlogged_email } = req.session;
 
+  const tokens = new Tokens();
+
+  const csrf_token = tokens.create(req.session.not_authenticated_csrf_secret!);
+
   try {
     logger.info(`Rendering 2fa verification page`);
     res.render("auth/verify-2fa", {
@@ -636,6 +661,7 @@ export const getVerify2fa = (
       verifyPath: unlogged_email ? "reset-password/verify-2fa" : "verify-2fa",
       error: null,
       nonce: res.locals.nonce,
+      csrfToken: csrf_token,
     });
   } catch (error) {
     logger.error(`Error rendering 2fa verification page: ${error}`);
@@ -767,6 +793,9 @@ export const postLoginVerify2fa = async (
   if (verified) {
     req.session.pending_2fa = false;
     logger.info(`2fa code verified`);
+
+    req.session.not_authenticated_csrf_secret = undefined;
+    req.session.csrf_secret = new Tokens().secretSync();
     try {
       logger.info(`Redirecting to dashboard`);
       return res.redirect(`/${req.session.user?.account_type}/dashboard`);
