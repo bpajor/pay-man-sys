@@ -58,6 +58,7 @@ export const postLogin = async (
       baseUrl: `${process.env.BASE_URL}`,
       error: errors.array()[0].msg,
       nonce: res.locals.nonce,
+      csrfToken: tokens.create(req.session.not_authenticated_csrf_secret!),
     });
   }
 
@@ -78,6 +79,7 @@ export const postLogin = async (
         baseUrl: `${process.env.BASE_URL}`,
         error: "User is locked out",
         nonce: res.locals.nonce,
+        csrfToken: tokens.create(req.session.not_authenticated_csrf_secret!),
       });
     }
   } catch (error) {
@@ -105,6 +107,7 @@ export const postLogin = async (
         baseUrl: `${process.env.BASE_URL}`,
         error: "Invalid email or password",
         nonce: res.locals.nonce,
+        csrfToken: tokens.create(req.session.not_authenticated_csrf_secret!),
       });
     }
   } catch (error) {
@@ -124,6 +127,7 @@ export const postLogin = async (
         baseUrl: `${process.env.BASE_URL}`,
         error: "Invalid email or password",
         nonce: res.locals.nonce,
+        csrfToken: tokens.create(req.session.not_authenticated_csrf_secret!),
       });
     }
   } catch (error) {
@@ -449,6 +453,7 @@ export const postForgotPassword = async (
       error: null,
       success: `Email sent to ${email}`,
       nonce: res.locals.nonce,
+      csrfToken: req.session.not_authenticated_csrf_secret,
     });
   });
 };

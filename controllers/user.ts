@@ -3,6 +3,8 @@ import { Logger } from "winston";
 import { AppDataSource } from "../data-source";
 import { User } from "../entity/User";
 import { userInSessionFieldsExist } from "./helpers/validator";
+import { validationResult } from "express-validator";
+import { validatorError } from "./helpers/validator_errors";
 
 // TODO -> add validation && think if changing personal data should be confirmed by email or 2fa
 export const postUpdateUserPersonalData = async (
@@ -23,6 +25,14 @@ export const postUpdateUserPersonalData = async (
   }
 
   const { uid, account_type } = user_session;
+  
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Bad request data`);
+    res.status(400);
+    return next(new Error(`Bad request: ${errors.array()[0].msg}`));
+  }
 
   const { name, last_name, email, phone_number, home_address, date_of_birth } =
     req.body;

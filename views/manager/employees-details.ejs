@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/common/footer.css" />
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
     <link rel="stylesheet" href="/css/common/date-picker.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
     <title>Employee Details</title>
     <style>
       /* Dodajemy podstawową stylizację dla komunikatu */
@@ -76,8 +77,8 @@
 
     <script nonce="<%= nonce %>">
       // Przekazujemy companyId z serwera do klienta
-      // const companyId = <%= companyId ? `'${companyId}'` : null %>;
-      const companyId = "<%= companyId %>" ? "<%= companyId %>" : null;
+      let companyId = "<%= companyId %>" ? "<%= companyId %>" : null;
+      companyId = DOMPurify.sanitize(companyId);
 
       let currentDate = new Date();
       let currentMonth = currentDate.getMonth(); // 0 = January
@@ -127,8 +128,7 @@
         const tableBody = document.getElementById("employeeTableBody");
         tableBody.innerHTML = ""; // Clear existing rows
         data.forEach((employee) => {
-          const row = document.createElement("tr");
-
+          const row = document.createElement("tr")
           row.innerHTML = `
             <td><a href="<%baseUrl%>/manager/single-emp-details/${employee.id}">${employee.first_name} ${employee.last_name}</a></td>
             <td>$${employee.salary_per_hour}</td>

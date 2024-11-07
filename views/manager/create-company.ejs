@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/common/footer.css" />
     <link rel="stylesheet" href="/css/common/common.css" />
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
     <title>Ustawienia konta</title>
     <style>
       .content {
@@ -208,4 +209,18 @@
   </body>
 
   <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
+
+  <script nonce="<%= nonce %>">
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("edit-mode-company");
+
+      form.addEventListener("submit", function (event) {
+        const inputs = form.querySelectorAll("input[type='text'], input[type='number']");
+        
+        inputs.forEach((input) => {
+          input.value = DOMPurify.sanitize(input.value);
+        });
+      });
+    });
+  </script>
 </html>

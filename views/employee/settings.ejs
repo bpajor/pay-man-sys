@@ -235,6 +235,17 @@
   <%- include("../includes/manager_left_dashboard_listener") %>
 
   <script nonce="<%= nonce %>">
+    document.getElementById("edit-mode").addEventListener("submit", function (event) {
+      const inputs = this.querySelectorAll("input[type='text'], input[type='email'], input[type='tel'], input[type='date']");
+  
+      inputs.forEach((input) => {
+        // Sanitizujemy wartość inputu przed wysłaniem formularza
+        input.value = DOMPurify.sanitize(input.value);
+      });
+    });
+  </script>
+
+  <script nonce="<%= nonce %>">
     <% if (loggedUser.employee_id) { %>
     document
       .getElementById("leave-button")

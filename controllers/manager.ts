@@ -8,6 +8,11 @@ import { Company } from "../entity/Company";
 import { JoinRequest } from "../entity/JoinRequest";
 import { userInSessionFieldsExist } from "./helpers/validator";
 import Tokens from "csrf";
+import { selectFields } from "express-validator/lib/field-selection";
+import { sanitizeReturnProps } from "./helpers/sanitize";
+import { validatorError } from "./helpers/validator_errors";
+import { validationResult } from "express-validator";
+import xss from "xss";
 
 type PayoutsHistory = {
   month: number;
@@ -47,16 +52,19 @@ export const getManagerDashboard = async (
 
   if (!user_session.company_id) {
     try {
-      return res.render("manager/dashboard", {
-        baseUrl: `${process.env.BASE_URL}`,
-        loggedUser: uid,
-        nonce: res.locals.nonce,
-        companyId: null,
-        payoutsHistory: [],
-        accountType: account_type,
-        jrequestsPending: req.session.jrequests_pending,
-        csrfToken: csrf_token,
-      });
+      return res.render(
+        "manager/dashboard",
+        sanitizeReturnProps({
+          baseUrl: `${process.env.BASE_URL}`,
+          loggedUser: uid,
+          nonce: res.locals.nonce,
+          companyId: null,
+          payoutsHistory: [],
+          accountType: account_type,
+          jrequestsPending: req.session.jrequests_pending,
+          csrfToken: csrf_token,
+        })
+      );
     } catch (error) {
       logger.error(`Error rendering manager dashboard: ${error}`);
       res.status(500);
@@ -101,22 +109,24 @@ export const getManagerDashboard = async (
     return next(new Error("Internal server error"));
   }
 
+  const sanitized_output_obj = sanitizeReturnProps({
+    baseUrl: `${process.env.BASE_URL}`,
+    loggedUser: uid,
+    nonce: res.locals.nonce,
+    totalSalary: present_month_total_salary,
+    totalBonus: present_month_total_bonus,
+    payoutsHistory: payouts_history,
+    totalPayoutsHistoryAmount: total_payouts_history_amount,
+    topEmployees: top_employees,
+    companyId: user_session.company_id,
+    accountType: account_type,
+    jrequestsPending: req.session.jrequests_pending,
+    csrfToken: csrf_token,
+  });
+
   try {
     logger.info(`Rendering manager dashboard`);
-    res.render("manager/dashboard", {
-      baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: uid,
-      nonce: res.locals.nonce,
-      totalSalary: present_month_total_salary,
-      totalBonus: present_month_total_bonus,
-      payoutsHistory: payouts_history,
-      totalPayoutsHistoryAmount: total_payouts_history_amount,
-      topEmployees: top_employees,
-      companyId: user_session.company_id,
-      accountType: account_type,
-      jrequestsPending: req.session.jrequests_pending,
-      csrfToken: csrf_token,
-    });
+    res.render("manager/dashboard", sanitized_output_obj);
   } catch (error) {
     logger.error(`Error rendering manager dashboard: ${error}`);
     res.status(500);
@@ -230,7 +240,9 @@ export const getManagerSingleEmployeeDetails = async (
 
   const employee_id = req.params.employee_id;
 
-  if (!req.session.user!.authorized_employees_ids.includes(Number(employee_id))) {
+  if (
+    !req.session.user!.authorized_employees_ids.includes(Number(employee_id))
+  ) {
     logger.warn("Unauthorized");
     res.status(403);
     return next(new Error("Unauthorized"));
@@ -283,8 +295,27 @@ export const postUpdateEmployeePresentEarnings = async (
 
   logger.info("Received employee present earnings update request");
 
-  const employee_id = req.params.employee_id;
-  const { type, hours_change, salary, bonus } = req.body as {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    res.status(400);
+    return next(new Error(`Bad request: ${errors.array()[0].msg}`));
+  }
+
+  let employee_id = req.params.employee_id;
+
+  employee_id = xss(employee_id);
+
+  if (
+    !req.session.user!.authorized_employees_ids.includes(Number(employee_id))
+  ) {
+    logger.warn("Unauthorized");
+    res.status(403);
+    return next(new Error("Unauthorized"));
+  }
+
+  let { type, hours_change, salary, bonus } = req.body as {
     type: "hours_change" | "salary_update";
     hours_change: HoursChange;
     salary: number;
@@ -315,7 +346,6 @@ export const postUpdateEmployeePresentEarnings = async (
     return next(new Error("Internal server error"));
   }
 
-  //TODO -> add transactions
 
   if (type == "salary_update") {
     try {
@@ -342,7 +372,7 @@ export const postUpdateEmployeePresentEarnings = async (
   }
 };
 
-const updatePresentMonthEmployeeSalary = async (
+export const updatePresentMonthEmployeeSalary = async (
   employee_id: string,
   salary: number,
   logger: Logger
@@ -359,7 +389,7 @@ const updatePresentMonthEmployeeSalary = async (
   }
 };
 
-const updatePresentMonthEmployeeSalaryHistoryByBonus = async (
+export const updatePresentMonthEmployeeSalaryHistoryByBonus = async (
   employee_id: string,
   bonus: number,
   logger: Logger
@@ -641,33 +671,39 @@ export const getManagerSettings = async (
   // TODO -> should pass company here
   if (error) {
     logger.warn(`Error happened before rendering settings page: ${error}`);
-    return res.status(400).render("manager/settings", {
-      baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: user_session,
-      user: user,
-      is2faEnabled: is_2fa_enabled,
-      nonce: res.locals.nonce,
-      accountType: account_type,
-      error: error,
-      jrequestsPending: req.session.jrequests_pending,
-      csrfToken: csrf_token,
-    });
-  }
-
-  if (!user_session.company_id) {
-    try {
-      return res.status(200).render("manager/settings", {
+    return res.status(400).render(
+      "manager/settings",
+      sanitizeReturnProps({
         baseUrl: `${process.env.BASE_URL}`,
         loggedUser: user_session,
         user: user,
         is2faEnabled: is_2fa_enabled,
         nonce: res.locals.nonce,
-        accountType: user_session.account_type,
-        error: null,
-        company: null,
+        accountType: account_type,
+        error: error,
         jrequestsPending: req.session.jrequests_pending,
         csrfToken: csrf_token,
-      });
+      })
+    );
+  }
+
+  if (!user_session.company_id) {
+    try {
+      return res.status(200).render(
+        "manager/settings",
+        sanitizeReturnProps({
+          baseUrl: `${process.env.BASE_URL}`,
+          loggedUser: user_session,
+          user: user,
+          is2faEnabled: is_2fa_enabled,
+          nonce: res.locals.nonce,
+          accountType: user_session.account_type,
+          error: null,
+          company: null,
+          jrequestsPending: req.session.jrequests_pending,
+          csrfToken: csrf_token,
+        })
+      );
     } catch (error) {
       logger.error(`Error rendering employee settings page: ${error}`);
       res.status(500);
@@ -697,18 +733,21 @@ export const getManagerSettings = async (
 
   try {
     logger.info(`Rendering employee settings page`);
-    res.render("manager/settings", {
-      baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: user_session,
-      user: user,
-      is2faEnabled: is_2fa_enabled,
-      nonce: res.locals.nonce,
-      accountType: account_type,
-      error: null,
-      company,
-      jrequestsPending: req.session.jrequests_pending,
-      csrfToken: csrf_token,
-    });
+    res.render(
+      "manager/settings",
+      sanitizeReturnProps({
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: user_session,
+        user: user,
+        is2faEnabled: is_2fa_enabled,
+        nonce: res.locals.nonce,
+        accountType: account_type,
+        error: null,
+        company,
+        jrequestsPending: req.session.jrequests_pending,
+        csrfToken: csrf_token,
+      })
+    );
   } catch (error) {
     logger.error(`Error rendering employee settings page: ${error}`);
     res.status(500);
@@ -736,6 +775,14 @@ export const postUpdateCompanySettings = async (
     logger.error(`Session data not found`);
     res.status(400);
     return next(new Error("Session data not found"));
+  }
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    res.status(400);
+    return next(new Error(`Bad request: ${errors.array()[0].msg}`));
   }
 
   const { uid, account_type, company_id } = user_session;
@@ -920,11 +967,13 @@ export const postManagerCreateCompany = async (
   const user_session = req.session.user!;
 
   const is_company_created = user_session.company_id ? true : false;
+  
+  const errors = validationResult(req);
 
-  if (is_company_created) {
-    logger.error(`Company already created`);
+  if (!errors.isEmpty()) {
+    logger.error(`Bad request data`);
     res.status(400);
-    return next(new Error("Requested resources not found"));
+    return next(new Error(`Bad request: ${errors.array()[0].msg}`));
   }
 
   let {
@@ -1168,6 +1217,50 @@ export const getManagerJoinRequest = async (
   }
 
   try {
+    const employee = await AppDataSource.getRepository(Employee).findOneBy({
+      user: { id: user_from_db.id },
+    });
+
+    if (employee) {
+      logger.error(`Employee exist`);
+      res.status(400);
+      return next(new Error("Bad request"));
+    }
+  } catch (error) {
+    logger.error(`Error getting employee: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  try {
+    const [jrequest] = await AppDataSource.query(
+      `SELECT
+      "companyId"
+      FROM
+      join_requests
+      WHERE
+      "userId" = $1`,
+      [uid]
+    );
+
+    if (!jrequest) {
+      logger.error(`Join request not found`);
+      res.status(404);
+      return next(new Error("Resources not found"));
+    }
+
+    if (jrequest.companyId !== user_session.company_id) {
+      logger.error(`Unauthorized`);
+      res.status(403);
+      return next(new Error("Unauthorized"));
+    }
+  } catch (error) {
+    logger.error(`Error checking if join request exists: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
+
+  try {
     return res.render("manager/join-request", {
       baseUrl: `${process.env.BASE_URL}`,
       loggedUser: user_session,
@@ -1201,6 +1294,14 @@ export const postManagerJoinRequest = async (
     return next(new Error("Bad request"));
   }
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Bad request data`);
+    res.status(400);
+    return next(new Error(`Bad request: ${errors.array()[0].msg}`));
+  }
+
   const {
     salary,
     phone,
@@ -1218,6 +1319,34 @@ export const postManagerJoinRequest = async (
     logger.error(`Missing id`);
     res.status(400);
     return next(new Error("Missing id"));
+  }
+
+  try {
+    const [jrequest] = await AppDataSource.query(
+      `SELECT
+      "companyId"
+      FROM
+      join_requests
+      WHERE
+      "userId" = $1`,
+      [uid]
+    );
+
+    if (!jrequest) {
+      logger.error(`Join request not found`);
+      res.status(404);
+      return next(new Error("Resources not found"));
+    }
+
+    if (jrequest.companyId !== user_session.company_id) {
+      logger.error(`Unauthorized`);
+      res.status(403);
+      return next(new Error("Unauthorized"));
+    }
+  } catch (error) {
+    logger.error(`Error checking if join request exists: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
   }
 
   if (

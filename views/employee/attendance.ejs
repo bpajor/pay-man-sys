@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
     <title>Employee Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
     <style>
       main {
         display: flex;
@@ -157,7 +158,7 @@
           <br>
           <br>
           <br>
-          <form action="/employee/attendance" method="POST">
+          <form action="/employee/attendance" method="POST" id="attendance-form">
             <input type="hidden" name="csrf_token" value="<%=csrfToken%>">
             <div class="attendance-options <%= errorInfo ? 'disabled' : '' %>">
               <div class="attendance-option" data-type="normal" data-value="normal">
@@ -193,6 +194,20 @@
       <p>© 2024 PayrollPro. All rights reserved.</p>
     </footer>
   </body>
+
+  <script nonce="<%= nonce %>">
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("attendance-form");
+  
+      form.addEventListener("submit", (event) => {
+        // Przeprowadzenie sanitacji dla wszystkich inputów w formularzu
+        const inputs = form.querySelectorAll("input[type='text'], input[type='hidden']");
+        inputs.forEach((input) => {
+          input.value = DOMPurify.sanitize(input.value);
+        });
+      });
+    });
+  </script>
 
   <%- include("../includes/manager_left_dashboard_listener") %>
   <script nonce="<%= nonce %>">

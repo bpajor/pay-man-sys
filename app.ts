@@ -18,6 +18,7 @@ import connectRedis from "connect-redis";
 import session from "express-session";
 import { createClient } from "redis";
 import RedisStore from "connect-redis";
+import Tokens from "csrf";
 
 dotenv.config();
 
@@ -42,6 +43,12 @@ AppDataSource.initialize()
 
     // Pass logger to middlewares
     app.use(createLogger);
+
+    // app.use((req: Request, res: Response, next: NextFunction) => {
+    //   res.locals.enable_csrf = false;
+
+    //   return next();
+    // })
 
     let redisClient = createClient({
       url: process.env.REDIS_TEMPORARY_URL,
@@ -128,22 +135,23 @@ AppDataSource.initialize()
 
     app.set("trust proxy", 1); // trust only first proxy
 
-    // const limiter = rateLimit({
-    //   windowMs: 15 * 60 * 1000, // 15 minutes
-    //   limit: 100, // limit each IP to 100 requests per windowMs
-    //   message:
-    //     "Too many requests from this IP, please try again after 15 minutes",
-    // });
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      limit: 100, // limit each IP to 100 requests per windowMs
+      message:
+        "Too many requests from this IP, please try again after 15 minutes",
+    });
 
-    // app.use(limiter);
+    app.use(limiter);
 
     app.use(bodyParser.urlencoded({ extended: false }));
 
     app.use(Express.json());
 
-    app.get("/css/:account_type/*",
+    app.get(
+      "/css/:account_type/*",
       (req: Express.Request, res: Express.Response, next: NextFunction) => {
-        console.log("In middleware")
+        console.log("In middleware");
         let account_type;
         if (req.session.user) {
           account_type = req.session.user.account_type;
@@ -162,6 +170,14 @@ AppDataSource.initialize()
             }
             return next();
           }
+
+          // if (acc_type_from_path === "common") {
+          //   if (!account_type) {
+          //     logger.error("Unauthorized access to CSS file");
+          //   res.status(403);
+          //   return next(new Error("Unauthorized"));
+          //   }
+          // }
 
           return next();
         }
@@ -206,7 +222,6 @@ AppDataSource.initialize()
     //   }
     // });
 
-    
     app.use(auth_routes);
     app.use(employee_routes);
     app.use(manager_routes);
@@ -215,12 +230,28 @@ AppDataSource.initialize()
 
     // Obsługa błędu 404 - nieznaleziono strony
     app.use((req: Request, res: Response) => {
+
+      let csrf_token;
+      if (req.session.not_authenticated_csrf_secret) {
+        csrf_token = new Tokens().create(
+          req.session.not_authenticated_csrf_secret
+        );
+      } else if (req.session.csrf_secret) {
+        csrf_token = new Tokens().create(req.session.csrf_secret);
+      } else {
+        req.session.not_authenticated_csrf_secret = new Tokens().secretSync();
+        csrf_token = new Tokens().create(
+          req.session.not_authenticated_csrf_secret
+        );
+      }
+
       res.status(404).render("error/error", {
         code: 404,
         message: "Page not found. Please check the URL and try again.",
         baseUrl: `${process.env.BASE_URL}`,
         loggedUser: req.session.user ? req.session.user.uid : null,
         accountType: req.session.user ? req.session.user.account_type : null,
+        csrfToken: csrf_token,
       });
     });
 
@@ -234,12 +265,27 @@ AppDataSource.initialize()
           ? "Internal server error. Please try again later."
           : err.message;
 
+      let csrf_token;
+      if (req.session.not_authenticated_csrf_secret) {
+        csrf_token = new Tokens().create(
+          req.session.not_authenticated_csrf_secret
+        );
+      } else if (req.session.csrf_secret) {
+        csrf_token = new Tokens().create(req.session.csrf_secret);
+      } else {
+        req.session.not_authenticated_csrf_secret = new Tokens().secretSync();
+        csrf_token = new Tokens().create(
+          req.session.not_authenticated_csrf_secret
+        );
+      }
+
       res.status(statusCode).render("error/error", {
         code: statusCode,
         message: errorMessage,
         baseUrl: `${process.env.BASE_URL}`,
         loggedUser: req.session.user ? req.session.user.uid : null,
         accountType: req.session.user ? req.session.user.account_type : null,
+        csrfToken: csrf_token,
       });
     });
 

@@ -144,4 +144,18 @@
   </body>
 
   <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
+
+  <script nonce="<%= nonce %>">
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("edit-mode-company");
+
+      form.addEventListener("submit", function (event) {
+        const inputs = form.querySelectorAll("input[type='text'], input[type='number'], input[type='date'], input[type='email'], input[type='tel'], textarea");
+        
+        inputs.forEach((input) => {
+          input.value = DOMPurify.sanitize(input.value);
+        });
+      });
+    });
+  </script>
 </html>
