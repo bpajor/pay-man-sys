@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/common/footer.css" />
     <link rel="stylesheet" href="/css/common/common.css">
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
     <title>Ustawienia konta</title>
     <style>
       .user-details-section {
@@ -389,7 +390,79 @@
   <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
 
   <script nonce="<%= nonce %>">
-    const editButton = document.getElementById("edit-button");
+    document.addEventListener("DOMContentLoaded", function () {
+      const paragraphs = document.querySelectorAll("#display-mode-company p");
+  
+      paragraphs.forEach((paragraph) => {
+        const label = paragraph.querySelector(".label"); // Etykieta w <span>
+        const valueNode = label.nextSibling; // Tekst wartości obok <span>
+  
+        // Pobieramy tekst wartości, sanitizujemy go i przypisujemy z powrotem
+        const valueText = valueNode.textContent.trim();
+        const sanitizedValue = DOMPurify.sanitize(valueText);
+        valueNode.textContent = ` ${sanitizedValue}`; // Aktualizujemy tekst po etykiecie
+      });
+    });
+  </script>
+    
+
+  <script nonce="<%= nonce %>">
+    document.addEventListener("DOMContentLoaded", function () {
+      const inputs = document.querySelectorAll("#edit-mode-company input[type='text'], #edit-mode-company input[type='number']");
+  
+      inputs.forEach((input) => {
+        // Zastosuj DOMPurify do wartości inputów
+        input.value = DOMPurify.sanitize(input.value);
+      });
+    });
+  </script>
+
+<script nonce="<%= nonce %>">
+  document.addEventListener("DOMContentLoaded", function () {
+    const displayMode = document.getElementById("display-mode");
+    const paragraphs = displayMode.querySelectorAll("p");
+
+    paragraphs.forEach((paragraph) => {
+      const label = paragraph.querySelector(".label"); // Pobieramy etykietę
+      const valueNode = label.nextSibling; // Pobieramy tekst wartości obok etykiety
+
+      // Sanitizujemy tekst wartości
+      const valueText = valueNode.textContent.trim();
+      const sanitizedValue = DOMPurify.sanitize(valueText);
+      valueNode.textContent = ` ${sanitizedValue}`; // Aktualizujemy tekst po etykiecie
+    });
+  });
+</script>
+
+
+<script nonce="<%= nonce %>">
+  document.addEventListener("DOMContentLoaded", function () {
+    const editMode = document.getElementById("edit-mode");
+    const inputs = editMode.querySelectorAll("input[type='text'], input[type='email'], input[type='tel'], input[type='date']");
+
+    inputs.forEach((input) => {
+      // Sanitizujemy wartość inputu
+      input.value = DOMPurify.sanitize(input.value);
+    });
+  });
+</script>
+
+<script nonce="<%= nonce %>">
+  document.getElementById("edit-mode").addEventListener("submit", function (event) {
+    const inputs = this.querySelectorAll("input[type='text'], input[type='email'], input[type='tel'], input[type='date']");
+
+    inputs.forEach((input) => {
+      // Sanitizujemy wartość inputu przed wysłaniem formularza
+      input.value = DOMPurify.sanitize(input.value);
+    });
+  });
+</script>
+
+
+  <script nonce="<%= nonce %>">
+    const test = DOMPurify.sanitize(`<img src onerror="alert('hacked')">`)
+    console.log(test)
+;    const editButton = document.getElementById("edit-button");
     const saveButton = document.getElementById("save-button");
     const cancelButton = document.getElementById("cancel-button");
 
@@ -416,32 +489,32 @@
       cancelButton.style.display = "none";
     });
 
-    // const editButtonCompany = document.getElementById("edit-button-company");
-    // const saveButtonCompany = document.getElementById("save-button-company");
-    // const cancelButtonCompany = document.getElementById("cancel-button-company");
+    const editButtonCompany = document.getElementById("edit-button-company");
+    const saveButtonCompany = document.getElementById("save-button-company");
+    const cancelButtonCompany = document.getElementById("cancel-button-company");
 
-    // const displayModeCompany = document.getElementById("display-mode-company");
-    // const editModeCompany = document.getElementById("edit-mode-company");
+    const displayModeCompany = document.getElementById("display-mode-company");
+    const editModeCompany = document.getElementById("edit-mode-company");
 
-    // // Function to switch to edit mode
-    // editButtonCompany.addEventListener("click", () => {
-    //   displayModeCompany.style.display = "none";
-    //   editModeCompany.style.display = "block";
+    // Function to switch to edit mode
+    editButtonCompany.addEventListener("click", () => {
+      displayModeCompany.style.display = "none";
+      editModeCompany.style.display = "block";
 
-    //   editButtonCompany.style.display = "none";
-    //   saveButtonCompany.style.display = "inline-block";
-    //   cancelButtonCompany.style.display = "inline-block";
-    // });
+      editButtonCompany.style.display = "none";
+      saveButtonCompany.style.display = "inline-block";
+      cancelButtonCompany.style.display = "inline-block";
+    });
 
-    // // Function to cancel edit mode
-    // cancelButtonCompany.addEventListener("click", () => {
-    //   displayModeCompany.style.display = "block";
-    //   editModeCompany.style.display = "none";
+    // Function to cancel edit mode
+    cancelButtonCompany.addEventListener("click", () => {
+      displayModeCompany.style.display = "block";
+      editModeCompany.style.display = "none";
 
-    //   editButtonCompany.style.display = "inline-block";
-    //   saveButtonCompany.style.display = "none";
-    //   cancelButtonCompany.style.display = "none";
-    // });
+      editButtonCompany.style.display = "inline-block";
+      saveButtonCompany.style.display = "none";
+      cancelButtonCompany.style.display = "none";
+    });
 
     function showNotification(message, isSuccess) {
       const notificationBar = document.getElementById("notification-bar");

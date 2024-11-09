@@ -25,6 +25,10 @@ export const csrfBodyValidator = (
   const logger: Logger = res.locals.logger;
   logger.info("Validating csrf token");
 
+  // if (!res.locals.enable_csrf) {
+  //   return next();
+  // }
+
   const tokens = new Tokens();
 
   const origin_validated = validateOrigin(req);
@@ -74,6 +78,10 @@ export const csrfAPIValidator = (
   const logger: Logger = res.locals.logger;
   logger.info("Validating csrf token");
 
+  // if (!res.locals.enable_csrf) {
+  //   return next();
+  // }
+
   const tokens = new Tokens();
 
   const origin_validated = validateOrigin(req);
@@ -116,15 +124,34 @@ export const csrfAPIValidator = (
 };
 
 const validateOrigin = (req: Request) => {
-  if (
-    !(
-      req.get("ORIGIN") === "null" ||
-      req.get("ORIGIN") === process.env.BASE_URL ||
-      req.get("REFERER") === process.env.BASE_URL
-    )
-  ) {
+  const origin = req.get("ORIGIN");
+  const referer = req.get("REFERER");
+
+  const is_valid_origin = origin === "null" || origin === process.env.BASE_URL;
+  const is_valid_referer = referer?.includes(process.env.BASE_URL!);
+
+  if (!origin && !referer) {
     return false;
   }
 
-  return true;
+  if (origin && !referer) {
+    return is_valid_origin;
+  }
+
+  if (!origin && referer) {
+    return is_valid_referer;
+  }
+
+  return is_valid_origin && is_valid_referer;
+  // if (
+  //   !(
+  //     req.get("ORIGIN") === "null" ||
+  //     req.get("ORIGIN") === process.env.BASE_URL ||
+  //     req.get("REFERER")?.includes(process.env.BASE_URL!) 
+  //   )
+  // ) { 
+  //   return false;
+  // }
+
+  // return true;
 };

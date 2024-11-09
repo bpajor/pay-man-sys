@@ -20,6 +20,8 @@ import {
 } from "./helpers/queries";
 import { getPeriod } from "./helpers/builders";
 import { Employee } from "../entity/Employee";
+import xss from "xss";
+import { sanitizeReturnProps } from "./helpers/sanitize";
 
 export type HoursWorkedResult = {
   period_month: Date;
@@ -67,7 +69,9 @@ export const getAllExpensesDetailsAPI = async (req: Request, res: Response) => {
       company_id,
     ]);
 
-    const results_to_return = translateExpensesResults(results);
+    let results_to_return = translateExpensesResults(results);
+
+    results_to_return = sanitizeReturnProps(results_to_return);
 
     return res.status(200).json(results_to_return);
   } catch (err) {
@@ -102,7 +106,9 @@ export const getAllHoursWorkedByYearAPI = async (
       year,
     ]);
 
-    const res_to_return = translateHoursWorkedResults(results);
+    let res_to_return = translateHoursWorkedResults(results);
+
+    res_to_return = sanitizeReturnProps(res_to_return);
 
     return res.status(200).json(res_to_return);
   } catch (err) {
@@ -131,7 +137,9 @@ export const getAverageSalaryAndBonusbByYearAPI = async (
   const query = AVERAGE_SALARY_AND_BONUSES_PER_YEAR;
 
   try {
-    const results = await AppDataSource.query(query, [company_id, year]);
+    let results = await AppDataSource.query(query, [company_id, year]);
+
+    results = sanitizeReturnProps(results);
 
     return res.status(200).json(results);
   } catch (err) {
@@ -165,9 +173,11 @@ export const getAllExpensesDetailsByYearAPI = async (
       company_id,
     ]);
 
-    const results_to_return = results.map((result) => {
+    let results_to_return = results.map((result) => {
       return translateExpensesResults(result);
     });
+
+    results_to_return = sanitizeReturnProps(results_to_return);
 
     return res.status(200).json(results_to_return);
   } catch (err) {
@@ -184,7 +194,9 @@ export const deleteJoinRequestByEmailAPI = async (
 
   logger.info(`Deleting join request by email`);
 
-  const { email } = req.body;
+  let { email } = req.body;
+
+  email = xss(email);
 
   if (!email) {
     logger.error(`Email not provided`);
@@ -203,32 +215,37 @@ export const deleteJoinRequestByEmailAPI = async (
       return res.status(404).json({ message: "User not found" });
     }
 
+    if (user_from_db.company.id !== req.session.user!.company_id) {
+      logger.error(`Unauthorized`);
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
     user_id = user_from_db.id;
   } catch (err) {
     logger.error(`Error getting user data: ${err}`);
     return res.status(500).json({ message: "Internal server error" });
   }
 
-  try {
-    const employee = await AppDataSource.getRepository(Employee).findOneBy({
-      user: { id: user_id },
-    });
+  // try {
+  //   const employee = await AppDataSource.getRepository(Employee).findOneBy({
+  //     user: { id: user_id },
+  //   });
 
-    if (!req.session.user!.authorized_employees_ids.includes(employee!.id)) {
-      logger.error(`Unauthorized`);
-      return res.status(403).json({ message: "Unauthorized" });
-    }
+  //   if (!req.session.user!.authorized_employees_ids.includes(employee!.id)) {
+  //     logger.error(`Unauthorized`);
+  //     return res.status(403).json({ message: "Unauthorized" });
+  //   }
 
-    if (!employee) {
-      logger.error(`Employee not found`);
-      return res
-        .status(404)
-        .json({ message: "Requested resources cannot be found" });
-    }
-  } catch (err) {
-    logger.error(`Error getting employee data: ${err}`);
-    return res.status(500).json({ message: "Internal server error" });
-  }
+  //   if (!employee) {
+  //     logger.error(`Employee not found`);
+  //     return res
+  //       .status(404)
+  //       .json({ message: "Requested resources cannot be found" });
+  //   }
+  // } catch (err) {
+  //   logger.error(`Error getting employee data: ${err}`);
+  //   return res.status(500).json({ message: "Internal server error" });
+  // }
 
   const join_request_repo = AppDataSource.getRepository(JoinRequest);
 
@@ -255,7 +272,9 @@ export const getEmployeeEarningsDetailsByYearAPI = async (
 
   const user = req.session.user!;
 
-  const { year } = req.query;
+  let { year } = req.query;
+
+  year = xss(year as string);
 
   if (!year) {
     logger.error(`Year not provided`);
@@ -271,7 +290,7 @@ export const getEmployeeEarningsDetailsByYearAPI = async (
   const query = ALL_EMPLOYEE_EARNINGS_DETAILS_PER_YEAR;
 
   try {
-    const earnings: EmployeeEarningsResponse = await AppDataSource.query(
+    let earnings: EmployeeEarningsResponse = await AppDataSource.query(
       query,
       [year, employee_id]
     );
@@ -290,6 +309,8 @@ export const getEmployeeEarningsDetailsByYearAPI = async (
       earning.income_tax = Number(earning.income_tax);
       earning.bonus = Number(earning.bonus);
     });
+
+    earnings = sanitizeReturnProps(earnings);
     return res.status(200).json(earnings);
   } catch (error) {
     logger.error(`Error getting employee earnings details: ${error}`);
@@ -498,29 +519,29 @@ GROUP BY
 
     employees_data.forEach((employee: any) => {
       employee.retirement_contributions = Number(
-        employee.retirement_contributions
+        xss(employee.retirement_contributions)
       );
       employee.disability_contributions = Number(
-        employee.disability_contributions
+        xss(employee.disability_contributions)
       );
       employee.healthcare_contributions = Number(
-        employee.healthcare_contributions
+        xss(employee.healthcare_contributions)
       );
-      employee.income_tax = Number(employee.income_tax);
-      employee.salary_per_hour = Number(employee.salary_per_hour);
-      employee.bonus = Number(employee.bonus);
-      employee.hours_present_in_month = Number(employee.hours_present_in_month);
-      employee.hours_on_sick_leave = Number(employee.hours_on_sick_leave);
-      employee.hours_on_vacation = Number(employee.hours_on_vacation);
-      employee.hours_on_demand_leave = Number(employee.hours_on_demand_leave);
+      employee.income_tax = Number(xss(employee.income_tax));
+      employee.salary_per_hour = Number(xss(employee.salary_per_hour));
+      employee.bonus = Number(xss(employee.bonus));
+      employee.hours_present_in_month = Number(xss(employee.hours_present_in_month));
+      employee.hours_on_sick_leave = Number(xss(employee.hours_on_sick_leave));
+      employee.hours_on_vacation = Number(xss(employee.hours_on_vacation));
+      employee.hours_on_demand_leave = Number(xss(employee.hours_on_demand_leave));
       employee.sick_leave_percent_factor = Number(
-        employee.sick_leave_percent_factor
+        xss(employee.sick_leave_percent_factor)
       );
       employee.vacation_percent_factor = Number(
-        employee.vacation_percent_factor
+        xss(employee.vacation_percent_factor)
       );
       employee.on_demand_percent_factor = Number(
-        employee.on_demand_percent_factor
+        xss(employee.on_demand_percent_factor)
       );
 
       employee.total_pay =

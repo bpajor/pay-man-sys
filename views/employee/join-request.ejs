@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
     <title>Employee Dashboard</title>
     <style>
       .container {
@@ -95,8 +96,13 @@
       <section class="content">
         <% if (!isUserEntitled) {%>
         <div class="container">
-          <form class="form-box" method="post" action="/employee/join-request">
-            <input type="hidden" name="csrf_token" value="<%=csrfToken%>">
+          <form
+            class="form-box"
+            id="joinRequestForm"
+            method="post"
+            action="/employee/join-request"
+          >
+            <input type="hidden" name="csrf_token" value="<%=csrfToken%>" />
             <h2>Join to company</h2>
             <input
               name="company_name"
@@ -134,12 +140,14 @@
   </body>
 
   <script nonce="<%= nonce %>">
-    // const companies = [
-    //   'WP Engine', 'Wordpress', 'Google', 'Microsoft', 'Amazon', 'Apple', 'Facebook', 'Twitter', 'Tesla', 'Spotify',
-    //   'Airbnb', 'Adobe', 'Salesforce', 'IBM', 'Netflix', 'Slack', 'Shopify', 'Uber', 'Zoom', 'Reddit',
-    //   'Stripe', 'Dropbox', 'Pinterest', 'LinkedIn', 'Oracle', 'Yahoo', 'Snapchat', 'GitHub', 'Asana', 'Bitbucket',
-    //   'Trello', 'Basecamp', 'DigitalOcean', 'Heroku', 'Kinsta', 'Squarespace', 'Wix', 'Cloudflare', 'Weebly', 'GoDaddy'
-    // ];
+
+    // document.getElementById('joinRequestForm').addEventListener('submit', (event) => {
+    // const inputs = document.querySelectorAll('#joinRequestForm input[type="text"], #joinRequestForm input[type="hidden"]');
+    // inputs.forEach((input) => {
+    //   input.value = DOMPurify.sanitize(input.value); // Sanitacja wartości
+    // });
+    // });
+
     const companies = <%- JSON.stringify(companiesNames) %>;
 
 

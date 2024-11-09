@@ -13,6 +13,13 @@
       src="https://cdn.jsdelivr.net/npm/chart.js"
       nonce="<%= nonce %>"
     ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js"
+      integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+      nonce="<%= nonce %>"
+    ></script>
     <title>Employee Details</title>
     <style>
       /* Basic styling for the no-company message */
@@ -147,17 +154,22 @@
                 method="POST"
                 action="<%= baseUrl %>/manager/update-employee-payment-details/<%= employeeId %>"
               >
-                <input type="hidden" name="csrf_token" value="<%= csrfToken %>" hidden/>
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="<%= csrfToken %>"
+                  hidden
+                />
                 <input type="hidden" name="type" value="salary_update" />
                 <div>
                   <label>Hourly Gross Pay:</label>
                   <span></span>
-                  <input type="text" name="salary" style="display: none" />
+                  <input type="number" name="salary" style="display: none" />
                 </div>
                 <div>
                   <label>Bonus:</label>
                   <span></span>
-                  <input type="text" name="bonus" style="display: none" />
+                  <input type="number" name="bonus" style="display: none" />
                 </div>
                 <div>
                   <label>Net pay</label>
@@ -346,7 +358,10 @@
         const personalContentDivs =
           personalInfoCard.querySelectorAll(".card-content div");
 
-        if (Object.keys(employeeData).length === 0 || employeeData.error === "Unauthorized") {
+        if (
+          Object.keys(employeeData).length === 0 ||
+          employeeData.error === "Unauthorized"
+        ) {
           personalNoDataMessage.style.display = "block";
           personalContentDivs.forEach((div) => (div.style.display = "none"));
         } else {
@@ -483,7 +498,10 @@
         const personalContentDivs =
           personalInfoCard.querySelectorAll(".card-content div");
 
-        if (Object.keys(employeeData).length === 0 || employeeData.error === "Unauthorized") {
+        if (
+          Object.keys(employeeData).length === 0 ||
+          employeeData.error === "Unauthorized"
+        ) {
           personalNoDataMessage.style.display = "block";
           personalContentDivs.forEach((div) => (div.style.display = "none"));
         } else {
@@ -540,7 +558,10 @@
         const healthcareContentDivs =
           healthcareCard.querySelectorAll(".card-content div");
 
-        if (employeeData.health_insurance_metadata === undefined || employeeData.health_insurance_metadata[0] === null) {
+        if (
+          employeeData.health_insurance_metadata === undefined ||
+          employeeData.health_insurance_metadata[0] === null
+        ) {
           healthcareNoDataMessage.style.display = "block";
           healthcareContentDivs.forEach((div) => (div.style.display = "none"));
         } else {
@@ -599,6 +620,19 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        const forms = document.querySelectorAll("form");
+        forms.forEach((form) => {
+          form.addEventListener("submit", (event) => {
+            // Przejdź przez każde pole formularza i oczyść wartość
+            const inputs = form.querySelectorAll(
+              "input[type='number'], input[type='hidden']"
+            );
+            inputs.forEach((input) => {
+              input.value = DOMPurify.sanitize(input.value);
+            });
+          });
+        });
+
         document
           .getElementById("prev-arrow")
           .addEventListener("click", prevMonth);
@@ -674,7 +708,11 @@
           const input = field.querySelector("input");
 
           if (input) {
-            span.textContent = input.value;
+            // Sanitacja wartości wejściowej za pomocą DOMPurify
+            const sanitizedValue = DOMPurify.sanitize(input.value);
+
+            // Ustaw przefiltrowaną wartość do wyświetlenia
+            span.textContent = sanitizedValue;
             span.style.display = "inline";
             input.style.display = "none";
           }

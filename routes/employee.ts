@@ -12,6 +12,7 @@ import {
 import { Guard2fa } from "./helpers/Guard2fa";
 import { authenticationRoutesGuard, authorizationEmployeeGuard } from "./helpers/RoutesGuard";
 import { csrfBodyValidator } from "./helpers/CsrfProtection";
+import { validators } from "./helpers/Validators";
 
 export const employee_router = Router();
 
@@ -43,6 +44,7 @@ employee_router.get(
 
 employee_router.post(
   "/employee/join-request",
+  validators.company_name,
   authenticationRoutesGuard,
   authorizationEmployeeGuard,
   Guard2fa,
@@ -68,6 +70,7 @@ employee_router.get(
 
 employee_router.post(
   "/employee/attendance",
+  validators.attendance_type,
   authenticationRoutesGuard,
   authorizationEmployeeGuard,
   Guard2fa,

@@ -109,7 +109,7 @@
     // Calculate net pay and update UI
     function calculateNetPay(salary, contributions) {
       const totalContributions = contributions.retirement_contributions + contributions.disability_contributions + contributions.healthcare_contributions + contributions.income_tax;
-      return salary - totalContributions;
+      return salary - totalContributions - contributions.bonus;
     }
 
     // Update UI elements based on fetched earnings data

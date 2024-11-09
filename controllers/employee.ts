@@ -12,6 +12,9 @@ import { JoinRequest } from "../entity/JoinRequest";
 import { Between } from "typeorm";
 import { userInSessionFieldsExist } from "./helpers/validator";
 import Tokens from "csrf";
+import { validationResult } from "express-validator";
+import { sanitizeReturnProps } from "./helpers/sanitize";
+import xss from "xss";
 
 type EmployeeDaysChange = {
   days_sick_leave: 0 | 1;
@@ -234,7 +237,7 @@ ORDER BY
 
   try {
     logger.info(`Rendering employee main page`);
-    res.render("employee/main", {
+    res.render("employee/main", sanitizeReturnProps({
       baseUrl: `${process.env.BASE_URL}`,
       loggedUser: user,
       nonce: res.locals.nonce,
@@ -245,7 +248,7 @@ ORDER BY
       earnings,
       isAttendanceMarked,
       csrfToken: csrf_token,
-    });
+    }));
   } catch (error) {
     logger.error(`Error rendering employee main page: ${error}`);
     res.status(500);
@@ -295,7 +298,15 @@ export const getEmployeeSettings = async (
 
   const is_2fa_enabled = user.two_fa_secret ? true : false;
 
-  const { error } = req.query;
+  let { error } = req.query;
+
+  if (error && typeof error !== "string") {
+    logger.error(`Error query parameter in invalid format`);
+    res.status(400);
+    return next(new Error("Bad request"));
+  }
+
+  error = xss(error as string);
 
   if (error) {
     logger.warn(`Error happened before rendering settings page: ${error}`);
@@ -324,7 +335,7 @@ export const getEmployeeSettings = async (
     res.render("employee/settings", {
       baseUrl: `${process.env.BASE_URL}`,
       loggedUser: req.session.user,
-      user: user,
+      user: sanitizeReturnProps(user),
       is2faEnabled: is_2fa_enabled,
       nonce: res.locals.nonce,
       accountType: user_session.account_type,
@@ -391,6 +402,7 @@ export const getEmployeeJoinRequest = async (
     }
 
     try {
+      companies = sanitizeReturnProps(companies);
       return res.render("employee/join-request", {
         baseUrl: `${process.env.BASE_URL}`,
         loggedUser: uid,
@@ -417,6 +429,8 @@ export const getEmployeeJoinRequest = async (
       accountType: account_type,
       jrequestsPending: null,
       isUserEntitled: true,
+      companiesNames: [],
+      isJrequestPending: false,
       csrfToken: csrf_token,
     });
   } catch (error) {
@@ -451,7 +465,9 @@ export const postEmployeeJoinRequest = async (
 
   const { uid, company_id, employee_id } = user_session;
 
-  const { company_name } = req.body;
+  let { company_name } = req.body;
+
+  company_name = xss(company_name);
 
   if (!company_name) {
     logger.error(`Company data not found`);
@@ -668,6 +684,7 @@ GROUP BY
 
     if (attendance_data.days_total >= attendance_data.max_days_per_month) {
       logger.info(`Employee has already marked maximum days for the month`);
+      attendance_data = sanitizeReturnProps(attendance_data);
       return res.render("employee/attendance", {
         baseUrl: `${process.env.BASE_URL}`,
         loggedUser: user_session,
@@ -732,6 +749,7 @@ GROUP BY
       });
 
     if (has_employee_marked_attendance_today) {
+      attendance_data = sanitizeReturnProps(attendance_data);
       logger.info(`Employee has already marked attendance for today`);
       return res.render("employee/attendance", {
         baseUrl: `${process.env.BASE_URL}`,
@@ -753,6 +771,7 @@ GROUP BY
   }
 
   try {
+    attendance_data = sanitizeReturnProps(attendance_data);
     return res.render("employee/attendance", {
       baseUrl: `${process.env.BASE_URL}`,
       loggedUser: req.session.user,
@@ -791,13 +810,21 @@ export const postEmployeeAttendace = async (
     return next(new Error("Bad request"));
   }
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    res.status(400);
+    return next(new Error(`Bad request: ${errors.array()[0].msg}`));
+  }
+
   const { uid, employee_id } = user_session;
 
   const { attendance_type } = req.body;
 
   const days_change: EmployeeDaysChange = {
     days_sick_leave: attendance_type === "sick" ? 1 : 0,
-    days_on_demand_leave: attendance_type === "on_demand" ? 1 : 0,
+    days_on_demand_leave: attendance_type === "ondemand" ? 1 : 0,
     days_vacation: attendance_type === "vacation" ? 1 : 0,
     days_worked: attendance_type === "normal" ? 1 : 0,
   };
@@ -920,9 +947,9 @@ GROUP BY
   const first_query = `
     UPDATE salary_history SET 
   days_worked = salary_history.days_worked + 1 * $1, 
-  days_sick_leave = salary_history.days_sick_leave * 1 * $2, 
-  days_vacation = salary_history.days_vacation * 1 * $3, 
-  days_on_demand_leave = salary_history.days_on_demand_leave * 1 * $4
+  days_sick_leave = salary_history.days_sick_leave + 1 * $2, 
+  days_vacation = salary_history.days_vacation + 1 * $3, 
+  days_on_demand_leave = salary_history.days_on_demand_leave + 1 * $4
 FROM 
   employees e 
   JOIN companies c ON e."companyId" = c.id 

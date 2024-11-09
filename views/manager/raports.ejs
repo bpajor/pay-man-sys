@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
     <link rel="stylesheet" href="/css/common/date-picker.css" />
     <link rel="stylesheet" href="/css/manager/manager_raports/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
     <script
       nonce="<%= nonce %>"
       src="https://cdn.jsdelivr.net/npm/chart.js"
@@ -289,16 +290,16 @@
             // Update the card values
             document.getElementById(
               "total-salary"
-            ).textContent = `$${data.total_salary}`;
+            ).textContent = data.total_salary ? `$${DOMPurify.sanitize(data.total_salary)}` : "$0";
             document.getElementById(
               "total-bonuses"
-            ).textContent = `$${data.total_bonuses}`;
+            ).textContent = data.total_bonuses ? `$${DOMPurify.sanitize(data.total_bonuses)}` : "$0";
             document.getElementById(
               "total-contributions"
-            ).textContent = `$${data.total_contributions}`;
+            ).textContent = data.total_contributions ? `$${DOMPurify.sanitize(data.total_contributions)}`: "$0";
             document.getElementById(
               "net-without-bonus"
-            ).textContent = `$${data.net_without_bonus_pay}`;
+            ).textContent = data.net_without_bonus_pay ? `$${DOMPurify.sanitize(data.net_without_bonus_pay)}` : "$0";
 
             // Update the pie chart data
             updatePieChart(data);
@@ -352,7 +353,7 @@
             );
             document.getElementById(
               "total-hours-worked"
-            ).textContent = `${totalHours}`;
+            ).textContent = totalHours ? DOMPurify.sanitize(totalHours) : 0;
 
             // Update the hours worked chart
             updateHoursWorkedChart(data);

@@ -21,6 +21,8 @@ import {
   csrfBodyValidator,
   csrfNonAuthenticatedGenerator,
 } from "./helpers/CsrfProtection";
+import { validators } from "./helpers/Validators";
+import { IPGuard } from "./helpers/IPGuard";
 
 const postSignupValidators = [
   body("name")
@@ -116,7 +118,9 @@ auth_router.get(
 // Let's use third and fourth validators from signup validators to not write unnecessary code only for login
 auth_router.post(
   "/login",
+  IPGuard,
   [postSignupValidators[2], postSignupValidators[3]],
+  authenticatedUserGuard,
   csrfNonAuthenticatedGenerator,
   csrfBodyValidator,
   postLogin as Application
@@ -127,6 +131,9 @@ auth_router.get("/signup", authenticatedUserGuard, getSignup);
 auth_router.post(
   "/signup",
   postSignupValidators,
+  validators.phone,
+  validators.address,
+  validators.date_of_birth,
   authenticatedUserGuard,
   csrfNonAuthenticatedGenerator,
   csrfBodyValidator,
@@ -152,6 +159,7 @@ auth_router.post(
 auth_router.get(
   "/reset-password",
   csrfNonAuthenticatedGenerator,
+  authenticatedUserGuard,
   getResetPassword
 );
 
@@ -194,4 +202,4 @@ auth_router.post(
   postResetPasswordVerify2fa
 );
 
-auth_router.post("/logout", csrfBodyValidator ,postLogout);
+auth_router.post("/logout", csrfBodyValidator , authenticationRoutesGuard, postLogout);
