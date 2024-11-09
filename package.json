@@ -40,7 +40,7 @@
     "chai": "^5.1.2",
     "esbuild-register": "^3.6.0",
     "mocha": "^10.8.2",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.1.7",
     "sinon": "^19.0.2",
     "sinon-chai": "^4.0.0",
     "ts-mocha": "^10.0.0",

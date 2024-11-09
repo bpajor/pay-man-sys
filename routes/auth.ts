@@ -22,6 +22,7 @@ import {
   csrfNonAuthenticatedGenerator,
 } from "./helpers/CsrfProtection";
 import { validators } from "./helpers/Validators";
+import { IPGuard } from "./helpers/IPGuard";
 
 const postSignupValidators = [
   body("name")
@@ -117,6 +118,7 @@ auth_router.get(
 // Let's use third and fourth validators from signup validators to not write unnecessary code only for login
 auth_router.post(
   "/login",
+  IPGuard,
   [postSignupValidators[2], postSignupValidators[3]],
   authenticatedUserGuard,
   csrfNonAuthenticatedGenerator,

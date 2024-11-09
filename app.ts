@@ -106,7 +106,7 @@ AppDataSource.initialize()
         cookie: {
           secure: process.env.NODE_ENVIRONMENT !== "local", // HTTPS w produkcji
           httpOnly: true,
-          maxAge: 1000 * 60 * 60 * 24, // 1 dzień
+          // maxAge: 1000 * 60 * 60 * 24, // 1 dzień
           sameSite: "strict",
         },
       })

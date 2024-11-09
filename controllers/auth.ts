@@ -492,6 +492,7 @@ export const postResetPassword = async (
 
   const { token, email, password, confirm_password } = req.body;
 
+  res.setHeader('Referrer-Policy', 'no-referrer');
   const allowed_hosts = getAllowedHosts();
   const host_header = req.headers.host as string;
 
