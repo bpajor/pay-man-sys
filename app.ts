@@ -19,6 +19,7 @@ import session from "express-session";
 import { createClient } from "redis";
 import RedisStore from "connect-redis";
 import Tokens from "csrf";
+import expressWinston from "express-winston";
 
 dotenv.config();
 
@@ -135,14 +136,14 @@ AppDataSource.initialize()
 
     app.set("trust proxy", 1); // trust only first proxy
 
-    const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      limit: 100, // limit each IP to 100 requests per windowMs
-      message:
-        "Too many requests from this IP, please try again after 15 minutes",
-    });
+    // const limiter = rateLimit({
+    //   windowMs: 15 * 60 * 1000, // 15 minutes
+    //   limit: 100, // limit each IP to 100 requests per windowMs
+    //   message:
+    //     "Too many requests from this IP, please try again after 15 minutes",
+    // });
 
-    app.use(limiter);
+    // app.use(limiter);
 
     app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -222,15 +223,54 @@ AppDataSource.initialize()
     //   }
     // });
 
+    // express-winston logger makes sense BEFORE the router
+    app.use(
+      expressWinston.logger({
+        transports: [new winston.transports.Console()],
+        format: winston.format.combine(winston.format.json()),
+        requestFilter: (req, propName) => {
+          if (propName === "headers") {
+            // Maskowanie ciasteczek - pozostawienie tylko connect.sid
+            if (req.headers.cookie) {
+              req.headers.cookie = req.headers.cookie
+                .split(";")
+                .filter((cookie) => cookie.trim().startsWith("connect.sid="))
+                .map(() => "connect.sid=****")
+                .join("; ");
+            }
+        
+            // Maskowanie innych nagłówków
+            const headersToMask = ["authorization", "x-api-key", "referer"];
+            headersToMask.forEach(header => {
+              if (req.headers[header]) {
+                req.headers[header] = "****";
+              }
+            });
+          }
+          return req[propName];
+        }
+        
+      })
+    );
+
     app.use(auth_routes);
     app.use(employee_routes);
     app.use(manager_routes);
     app.use(api_routes);
     app.use(user_routes);
 
+    app.use(
+      expressWinston.errorLogger({
+        transports: [new winston.transports.Console()],
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.json()
+        ),
+      })
+    );
+
     // Obsługa błędu 404 - nieznaleziono strony
     app.use((req: Request, res: Response) => {
-
       let csrf_token;
       if (req.session.not_authenticated_csrf_secret) {
         csrf_token = new Tokens().create(

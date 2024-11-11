@@ -17,6 +17,7 @@ import { JoinRequest } from "../entity/JoinRequest";
 import session from "express-session";
 import { Employee } from "../entity/Employee";
 import Tokens from "csrf";
+import { hasPasswordBeenLeaked } from "./helpers/login";
 
 export const getLogin = (req: Request, res: Response, next: NextFunction) => {
   const logger: Logger = res.locals.logger;
@@ -63,6 +64,7 @@ export const postLogin = async (
   }
 
   const { email, password } = req.body;
+
   let user;
   let attemptsKey: string;
   let lockKey: string;
@@ -273,6 +275,22 @@ export const postSignup = async (
     address,
     date_of_birth,
   } = req.body;
+
+  try {
+    if (await hasPasswordBeenLeaked(password, logger)) {
+      logger.error(`Password has been leaked`);
+      return res.status(400).render("auth/signup", {
+        baseUrl: `${process.env.BASE_URL}`,
+        error: `Password has been leaked`,
+        nonce: res.locals.nonce,
+        csrfToken: csrf_token,
+      })
+    }
+  } catch (error) {
+    logger.error(`Error checking if password has been leaked: ${error}`);
+    res.status(500);
+    return next(new Error("Internal server error"));
+  }
 
   if (password !== confirm_password) {
     logger.error(`Passwords do not match`);

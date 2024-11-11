@@ -130,6 +130,7 @@ auth_router.get("/signup", authenticatedUserGuard, getSignup);
 
 auth_router.post(
   "/signup",
+  IPGuard,
   postSignupValidators,
   validators.phone,
   validators.address,
@@ -149,6 +150,7 @@ auth_router.get(
 
 auth_router.post(
   "/forgot-password",
+  IPGuard,
   postSignupValidators[2],
   authenticatedUserGuard,
   csrfNonAuthenticatedGenerator,
@@ -165,6 +167,7 @@ auth_router.get(
 
 auth_router.post(
   "/reset-password",
+  IPGuard,
   postSignupValidators[2],
   postSignupValidators[3],
   postSignupValidators[4],
@@ -178,6 +181,7 @@ auth_router.get("/verify-2fa", csrfNonAuthenticatedGenerator, getVerify2fa);
 
 auth_router.post(
   "/verify-2fa",
+  IPGuard,
   body("code")
     .exists()
     .withMessage("Verification code is required")
@@ -191,6 +195,7 @@ auth_router.post(
 
 auth_router.post(
   "/reset-password/verify-2fa",
+  IPGuard,
   body("code")
     .exists()
     .withMessage("Verification code is required")
