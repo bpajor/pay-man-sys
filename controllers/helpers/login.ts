@@ -1,23 +1,42 @@
-// import axios from "axios";
+import axios from "axios";
+import crypto from "crypto";
+import { Logger } from "winston";
 
-// export const isIPReliable = async (ip: string) => {
-//   try {
-//     const response = await axios.get("https://api.abuseipdb.com/api/v2/check", {
-//       params: {
-//         ipAddress: ip,
-//         maxAgeInDays: 90,
-//         verbose: true,
-//       },
-//       headers: {
-//         Key: process.env.ABUSEIP_API_KEY, // Zamień na swój klucz API
-//         Accept: "application/json",
-//       },
-//     });
+export const hasPasswordBeenLeaked = async (
+  password: string,
+  logger: Logger
+): Promise<boolean> => {
+  const hashed_password = crypto
+    .createHash("sha1")
+    .update(password)
+    .digest("hex");
 
-//     if (response.status !== 200) {
-//       throw new Error("Error while checking IP address");
-//     }
-//   } catch (error) {
-//     throw new Error("Error while checking IP address");
-//   }
-// };
+  try {
+    logger.info("Checking password against haveibeenpwned database");
+    const response = await axios.get(
+      `https://api.pwnedpasswords.com/range/${hashed_password.slice(0, 5)}`
+    );
+
+    if (response.status !== 200) {
+      logger.error("haveibeenpwned database responed with non 200 status code");
+      throw new Error("Error while checking password");
+    }
+
+    logger.info("haveibeenpwned database responded with 200 status code");
+
+    const passwords = response.data.split("\n");
+
+    for (const p of passwords) {
+      const [hash, count] = p.split(":");
+
+      if (hash === hashed_password.slice(5).toUpperCase()) {
+        logger.warn("Password has been leaked");
+        return true;
+      }
+    }
+  } catch (error) {
+    throw new Error("Error while checking password");
+  }
+
+  return false;
+};

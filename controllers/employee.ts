@@ -237,18 +237,21 @@ ORDER BY
 
   try {
     logger.info(`Rendering employee main page`);
-    res.render("employee/main", sanitizeReturnProps({
-      baseUrl: `${process.env.BASE_URL}`,
-      loggedUser: user,
-      nonce: res.locals.nonce,
-      accountType: user_session.account_type,
-      jrequestsPending: null,
-      company,
-      salaryHistory: employee_salary_history,
-      earnings,
-      isAttendanceMarked,
-      csrfToken: csrf_token,
-    }));
+    res.render(
+      "employee/main",
+      sanitizeReturnProps({
+        baseUrl: `${process.env.BASE_URL}`,
+        loggedUser: user,
+        nonce: res.locals.nonce,
+        accountType: user_session.account_type,
+        jrequestsPending: null,
+        company,
+        salaryHistory: employee_salary_history,
+        earnings,
+        isAttendanceMarked,
+        csrfToken: csrf_token,
+      })
+    );
   } catch (error) {
     logger.error(`Error rendering employee main page: ${error}`);
     res.status(500);
@@ -449,12 +452,13 @@ export const postEmployeeJoinRequest = async (
   logger.info(`Sending employee join request`);
 
   const user_repo = AppDataSource.getRepository(User);
+  const jr_repo = AppDataSource.getRepository(JoinRequest);
 
   const user_session = req.session.user!;
 
   if (
     !userInSessionFieldsExist(
-      ["uid", "company_id", "employee_id"],
+      ["uid",],
       user_session
     )
   ) {
@@ -463,7 +467,13 @@ export const postEmployeeJoinRequest = async (
     return next(new Error("Bad request"));
   }
 
-  const { uid, company_id, employee_id } = user_session;
+  const { uid} = user_session;
+
+  if (user_session.company_id || user_session.employee_id) {
+    logger.error(`User is already entitled to a company`);
+    res.status(400);
+    return next(new Error("Bad request"));
+  }
 
   let { company_name } = req.body;
 
@@ -476,15 +486,25 @@ export const postEmployeeJoinRequest = async (
   }
 
   try {
+    const does_employee_exist_with_uid = await AppDataSource.getRepository(Employee).exists({
+      where: {user: {id: uid}}
+    })
+
+    if (does_employee_exist_with_uid) {
+      logger.error(`Employee already exists with uid`);
+      res.status(400);
+      return next(new Error("Bad request"));
+    }
+
     logger.info(`Creating join request`);
     const company = await AppDataSource.getRepository(Company).findOneBy({
       name: company_name,
     });
 
-    if (!company) {
+    if (!company || Object.keys(company).length === 0) {
       logger.error(`Company not found`);
       res.status(404);
-      return next(new Error("Company not found"));
+      return next(new Error("Bad request"));
     }
 
     const user = await user_repo.findOneBy({ id: uid });
@@ -492,7 +512,23 @@ export const postEmployeeJoinRequest = async (
     if (!user) {
       logger.error(`User not found`);
       res.status(404);
-      return next(new Error("User not found"));
+      return next(new Error("Bad request"));
+    }
+
+    // const does_jr_for_user_exist = await AppDataSource.getRepository(
+    //   JoinRequest
+    // ).existsBy({
+    //   user: { id: uid },
+    // });
+
+    const does_jr_for_user_exist = await jr_repo.exists({
+      where: {user: { id: uid }} ,
+    })
+
+    if (does_jr_for_user_exist) {
+      logger.error(`Join request for user already exists`);
+      res.status(400);
+      return next(new Error("Bad request"));
     }
 
     const join_request = new JoinRequest();
