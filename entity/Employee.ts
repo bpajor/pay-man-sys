@@ -11,7 +11,6 @@ import { Company } from "./Company";
 import { SalaryHistory } from "./SalaryHistory";
 
 @Entity("employees")
-@Unique(["user"])
 export class Employee {
   @PrimaryGeneratedColumn()
   id: number;

@@ -1,8 +1,9 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { User } from "./User";
 import { Company } from "./Company";
 
 @Entity("join_requests")
+@Unique(["user"])
 export class JoinRequest {
     @PrimaryGeneratedColumn()
     id: number;

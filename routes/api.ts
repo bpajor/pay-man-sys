@@ -1,4 +1,4 @@
-import { Application, Router } from "express";
+import { Application, query, Router } from "express";
 import {
   deleteEmployeeEmployeeAPI,
   deleteJoinRequestByEmailAPI,
@@ -19,6 +19,7 @@ import {
   authorizationEmployeeAPIGuard,
 } from "./helpers/RoutesGuard";
 import { csrfAPIValidator } from "./helpers/CsrfProtection";
+import { validators } from "./helpers/Validators";
 export const api_router = Router();
 
 api_router.get(
@@ -97,6 +98,8 @@ api_router.post(
 
 api_router.get(
   "/api/manager/employees-details",
+  validators.month,
+  validators.year,
   authenticationAPIRoutesGuard as Application,
   authorizationManagerAPIGuard as Application,
   Guard2fa,
@@ -105,6 +108,8 @@ api_router.get(
 
 api_router.get(
   "/api/manager/single-emp-details",
+  validators.month,
+  validators.year,
   authenticationAPIRoutesGuard as Application,
   authorizationManagerAPIGuard as Application,
   Guard2fa,
