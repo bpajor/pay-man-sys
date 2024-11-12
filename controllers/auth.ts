@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { log, Logger } from "winston";
-import bcrypt from "bcrypt";
+import * as argon2 from "argon2";
 import { AppDataSource } from "../data-source";
 import { User } from "../entity/User";
 import { validationResult } from "express-validator";
@@ -119,7 +119,8 @@ export const postLogin = async (
   }
 
   try {
-    const password_match = await bcrypt.compare(password, user.password_hash);
+    // const password_match = await bcrypt.compare(password, user.password_hash);
+    const password_match = await argon2.verify(user.password_hash, password);
     if (!password_match) {
       logger.error(`Invalid password for user ${email}`);
 
@@ -326,7 +327,8 @@ export const postSignup = async (
     const salt_rounds = 10;
 
     logger.info(`Hashing password`);
-    const hashed_password = await bcrypt.hash(password, salt_rounds);
+    // const hashed_password = await bcrypt.hash(password, salt_rounds);
+    const hashed_password = await argon2.hash(password);
     logger.info(`Password hashed`);
 
     // Let's create the user
@@ -424,7 +426,8 @@ export const postForgotPassword = async (
   try {
     logger.info(`Generating token`);
     token = crypto.randomBytes(32).toString("hex");
-    hashed_token = await bcrypt.hash(token, 10);
+    // hashed_token = await bcrypt.hash(token, 10);
+    hashed_token = await argon2.hash(token);
   } catch (err) {
     logger.error(`Error generating token: ${err}`);
     res.status(500);
@@ -581,9 +584,13 @@ export const postResetPassword = async (
   }
 
   try {
-    const is_token_valid = await bcrypt.compare(
-      token,
-      user.reset_token as string
+    // const is_token_valid = await bcrypt.compare(
+    //   token,
+    //   user.reset_token as string
+    // );
+    const is_token_valid = await argon2.verify(
+      user.reset_token as string,
+      token
     );
     if (!is_token_valid) {
       logger.error(`Invalid token`);
@@ -603,7 +610,8 @@ export const postResetPassword = async (
 
   let hashed_password;
   try {
-    hashed_password = await bcrypt.hash(password, 10);
+    // hashed_password = await bcrypt.hash(password, 10);
+    hashed_password = await argon2.hash(password);
   } catch (error) {
     logger.error(`Error hashing password: ${error}`);
     res.status(500);
