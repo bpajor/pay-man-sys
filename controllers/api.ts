@@ -22,6 +22,7 @@ import { getPeriod } from "./helpers/builders";
 import { Employee } from "../entity/Employee";
 import xss from "xss";
 import { sanitizeReturnProps } from "./helpers/sanitize";
+import { validationResult } from "express-validator";
 
 export type HoursWorkedResult = {
   period_month: Date;
@@ -455,15 +456,17 @@ export const getManagerEmployeesDetailsAPI = async (
 
   const company_id = user.company_id;
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).json({ error: `Validation error: ${errors.array()[0].msg}` });
+  }
+
   const { month, year } = req.query;
 
-  if (!month || !year) {
-    logger.error(`Missing required query parameters`);
-    return res.status(400).json({ error: "Missing required query parameters" });
-  } //TODO validation should happen in route validators
-
   try {
-    const date = `${year}-${month.toString().padStart(2, "0")}-01`;
+    const date = `${year}-${(month as string).padStart(2, "0")}-01`;
     const results = await AppDataSource.getRepository(User).query(
       `
                    SELECT 
@@ -630,13 +633,8 @@ export const getManagerSingleEmpDetailsAPI = async (
     );
   }
 
-  if (!month || !year) {
-    logger.error(`Missing required query parameters`);
-    return res.status(400).json({ error: "Missing required query parameters" });
-  } //TODO this should also be validated earlier (Vulnerability)
-
   try {
-    const date = `${year}-${month.toString().padStart(2, "0")}-01`;
+    const date = `${year}-${(month as string).padStart(2, "0")}-01`;
 
     const results = await AppDataSource.query(
       `

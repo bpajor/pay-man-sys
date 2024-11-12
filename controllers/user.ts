@@ -5,6 +5,7 @@ import { User } from "../entity/User";
 import { userInSessionFieldsExist } from "./helpers/validator";
 import { validationResult } from "express-validator";
 import { validatorError } from "./helpers/validator_errors";
+import { sanitizeReturnProps } from "./helpers/sanitize";
 
 // TODO -> add validation && think if changing personal data should be confirmed by email or 2fa
 export const postUpdateUserPersonalData = async (
@@ -92,6 +93,8 @@ export const postUpdateUserPersonalData = async (
   user.phone_number = phone_number;
   user.home_address = home_address;
   user.date_of_birth = date_of_birth;
+
+  user = sanitizeReturnProps(user);
 
   try {
     logger.info(`Updating user data`);

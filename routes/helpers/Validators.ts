@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, query } from "express-validator";
 import xss from "xss";
 
 export const validators = {
@@ -287,6 +287,30 @@ export const validators = {
     .withMessage("Company name in an invalid format")
     .trim()
     .escape()
+    .customSanitizer((value) => {
+      return xss(value);
+    }),
+    month: query("month")
+    .exists()
+    .withMessage("Month is required")
+    .isLength({min: 1, max: 2})
+    .withMessage("Month must be between 1 and 2 characters")
+    .isNumeric()
+    .withMessage("Month must be a number")
+    .isInt({ min: 1, max: 12 })
+    .withMessage("Month must be between 1 and 12")
+    .customSanitizer((value) => {
+      return xss(value);
+    }),
+    year: query("year")
+    .exists()
+    .withMessage("Year is required")
+    .isLength({min: 4, max: 4})
+    .withMessage("Year must be 4 characters")
+    .isNumeric()
+    .withMessage("Year must be a number")
+    .isInt({ min: 1900, max: 2100 })
+    .withMessage("Year must be between 1900 and 2100")
     .customSanitizer((value) => {
       return xss(value);
     }),
