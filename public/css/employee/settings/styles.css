@@ -1,0 +1,95 @@
+.content {
+    margin-bottom: 240px;
+  }
+  .user-details-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    position: relative;
+  }
+
+  .user-details-section h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .user-details-section p {
+    margin-bottom: 10px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .user-details-section .label {
+    font-weight: bold;
+  }
+
+  .edit-button,
+  .save-button,
+  .cancel-button {
+    background-color: #008cba;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+  }
+
+  .leave-button {
+    background-color: #f44336; 
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+    right: 140px; 
+  }
+
+  .leave-button:hover {
+    background-color: #d32f2f;
+  }
+
+  .edit-button {
+    right: 20px;
+  }
+
+  .save-button,
+  .cancel-button {
+    display: none;
+    margin-top: 20px;
+  }
+
+  .save-button {
+    background-color: #4caf50;
+    right: 140px; 
+  }
+
+  .cancel-button {
+    background-color: #f44336;
+    right: 20px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .no-display {
+    display: none;
+  }
+
+  .red {
+    color: #cb4b42
+  }

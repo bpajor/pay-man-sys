@@ -1,77 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- ... pozostałe meta dane i linki do stylów ... -->
     <link rel="stylesheet" href="/css/common/settings/styles.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/manager/join_requests/styles.css">
     <title>Employee Details</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
-    <style>
-      .join-requests-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-      }
-
-      .join-requests-table th,
-      .join-requests-table td {
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-        text-align: left;
-      }
-
-      .join-requests-table th {
-        background-color: #f4f4f4;
-      }
-
-      .join-requests-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-      }
-
-      .btn-accept {
-        display: inline-block;
-        padding: 8px 12px;
-        background-color: #28a745;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        border: none;
-      }
-
-      .btn-accept:hover {
-        background-color: #218838;
-      }
-
-      .btn-reject {
-        display: inline-block;
-        padding: 8px 12px;
-        background-color: #dc3545;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        border: none;
-      }
-
-      .btn-reject:hover {
-        background-color: #c82333;
-      }
-
-       /* Dodajemy podstawową stylizację dla komunikatu */
-       .no-company-message {
-        padding: 20px;
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        border-radius: 5px;
-        margin: 20px 0;
-      }
-      .no-company-message a {
-        color: #721c24;
-        text-decoration: underline;
-      }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
@@ -138,27 +74,17 @@
           displayNoCompanyMessage();
           return;
         }
-        // const join_requests = '<%= JSON.stringify(joinRequests) %>';
-
-        // if (join_requests === '[]') {
-        //   displayNoCompanyMessage();
-        //   return;
-        // }
-        
-        // Pobieramy wszystkie przyciski "Accept" i "Reject"
+      
         const acceptButtons = document.querySelectorAll(".btn-accept");
         const rejectButtons = document.querySelectorAll(".btn-reject");
 
-        // Iterujemy po wszystkich przyciskach "Accept" i przypisujemy event listener
         acceptButtons.forEach((button) => {
           button.addEventListener("click", function () {
             const jr_id = button.getAttribute("data-id");
-            // Przekierowanie na stronę akceptacji z emailem jako parametrem
             window.location.href = `<%= baseUrl %>/manager/join-request/${jr_id}`;
           });
         });
 
-        // Iterujemy po wszystkich przyciskach "Reject" i przypisujemy event listener
         rejectButtons.forEach((button) => {
           button.addEventListener("click", function () {
             let email = button.getAttribute("data-email");

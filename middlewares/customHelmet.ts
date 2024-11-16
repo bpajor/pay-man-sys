@@ -18,6 +18,8 @@ export const customHelmet = (
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'",`'nonce-${nonce}'`],
+        styleSrc: ["'self'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "fonts.gstatic.com"],
       },
     },
     frameguard: {

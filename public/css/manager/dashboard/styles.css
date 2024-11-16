@@ -28,7 +28,6 @@ body {
   margin-left: 20px;
   display: flex;
   flex-wrap: wrap;
-  /* gap: 20px; Odstęp między kartami */
   justify-content: space-around;
   border-top: 1px solid #b7aeae;
   padding-top: 10px;
@@ -42,7 +41,7 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Umożliwia równomierne rozmieszczenie elementów wewnątrz kart */
+  justify-content: space-between;
   max-height: 400px;
   margin-bottom: 20px;
 }
@@ -271,6 +270,15 @@ body {
 .no-company-id-message p {
   font-size: 18px;
   color: #666;
+}
+
+.create-company {
+  color: #008cba;
+  text-decoration: underline;
+}
+
+.font {
+  font-size: 20px;
 }
 
 @media screen and (max-width: 900px) {

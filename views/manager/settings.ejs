@@ -6,91 +6,23 @@
     <link rel="stylesheet" href="/css/common/settings/styles.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
-    <link rel="stylesheet" href="/css/common/common.css">
-    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
+    <link rel="stylesheet" href="/css/common/common.css" />
+    <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/manager/settings/styles.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js"
+      integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+      nonce="<%= nonce %>"
+    ></script>
     <title>Ustawienia konta</title>
-    <style>
-      .user-details-section {
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        max-width: 600px;
-        position: relative;
-      }
-
-      .user-details-section h2 {
-        font-size: 24px;
-        margin-bottom: 20px;
-      }
-
-      .user-details-section p {
-        margin-bottom: 10px;
-        font-size: 16px;
-        line-height: 1.6;
-      }
-
-      .user-details-section .label {
-        font-weight: bold;
-      }
-
-      .edit-button,
-      .save-button,
-      .cancel-button {
-        background-color: #008cba;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        position: absolute;
-        top: 20px;
-      }
-
-      .edit-button {
-        right: 20px;
-      }
-
-      .save-button,
-      .cancel-button {
-        display: none;
-        margin-top: 20px;
-      }
-
-      .save-button {
-        background-color: #4caf50;
-        right: 140px; /* Added margin so the save button doesn't overlap with cancel */
-      }
-
-      .cancel-button {
-        background-color: #f44336;
-        right: 20px; /* Positioned next to the save button */
-      }
-
-      input[type="text"],
-      input[type="email"],
-      input[type="tel"],
-      input[type="date"],
-      input[type="number"]
-      {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 15px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-
-      .company-create {
-        color: #008cba;
-        text-decoration: underline;
-      }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", { baseUrl, loggedUser , accountType}) %>
     <main>
-      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType,
+      jrequestsPending}) %>
       <section class="content">
         <div id="notification-bar" class="notification hidden"></div>
         <h2>Security settings</h2>
@@ -102,17 +34,16 @@
             <span class="slider round"></span>
           </label>
         </div>
-        <!-- Modal ładowania -->
+
         <div id="loading-modal" class="modal">
           <div class="modal-content">
             <h2>Enabling two-factor authentication...</h2>
             <p>Please wait...</p>
-            <!-- Animacja ładowania -->
+
             <div class="loader"></div>
           </div>
         </div>
 
-        <!-- Modal QR Code -->
         <div id="qr-modal" class="modal hidden">
           <div class="modal-content">
             <h2>Configure two-factor authentication</h2>
@@ -144,10 +75,9 @@
             </p>
           </div>
 
-          <!-- Edit Mode -->
           <form
             id="edit-mode"
-            style="display: none"
+            class="no-display"
             method="post"
             action="<%= baseUrl %>/user/update-personal-data"
           >
@@ -225,7 +155,8 @@
               %>
             </p>
             <p>
-              <span class="label">Max marked days in one month: </span> <%= company.max_days_per_month %>
+              <span class="label">Max marked days in one month: </span> <%=
+              company.max_days_per_month %>
             </p>
             <p>
               <span class="label">Sick leave percent rate:</span> <%=
@@ -259,7 +190,7 @@
 
           <form
             id="edit-mode-company"
-            style="display: none"
+            class="no-display"
             method="post"
             action="<%= baseUrl %>/manager/settings/update-company-settings"
           >
@@ -285,7 +216,9 @@
               value="<%= company.hours_per_day %>"
             />
 
-            <label for="max_days_per_month">Max marked days in one month:</label>
+            <label for="max_days_per_month"
+              >Max marked days in one month:</label
+            >
             <input
               name="max_days_per_month"
               type="number"
@@ -293,7 +226,9 @@
               value="<%= company.max_days_per_month %>"
             />
 
-            <label for="sick_leave_percent_factor">Sick leave percent rate (%):</label>
+            <label for="sick_leave_percent_factor"
+              >Sick leave percent rate (%):</label
+            >
             <input
               name="sick_leave_percent_factor"
               type="number"
@@ -303,7 +238,9 @@
               max="100"
             />
 
-            <label for="vacation_percent_factor">Vacation leave percent rate (%):</label>
+            <label for="vacation_percent_factor"
+              >Vacation leave percent rate (%):</label
+            >
             <input
               name="vacation_percent_factor"
               type="number"
@@ -313,7 +250,9 @@
               max="100"
             />
 
-            <label for="on_demand_percent_factor">On demand leave percent factor (%)</label>
+            <label for="on_demand_percent_factor"
+              >On demand leave percent factor (%)</label
+            >
             <input
               name="on_demand_percent_factor"
               type="number"
@@ -321,7 +260,6 @@
               value="<%= company.on_demand_percent_factor %>"
               min="0"
               max="100"
-
             />
 
             <label for="retirement_rate">Retirement rate (%):</label>
@@ -370,16 +308,22 @@
           </form>
 
           <button class="edit-button" id="edit-button-company">Edit</button>
-          <button class="cancel-button" id="cancel-button-company">Cancel</button>
+          <button class="cancel-button" id="cancel-button-company">
+            Cancel
+          </button>
         </section>
         <% } else {%>
-          <section class="user-details-section">
-            <h1>You haven't defined your company yet!</h1>
-            <label>Follow the link to create one: </label>
-            <a class="company-create" href="<%= baseUrl %>/manager/company/create"> Create company</a>
-          </section>
+        <section class="user-details-section">
+          <h1>You haven't defined your company yet!</h1>
+          <label>Follow the link to create one: </label>
+          <a
+            class="company-create"
+            href="<%= baseUrl %>/manager/company/create"
+          >
+            Create company</a
+          >
+        </section>
         <% } %>
-        <!-- Możesz dodać więcej opcji ustawień -->
       </section>
     </main>
     <footer>
@@ -392,84 +336,81 @@
   <script nonce="<%= nonce %>">
     document.addEventListener("DOMContentLoaded", function () {
       const paragraphs = document.querySelectorAll("#display-mode-company p");
-  
+
       paragraphs.forEach((paragraph) => {
-        const label = paragraph.querySelector(".label"); // Etykieta w <span>
-        const valueNode = label.nextSibling; // Tekst wartości obok <span>
-  
-        // Pobieramy tekst wartości, sanitizujemy go i przypisujemy z powrotem
+        const label = paragraph.querySelector(".label");
+        const valueNode = label.nextSibling;
+
         const valueText = valueNode.textContent.trim();
         const sanitizedValue = DOMPurify.sanitize(valueText);
-        valueNode.textContent = ` ${sanitizedValue}`; // Aktualizujemy tekst po etykiecie
+        valueNode.textContent = ` ${sanitizedValue}`;
       });
     });
   </script>
-    
 
   <script nonce="<%= nonce %>">
     document.addEventListener("DOMContentLoaded", function () {
-      const inputs = document.querySelectorAll("#edit-mode-company input[type='text'], #edit-mode-company input[type='number']");
-  
+      const inputs = document.querySelectorAll(
+        "#edit-mode-company input[type='text'], #edit-mode-company input[type='number']"
+      );
+
       inputs.forEach((input) => {
-        // Zastosuj DOMPurify do wartości inputów
         input.value = DOMPurify.sanitize(input.value);
       });
     });
   </script>
 
-<script nonce="<%= nonce %>">
-  document.addEventListener("DOMContentLoaded", function () {
-    const displayMode = document.getElementById("display-mode");
-    const paragraphs = displayMode.querySelectorAll("p");
+  <script nonce="<%= nonce %>">
+    document.addEventListener("DOMContentLoaded", function () {
+      const displayMode = document.getElementById("display-mode");
+      const paragraphs = displayMode.querySelectorAll("p");
 
-    paragraphs.forEach((paragraph) => {
-      const label = paragraph.querySelector(".label"); // Pobieramy etykietę
-      const valueNode = label.nextSibling; // Pobieramy tekst wartości obok etykiety
+      paragraphs.forEach((paragraph) => {
+        const label = paragraph.querySelector(".label");
+        const valueNode = label.nextSibling;
 
-      // Sanitizujemy tekst wartości
-      const valueText = valueNode.textContent.trim();
-      const sanitizedValue = DOMPurify.sanitize(valueText);
-      valueNode.textContent = ` ${sanitizedValue}`; // Aktualizujemy tekst po etykiecie
+        const valueText = valueNode.textContent.trim();
+        const sanitizedValue = DOMPurify.sanitize(valueText);
+        valueNode.textContent = ` ${sanitizedValue}`;
+      });
     });
-  });
-</script>
-
-
-<script nonce="<%= nonce %>">
-  document.addEventListener("DOMContentLoaded", function () {
-    const editMode = document.getElementById("edit-mode");
-    const inputs = editMode.querySelectorAll("input[type='text'], input[type='email'], input[type='tel'], input[type='date']");
-
-    inputs.forEach((input) => {
-      // Sanitizujemy wartość inputu
-      input.value = DOMPurify.sanitize(input.value);
-    });
-  });
-</script>
-
-<script nonce="<%= nonce %>">
-  document.getElementById("edit-mode").addEventListener("submit", function (event) {
-    const inputs = this.querySelectorAll("input[type='text'], input[type='email'], input[type='tel'], input[type='date']");
-
-    inputs.forEach((input) => {
-      // Sanitizujemy wartość inputu przed wysłaniem formularza
-      input.value = DOMPurify.sanitize(input.value);
-    });
-  });
-</script>
-
+  </script>
 
   <script nonce="<%= nonce %>">
-    const test = DOMPurify.sanitize(`<img src onerror="alert('hacked')">`)
-    console.log(test)
-;    const editButton = document.getElementById("edit-button");
+    document.addEventListener("DOMContentLoaded", function () {
+      const editMode = document.getElementById("edit-mode");
+      const inputs = editMode.querySelectorAll(
+        "input[type='text'], input[type='email'], input[type='tel'], input[type='date']"
+      );
+
+      inputs.forEach((input) => {
+        input.value = DOMPurify.sanitize(input.value);
+      });
+    });
+  </script>
+
+  <script nonce="<%= nonce %>">
+    document
+      .getElementById("edit-mode")
+      .addEventListener("submit", function (event) {
+        const inputs = this.querySelectorAll(
+          "input[type='text'], input[type='email'], input[type='tel'], input[type='date']"
+        );
+
+        inputs.forEach((input) => {
+          input.value = DOMPurify.sanitize(input.value);
+        });
+      });
+  </script>
+
+  <script nonce="<%= nonce %>">
+    const editButton = document.getElementById("edit-button");
     const saveButton = document.getElementById("save-button");
     const cancelButton = document.getElementById("cancel-button");
 
     const displayMode = document.getElementById("display-mode");
     const editMode = document.getElementById("edit-mode");
 
-    // Function to switch to edit mode
     editButton.addEventListener("click", () => {
       displayMode.style.display = "none";
       editMode.style.display = "block";
@@ -479,7 +420,6 @@
       cancelButton.style.display = "inline-block";
     });
 
-    // Function to cancel edit mode
     cancelButton.addEventListener("click", () => {
       displayMode.style.display = "block";
       editMode.style.display = "none";
@@ -491,12 +431,13 @@
 
     const editButtonCompany = document.getElementById("edit-button-company");
     const saveButtonCompany = document.getElementById("save-button-company");
-    const cancelButtonCompany = document.getElementById("cancel-button-company");
+    const cancelButtonCompany = document.getElementById(
+      "cancel-button-company"
+    );
 
     const displayModeCompany = document.getElementById("display-mode-company");
     const editModeCompany = document.getElementById("edit-mode-company");
 
-    // Function to switch to edit mode
     editButtonCompany.addEventListener("click", () => {
       displayModeCompany.style.display = "none";
       editModeCompany.style.display = "block";
@@ -506,7 +447,6 @@
       cancelButtonCompany.style.display = "inline-block";
     });
 
-    // Function to cancel edit mode
     cancelButtonCompany.addEventListener("click", () => {
       displayModeCompany.style.display = "block";
       editModeCompany.style.display = "none";
@@ -524,17 +464,14 @@
       }`;
       notificationBar.classList.remove("hidden");
 
-      // Automatycznie ukryj pasek po 3 sekundach
       setTimeout(() => {
         notificationBar.classList.add("hidden");
       }, 3000);
     }
 
     function init2FA() {
-      // Pokaż modal ładowania
       document.getElementById("loading-modal").style.display = "block";
 
-      // Zablokuj przełącznik
       document.getElementById("2fa-toggle").disabled = true;
 
       fetch("<% baseUrl %>/api/auth/enable-2fa", {
@@ -547,34 +484,27 @@
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log(data);
-          // Ukryj modal ładowania
           document.getElementById("loading-modal").style.display = "none";
 
-          // Odblokuj przełącznik
           document.getElementById("2fa-toggle").disabled = false;
 
           if (data.success) {
-            // document.getElementById("2fa-toggle").checked = false;
             document.getElementById("qr-code").src = data.qrCode;
             document.getElementById("qr-modal").style.display = "block";
             showNotification("2FA has been enabled.", true);
           } else {
             document.getElementById("2fa-toggle").checked = true;
-            showNotification("Erro enabling 2fa: " + data.message, false);
+            showNotification("Error enabling 2fa: ", false);
           }
         })
         .catch((error) => {
-          // Ukryj modal ładowania
           document.getElementById("loading-modal").style.display = "none";
 
-          // Odblokuj przełącznik
           document.getElementById("2fa-toggle").disabled = false;
 
-          // Przywróć stan slidera
           document.getElementById("2fa-toggle").checked = false;
           showNotification(
-            "Internal server error. Please try again later.",
+            "Enabling 2fa failed. Please try again later.",
             false
           );
         });
@@ -608,15 +538,14 @@
             showNotification("2FA has been disabled.", true);
           } else {
             document.getElementById("2fa-toggle").checked = true;
-            showNotification("Error disabling 2fa. " + data.message, false);
+            showNotification("Error disabling 2fa. ", false);
           }
         })
         .catch((error) => {
-          console.log(error);
           document.getElementById("loading-modal").style.display.none;
           document.getElementById("2fa-toggle").disabled = false;
           showNotification(
-            "Internal server error. Please try again later.",
+            "Disabling 2fa failed. Please try again later.",
             false
           );
         });

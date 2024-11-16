@@ -61,49 +61,65 @@ body {
 }
 
 .card {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 20px;
-    padding: 20px;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 20px;
+  padding: 20px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .card h2 {
-    margin-top: 0;
+  margin-top: 0;
 }
 table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
 }
-table, th, td {
-    border: 1px solid #ddd;
+table,
+th,
+td {
+  border: 1px solid #ddd;
 }
-th, td {
-    padding: 12px;
-    text-align: left;
+th,
+td {
+  padding: 12px;
+  text-align: left;
 }
 th {
-    background-color: #f2f2f2;
-    cursor: pointer;
+  background-color: #f2f2f2;
+  cursor: pointer;
 }
-/* th.sortable::after {
-    content: ' \25B2\25BC';
-    font-size: 0.8em;
-    color: #888;
-} */
+
 .highlight {
-    font-weight: bold;
-    color: #333;
+  font-weight: bold;
+  color: #333;
 }
 
 td a {
-    color: #0a8080;
-    font-weight: bold;
-    font-size: 1.5rem;
-    font-style: oblique;
+  color: #0a8080;
+  font-weight: bold;
+  font-size: 1.5rem;
+  font-style: oblique;
+}
+
+.no-company-message {
+  padding: 20px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  margin: 20px 0;
+}
+.no-company-message a {
+  color: #721c24;
+  text-decoration: underline;
+}
+
+.no-display {
+  display: none;
 }
 
 @media screen and (max-width: 900px) {

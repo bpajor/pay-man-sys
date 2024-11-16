@@ -7,86 +7,8 @@
     <link rel="stylesheet" href="/css/common/footer.css" />
     <link rel="stylesheet" href="/css/common/common.css" />
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
+    <link rel="stylesheet" href="/css/manager/join_request/styles.css">
     <title>Ustawienia konta</title>
-    <style>
-      .content {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      .user-details-section {
-        margin: 50px 0;
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        max-width: 600px;
-        position: relative;
-      }
-
-      .user-details-section h2 {
-        font-size: 24px;
-        margin-bottom: 20px;
-      }
-
-      .user-details-section p {
-        margin-bottom: 10px;
-        font-size: 16px;
-        line-height: 1.6;
-      }
-
-      .user-details-section .label {
-        font-weight: bold;
-      }
-
-      .edit-button,
-      .save-button,
-      .cancel-button {
-        background-color: #008cba;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        top: 20px;
-      }
-
-      .edit-button {
-        right: 20px;
-      }
-
-      .save-button,
-      .cancel-button {
-        margin-top: 20px;
-      }
-
-      .save-button {
-        background-color: #4caf50;
-      }
-
-      .cancel-button {
-        background-color: #f44336;
-        right: 20px; /* Positioned next to the save button */
-      }
-
-      input[type="text"],
-      input[type="email"],
-      input[type="tel"],
-      input[type="date"],
-      input[type="number"],
-      textarea {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 15px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-
-      .company-create {
-        color: #008cba;
-        text-decoration: underline;
-      }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", { baseUrl, loggedUser , accountType}) %>
