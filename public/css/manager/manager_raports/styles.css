@@ -114,6 +114,17 @@ body {
     cursor: pointer;
 }
 
+      /* Style for the "Card data is not available" message */
+      .no-data-message {
+        padding: 20px;
+        background-color: #ffeeba;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        border-radius: 5px;
+        margin: 10px 0;
+        text-align: center;
+      }
+
 @media screen and (max-width: 900px) {
   main {
     flex-direction: column;

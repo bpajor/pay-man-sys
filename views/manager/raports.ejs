@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Meta tags and links -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/css/common/header.css" />
@@ -9,31 +8,25 @@
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
     <link rel="stylesheet" href="/css/common/date-picker.css" />
     <link rel="stylesheet" href="/css/manager/manager_raports/styles.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js"
+      integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+      nonce="<%= nonce %>"
+    ></script>
     <script
       nonce="<%= nonce %>"
       src="https://cdn.jsdelivr.net/npm/chart.js"
     ></script>
     <title>Financial Reports</title>
-    <style>
-      /* Style for the "Card data is not available" message */
-      .no-data-message {
-        padding: 20px;
-        background-color: #ffeeba;
-        color: #856404;
-        border: 1px solid #ffeeba;
-        border-radius: 5px;
-        margin: 10px 0;
-        text-align: center;
-      }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", { baseUrl, loggedUser, accountType }) %>
     <main>
-      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType, jrequestsPending}) %>
+      <%- include("../includes/left-dashboard-nav", {baseUrl, accountType,
+      jrequestsPending}) %>
       <section class="content">
-        <!-- Header -->
         <header class="content-header">
           <div class="header-left">
             <h1>
@@ -79,7 +72,6 @@
                 <span class="value" id="net-without-bonus">$0</span>
               </div>
               <div class="chart">
-                <!-- Pie Chart -->
                 <canvas id="pieChart"></canvas>
               </div>
             </div>
@@ -93,7 +85,6 @@
                 <span class="value" id="total-hours-worked">0</span>
               </div>
               <div class="chart">
-                <!-- Line Chart for hours worked -->
                 <canvas id="hoursWorkedChart"></canvas>
               </div>
             </div>
@@ -108,7 +99,6 @@
             </h2>
             <div class="card-content">
               <div class="chart">
-                <!-- Line Chart -->
                 <canvas id="salaryBonusTrendChart"></canvas>
               </div>
             </div>
@@ -118,7 +108,6 @@
             <h2>Trend Analysis (<span class="month-year"></span>)</h2>
             <div class="card-content">
               <div class="chart">
-                <!-- Line Chart -->
                 <canvas id="lineChart"></canvas>
               </div>
             </div>
@@ -134,7 +123,7 @@
 
     <script nonce="<%= nonce %>">
       let currentDate = new Date();
-      let currentMonth = currentDate.getMonth(); // 0 = January
+      let currentMonth = currentDate.getMonth();
       let currentYear = currentDate.getFullYear();
 
       function formatDateRange(month, year) {
@@ -188,17 +177,13 @@
           span.textContent = monthYear;
         });
 
-        // Fetch and update the monthly summary
         fetchMonthlySummary();
 
         if (hasYearChanged) {
-          // Fetch and update the hours worked data
           fetchHoursWorked();
 
-          // Fetch and update the average salary and bonus trends
           fetchAverageSalaryAndBonusTrends();
 
-          // Fetch and update the trend analysis data
           fetchTrendAnalysisData();
         }
       }
@@ -233,9 +218,8 @@
           .getElementById("next-arrow")
           .addEventListener("click", nextMonth);
 
-        updateDateText(); // Display current month on start
+        updateDateText();
 
-        // Initialize charts
         const pie_ctx = document.getElementById("pieChart").getContext("2d");
         const line_ctx = document.getElementById("lineChart").getContext("2d");
         const salaryBonusTrend_ctx = document
@@ -245,7 +229,6 @@
           .getElementById("hoursWorkedChart")
           .getContext("2d");
 
-        // Initialize the pie chart with empty data
         pieChart = new Chart(pie_ctx, config);
         lineChart = new Chart(line_ctx, lineConfig);
         salaryBonusTrendChart = new Chart(
@@ -254,29 +237,23 @@
         );
         hoursWorkedChart = new Chart(hoursWorked_ctx, hoursWorkedConfig);
 
-        // Fetch and update the monthly summary
         fetchMonthlySummary();
 
-        // Fetch and update the hours worked data
         fetchHoursWorked();
 
-        // Fetch and update the average salary and bonus trends
         fetchAverageSalaryAndBonusTrends();
 
-        // Fetch and update the trend analysis data
         fetchTrendAnalysisData();
       });
 
-      // Variable to hold the chart instances
       let pieChart;
       let hoursWorkedChart;
       let lineChart;
       let salaryBonusTrendChart;
 
-      // Function to fetch monthly summary data
       function fetchMonthlySummary() {
         const year = currentYear;
-        const month = currentMonth + 1; // JavaScript months are 0-based, API expects 1-based
+        const month = currentMonth + 1;
         const url = `<%= baseUrl %>/api/manager/get-all-expenses-details?year=${year}&month=${month}`;
 
         fetch(url)
@@ -287,21 +264,23 @@
             return response.json();
           })
           .then((data) => {
-            // Update the card values
-            document.getElementById(
-              "total-salary"
-            ).textContent = data.total_salary ? `$${DOMPurify.sanitize(data.total_salary)}` : "$0";
-            document.getElementById(
-              "total-bonuses"
-            ).textContent = data.total_bonuses ? `$${DOMPurify.sanitize(data.total_bonuses)}` : "$0";
-            document.getElementById(
-              "total-contributions"
-            ).textContent = data.total_contributions ? `$${DOMPurify.sanitize(data.total_contributions)}`: "$0";
-            document.getElementById(
-              "net-without-bonus"
-            ).textContent = data.net_without_bonus_pay ? `$${DOMPurify.sanitize(data.net_without_bonus_pay)}` : "$0";
+            document.getElementById("total-salary").textContent =
+              data.total_salary
+                ? `$${DOMPurify.sanitize(data.total_salary)}`
+                : "$0";
+            document.getElementById("total-bonuses").textContent =
+              data.total_bonuses
+                ? `$${DOMPurify.sanitize(data.total_bonuses)}`
+                : "$0";
+            document.getElementById("total-contributions").textContent =
+              data.total_contributions
+                ? `$${DOMPurify.sanitize(data.total_contributions)}`
+                : "$0";
+            document.getElementById("net-without-bonus").textContent =
+              data.net_without_bonus_pay
+                ? `$${DOMPurify.sanitize(data.net_without_bonus_pay)}`
+                : "$0";
 
-            // Update the pie chart data
             updatePieChart(data);
           })
           .catch((error) => {
@@ -310,7 +289,6 @@
           });
       }
 
-      // Function to update the pie chart with new data
       function updatePieChart(data) {
         const newData = [
           data.net_without_bonus_pay || 0,
@@ -327,13 +305,11 @@
         pieChart.update();
       }
 
-      // Function to display "Card data is not available" message
       function displayNoDataMessage() {
         const cardContent = document.getElementById("monthly-summary-content");
         cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
       }
 
-      // Function to fetch hours worked data
       function fetchHoursWorked() {
         const year = currentYear;
         const url = `<%= baseUrl %>/api/manager/get-hours-worked?year=${year}`;
@@ -346,16 +322,13 @@
             return response.json();
           })
           .then((data) => {
-            // Update the total hours worked value
             const totalHours = data.reduce(
               (sum, item) => sum + item.total_hours_worked,
               0
             );
-            document.getElementById(
-              "total-hours-worked"
-            ).textContent = totalHours ? DOMPurify.sanitize(totalHours) : 0;
+            document.getElementById("total-hours-worked").textContent =
+              totalHours ? DOMPurify.sanitize(totalHours) : 0;
 
-            // Update the hours worked chart
             updateHoursWorkedChart(data);
           })
           .catch((error) => {
@@ -447,7 +420,6 @@
         cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
       }
 
-      // Function to update the hours worked chart
       function updateHoursWorkedChart(data) {
         const monthNames = [
           "January",
@@ -478,7 +450,6 @@
         hoursWorkedChart.update();
       }
 
-      // Function to display "Card data is not available" message for hours worked
       function displayHoursWorkedNoDataMessage() {
         const cardContent = document.getElementById("hours-worked-content");
         cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
@@ -522,13 +493,12 @@
         cardContent.innerHTML = `<p class="no-data-message">Card data is not available</p>`;
       }
 
-      // Pie chart data (initialized with zeros)
       const data = {
         labels: ["Net pays (without bonuses)", "Bonuses", "Contributions"],
         datasets: [
           {
             label: "Expense Distribution",
-            data: [0, 0, 0], // Zeros by default
+            data: [0, 0, 0],
             backgroundColor: [
               "rgba(75, 192, 192, 0.2)",
               "rgba(255, 99, 132, 0.2)",
@@ -544,7 +514,6 @@
         ],
       };
 
-      // Pie chart configuration
       const config = {
         type: "pie",
         data: data,
@@ -563,7 +532,6 @@
         },
       };
 
-      // Line chart data for Trend Analysis (initialized with zeros)
       const lineData = {
         labels: [
           "January",
@@ -582,7 +550,7 @@
         datasets: [
           {
             label: "Net pays (without bonuses)",
-            data: new Array(12).fill(0), // Zeros by default
+            data: new Array(12).fill(0),
             borderColor: "rgba(75, 192, 192, 1)",
             backgroundColor: "rgba(75, 192, 192, 0.2)",
             fill: false,
@@ -590,7 +558,7 @@
           },
           {
             label: "Bonuses",
-            data: new Array(12).fill(0), // Zeros by default
+            data: new Array(12).fill(0),
             borderColor: "rgba(255, 99, 132, 1)",
             backgroundColor: "rgba(255, 99, 132, 0.2)",
             fill: false,
@@ -598,7 +566,7 @@
           },
           {
             label: "Contributions",
-            data: new Array(12).fill(0), // Zeros by default
+            data: new Array(12).fill(0),
             borderColor: "rgba(54, 162, 235, 1)",
             backgroundColor: "rgba(54, 162, 235, 0.2)",
             fill: false,
@@ -607,7 +575,6 @@
         ],
       };
 
-      // Line chart configuration
       const lineConfig = {
         type: "line",
         data: lineData,
@@ -631,7 +598,6 @@
         },
       };
 
-      // Average Gross Salary and Bonuses Trends data (initialized with zeros)
       const salaryBonusTrendData = {
         labels: [
           "January",
@@ -650,7 +616,7 @@
         datasets: [
           {
             label: "Average Gross Salary",
-            data: new Array(12).fill(0), // Zeros by default
+            data: new Array(12).fill(0),
             borderColor: "rgba(75, 192, 192, 1)",
             backgroundColor: "rgba(75, 192, 192, 0.2)",
             fill: false,
@@ -658,7 +624,7 @@
           },
           {
             label: "Average Bonus",
-            data: new Array(12).fill(0), // Zeros by default
+            data: new Array(12).fill(0),
             borderColor: "rgba(255, 99, 132, 1)",
             backgroundColor: "rgba(255, 99, 132, 0.2)",
             fill: false,
@@ -667,7 +633,6 @@
         ],
       };
 
-      // Average Gross Salary and Bonuses Trends configuration
       const salaryBonusTrendConfig = {
         type: "line",
         data: salaryBonusTrendData,
@@ -691,7 +656,6 @@
         },
       };
 
-      // Total Hours Worked chart data (initialized with zeros)
       const hoursWorkedData = {
         labels: [
           "January",
@@ -710,7 +674,7 @@
         datasets: [
           {
             label: "Total Hours Worked",
-            data: new Array(12).fill(0), // Zeros by default
+            data: new Array(12).fill(0),
             borderColor: "rgba(54, 162, 235, 1)",
             backgroundColor: "rgba(54, 162, 235, 0.2)",
             fill: false,
@@ -719,7 +683,6 @@
         ],
       };
 
-      // Total Hours Worked chart configuration
       const hoursWorkedConfig = {
         type: "line",
         data: hoursWorkedData,

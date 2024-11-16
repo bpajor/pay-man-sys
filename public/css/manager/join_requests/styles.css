@@ -1,0 +1,62 @@
+.join-requests-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  .join-requests-table th,
+  .join-requests-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+
+  .join-requests-table th {
+    background-color: #f4f4f4;
+  }
+
+  .join-requests-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .btn-accept {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+  }
+
+  .btn-accept:hover {
+    background-color: #218838;
+  }
+
+  .btn-reject {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+  }
+
+  .btn-reject:hover {
+    background-color: #c82333;
+  }
+
+   /* Dodajemy podstawową stylizację dla komunikatu */
+   .no-company-message {
+    padding: 20px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    margin: 20px 0;
+  }
+  .no-company-message a {
+    color: #721c24;
+    text-decoration: underline;
+  }

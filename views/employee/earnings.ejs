@@ -10,27 +10,6 @@
     <link rel="stylesheet" href="/css/common/date-picker.css">
     <script nonce="<%= nonce %>" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Employee Dashboard</title>
-    <style>
-      /* Stylizacja boxów z komunikatami */
-      .error-message-box {
-        background-color: #fffbea; /* Lekko żółty kolor tła */
-        border: 2px solid black; /* Czarny border */
-        padding: 15px;
-        border-radius: 5px;
-        font-size: 16px;
-        color: black;
-        text-align: center;
-        font-weight: bold;
-      }
-
-      /* Komunikat w wykresach */
-      .chart-error {
-        color: red;
-        font-size: 14px;
-        text-align: center;
-        margin-top: 10px;
-      }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
@@ -45,11 +24,11 @@
         <section class="summary-cards">
           <div class="payroll-card">
             <div class="payroll-title">Gross pay</div>
-            <div class="error-message-box" id="currentMonthSalary">Data is not available</div> <!-- Komunikat z boxem -->
+            <div class="error-message-box" id="currentMonthSalary">Data is not available</div>
           </div>
           <div class="payroll-card">
             <div class="payroll-title">Net Pay</div>
-            <div class="error-message-box" id="netPay">Data is not available</div> <!-- Komunikat z boxem -->
+            <div class="error-message-box" id="netPay">Data is not available</div>
           </div>
         </section>
         <section class="charts">
@@ -57,17 +36,17 @@
             <div class="chart-title">Payroll Cost Overview</div>
             <a href="">See details</a>
             <canvas id="payrollChart"></canvas>
-            <div class="error-message-box" id="payrollChartError" style="display: none;">Data is not available</div> <!-- Komunikat w wykresie -->
+            <div class="error-message-box no-display" id="payrollChartError" >Data is not available</div>
           </div>
           <div class="card">
             <h2>Salary Breakdown</h2>
             <canvas id="salaryChart"></canvas>
             <br />
             <br />
-            <div class="error-message-box" id="totalNetPay">Data is not available</div> <!-- Komunikat z boxem -->
+            <div class="error-message-box" id="totalNetPay">Data is not available</div>
           </div>
         </section>
-        <div id="errorMessage" class="chart-error" style="display: none;">Data is not available</div> <!-- Błąd wyświetlany tutaj -->
+        <div id="errorMessage" class="chart-error no-display">Data is not available</div>
       </section>
     </main>
     <footer>
@@ -77,12 +56,11 @@
 
   <script nonce="<%= nonce %>">
     let currentYear = new Date().getFullYear();
-    let currentIndex = new Date().getMonth();  // Obecny miesiąc (0 = styczeń, 11 = grudzień)
+    let currentIndex = new Date().getMonth();  
     let earningsData = [];
     
     document.getElementById('currentYear').textContent = currentYear;
 
-    // Fetch earnings data from API
     async function fetchEarnings(year) {
       try {
         const response = await fetch(`/api/employee/earnings?year=${year}`);
@@ -91,49 +69,42 @@
         }
         earningsData = await response.json();
         updateUI();
-        document.getElementById('payrollChartError').style.display = 'none'; // Ukryj komunikat o błędzie
+        document.getElementById('payrollChartError').style.display = 'none'; 
       } catch (error) {
-        console.error('Error fetching earnings data:', error);
-        displayErrorMessage(); // Wyświetl błąd w interfejsie
+        displayErrorMessage(); 
       }
     }
 
-    // Display error message in UI
     function displayErrorMessage() {
       document.getElementById('currentMonthSalary').textContent = "Data is not available";
       document.getElementById('netPay').textContent = "Data is not available";
       document.getElementById('totalNetPay').textContent = "Data is not available";
-      document.getElementById('payrollChartError').style.display = 'block'; // Pokaż komunikat w wykresie
+      document.getElementById('payrollChartError').style.display = 'block'; 
     }
 
-    // Calculate net pay and update UI
     function calculateNetPay(salary, contributions) {
       const totalContributions = contributions.retirement_contributions + contributions.disability_contributions + contributions.healthcare_contributions + contributions.income_tax;
       return salary - totalContributions - contributions.bonus;
     }
 
-    // Update UI elements based on fetched earnings data
     function updateUI() {
       const currentMonthData = earningsData[currentIndex];
       if (currentMonthData) {
         const totalSalary = currentMonthData.total_salary || 0;
         const netPay = calculateNetPay(totalSalary, currentMonthData);
-        document.getElementById('currentMonthSalary').textContent = `$${totalSalary.toFixed(2)}`;
-        document.getElementById('netPay').textContent = `$${netPay.toFixed(2)}`;
+        document.getElementById('currentMonthSalary').textContent = `${totalSalary.toFixed(2)} $`;
+        document.getElementById('netPay').textContent = `${netPay.toFixed(2)} $`;
 
-        // Update chart data
         const labels = earningsData.map(item => item.month_name);
         const salaryData = earningsData.map(item => item.total_salary);
         payrollChart.data.labels = labels;
         payrollChart.data.datasets[0].data = salaryData;
         payrollChart.update();
 
-        // Update pie chart for salary breakdown
         updateSalaryBreakdownChart(currentMonthData);
       }
     }
 
-    // Function to update the pie chart (salary breakdown)
     function updateSalaryBreakdownChart(data) {
       const chartData = [
         data.retirement_contributions,
@@ -147,11 +118,9 @@
       salaryChart.data.datasets[0].data = chartData;
       salaryChart.update();
 
-      // Update net pay display
       document.getElementById('totalNetPay').textContent = `${data.total_salary.toFixed(2)} $`;
     }
 
-    // Date navigation logic
     const dateRanges = [
       "01 January - 31 January",
       "01 February - 29 February",
@@ -191,7 +160,6 @@
     document.querySelector(".date-prev").addEventListener("click", prevMonth);
     document.querySelector(".date-next").addEventListener("click", nextMonth);
 
-    // Bar chart setup
     const ctx = document.getElementById("payrollChart").getContext("2d");
     const payrollChart = new Chart(ctx, {
       type: "bar",
@@ -216,7 +184,6 @@
       },
     });
 
-    // Pie chart setup for salary breakdown
     const salaryCtx = document.getElementById("salaryChart").getContext("2d");
     const salaryChart = new Chart(salaryCtx, {
       type: "pie",
@@ -231,7 +198,7 @@
         ],
         datasets: [
           {
-            data: [0, 0, 0, 0, 0, 0], // Initial empty data
+            data: [0, 0, 0, 0, 0, 0], 
             backgroundColor: [
               "#FF6384",
               "#36A2EB",
@@ -278,10 +245,9 @@
       },
     });
 
-    // Fetch data on page load
     document.addEventListener("DOMContentLoaded", function () {
-      updateDateText();  // Update date to reflect current month
-      fetchEarnings(currentYear);  // Fetch earnings for the current year
+      updateDateText();  
+      fetchEarnings(currentYear); 
     });
   </script>
 </html>

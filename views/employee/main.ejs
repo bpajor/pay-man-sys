@@ -7,51 +7,8 @@
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/employee/dashboard/styles.css">
     <title>Employee Dashboard</title>
-    <style>
-      .container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 400px; /* dostosowane do przestrzeni na obrazku */
-      background-color: white;
-    }
-
-    .message-box {
-      text-align: center;
-      padding: 30px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      margin-top: 150px;
-      margin-bottom: 470px;
-    }
-
-    .message-box h2 {
-      color: #333;
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-
-    .message-box p {
-      color: #555;
-      font-size: 18px;
-      margin-bottom: 30px;
-    }
-
-    .message-box a {
-      text-decoration: none;
-      background-color: #006d6a; /* dopasowanie do designu */
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-
-    .message-box a:hover {
-      background-color: #004f4d;
-    }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
@@ -115,7 +72,6 @@
   <script nonce="<%= nonce %>">
     const ctx = document.getElementById("earnings-chart").getContext("2d");
 
-    // Przekazanie dynamicznych danych z EJS
     const earningsData = <%- JSON.stringify(earnings) %>;
 
     const labels = earningsData.map(e => e.month_name.trim());

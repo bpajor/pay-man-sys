@@ -7,126 +7,9 @@
     <link rel="stylesheet" href="/css/common/left-dashboard-nav.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
+    <link rel="stylesheet" href="/css/employee/attendance/styles.css">
     <title>Employee Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
-    <style>
-      main {
-        display: flex;
-      }
-
-      .content {
-        flex-grow: 1;
-        padding: 20px;
-        margin-left: 100px; /* Ustaw odległość od nawigacji po lewej stronie */
-        margin-top: 160px;
-        margin-bottom: 240px;
-      }
-
-      .attendance-section {
-        padding: 20px;
-        text-align: center;
-      }
-
-      .progress-container {
-        margin-bottom: 20px;
-        width: 100%; /* Zajmuje całą szerokość rodzica */
-      }
-
-      .progress-bar-wrapper {
-        width: 100%;
-        height: 30px;
-        background-color: #e0e0e0; /* Tło dla paska */
-        border-radius: 15px;
-        overflow: hidden; /* Sprawia, że pasek postępu nie wychodzi poza obramowanie */
-      }
-
-      .progress-bar {
-        height: 100%;
-        background-color: #4CAF50; /* Kolor wypełnienia */
-        width: 0; /* Początkowa szerokość to 0% */
-        transition: width 0.3s ease-in-out; /* Animacja podczas zmiany szerokości */
-      }
-
-      .attendance-options {
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 20px;
-      }
-
-      .attendance-option {
-        width: 200px;
-        height: 150px;
-        border-radius: 10px;
-        background-color: #f0f0f0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        transition: transform 0.2s, background-color 0.3s;
-        cursor: pointer;
-      }
-
-      .attendance-option:hover {
-        transform: scale(1.05);
-      }
-
-      .attendance-option.selected {
-        background-color: #cfe2f3;
-      }
-
-      .attendance-option h3 {
-        margin: 0;
-        font-size: 18px;
-        color: #333;
-      }
-
-      .attendance-option p {
-        margin: 5px 0 0 0;
-        font-size: 16px;
-        color: #777;
-      }
-
-      .submit-btn {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-
-      .submit-btn:hover {
-        background-color: #45a049;
-      }
-
-      .error-message {
-        color: red;
-        font-size: 18px;
-        margin-bottom: 20px;
-        text-align: center;
-      }
-
-      .disabled {
-        pointer-events: none;
-        opacity: 0.6;
-      }
-
-             /* Dodajemy podstawową stylizację dla komunikatu */
-             .no-company-message {
-        padding: 20px;
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        border-radius: 5px;
-        margin: 20px 0;
-      }
-      .no-company-message a {
-        color: #721c24;
-        text-decoration: underline;
-      }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
@@ -142,7 +25,6 @@
         <% } else {%>
         <section class="attendance-section">
 
-          <!-- Wyświetlanie komunikatu błędu -->
           <% if (errorInfo) { %>
             <div class="error-message">
               <p><%= errorInfo %></p>
@@ -200,7 +82,6 @@
       const form = document.getElementById("attendance-form");
   
       form.addEventListener("submit", (event) => {
-        // Przeprowadzenie sanitacji dla wszystkich inputów w formularzu
         const inputs = form.querySelectorAll("input[type='text'], input[type='hidden']");
         inputs.forEach((input) => {
           input.value = DOMPurify.sanitize(input.value);
@@ -211,22 +92,18 @@
 
   <%- include("../includes/manager_left_dashboard_listener") %>
   <script nonce="<%= nonce %>">
-    // Ustawienie domyślnej liczby dni wybranych i max
     let selectedDays = JSON.stringify(<%= attendanceData?.days_total %>);
     const maxDays = JSON.stringify(<%= attendanceData?.max_days_per_month %>);
 
-    // Ustawienie początkowej szerokości paska postępu na podstawie wybranych dni
     const progressBar = document.getElementById('progress-bar');
     progressBar.style.width = `${(selectedDays / maxDays) * 100}%`;
 
-    // Event dla wyboru opcji obecności, jeśli nie ma błędu
     if (!<%= errorInfo ? 'true' : 'false' %>) {
       document.querySelectorAll('.attendance-option').forEach(option => {
         option.addEventListener('click', function () {
           document.querySelectorAll('.attendance-option').forEach(opt => opt.classList.remove('selected'));
           this.classList.add('selected');
           
-          // Ustawienie wybranego typu obecności w ukrytym polu formularza
           document.getElementById('attendance-type').value = this.getAttribute('data-value');
         });
       });

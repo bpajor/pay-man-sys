@@ -1,0 +1,116 @@
+main {
+    display: flex;
+  }
+
+  .content {
+    flex-grow: 1;
+    padding: 20px;
+    margin-left: 100px;
+    margin-top: 160px;
+    margin-bottom: 240px;
+  }
+
+  .attendance-section {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .progress-container {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .progress-bar-wrapper {
+    width: 100%;
+    height: 30px;
+    background-color: #e0e0e0; 
+    border-radius: 15px;
+    overflow: hidden; 
+  }
+
+  .progress-bar {
+    height: 100%;
+    background-color: #4CAF50; 
+    width: 0; 
+    transition: width 0.3s ease-in-out; 
+  }
+
+  .attendance-options {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+  }
+
+  .attendance-option {
+    width: 200px;
+    height: 150px;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s, background-color 0.3s;
+    cursor: pointer;
+  }
+
+  .attendance-option:hover {
+    transform: scale(1.05);
+  }
+
+  .attendance-option.selected {
+    background-color: #cfe2f3;
+  }
+
+  .attendance-option h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+
+  .attendance-option p {
+    margin: 5px 0 0 0;
+    font-size: 16px;
+    color: #777;
+  }
+
+  .submit-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .submit-btn:hover {
+    background-color: #45a049;
+  }
+
+  .error-message {
+    color: red;
+    font-size: 18px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+   
+         .no-company-message {
+    padding: 20px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    margin: 20px 0;
+  }
+  .no-company-message a {
+    color: #721c24;
+    text-decoration: underline;
+  }

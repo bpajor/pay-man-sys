@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- ... pozostałe meta dane i linki do stylów ... -->
+
     <link rel="stylesheet" href="/css/manager/employees_details/styles.css" />
     <link rel="stylesheet" href="/css/common/header.css" />
     <link rel="stylesheet" href="/css/common/footer.css" />
@@ -9,21 +9,6 @@
     <link rel="stylesheet" href="/css/common/date-picker.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js" integrity="sha512-BdRNuI8/lsyxkKQVxK1lVtfZshggfXPAwEP+JAOJEKx6Y8SLfcBSRdaWyXQmMxo+wG180uFqXYGjGRL0mh4/Jw==" crossorigin="anonymous" referrerpolicy="no-referrer" nonce="<%= nonce %>"></script>
     <title>Employee Details</title>
-    <style>
-      /* Dodajemy podstawową stylizację dla komunikatu */
-      .no-company-message {
-        padding: 20px;
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        border-radius: 5px;
-        margin: 20px 0;
-      }
-      .no-company-message a {
-        color: #721c24;
-        text-decoration: underline;
-      }
-    </style>
   </head>
   <body>
     <%- include("../includes/header", {baseUrl, loggedUser, accountType}) %>
@@ -45,9 +30,9 @@
             </button>
           </div>
         </header>
-        <!-- Dodajemy kontener na komunikat -->
+
         <div id="messageContainer"></div>
-        <div class="card" id="employeeCard" style="display: none">
+        <div class="card no-display" id="employeeCard">
           <h2>Employee List</h2>
           <table id="employeeTable">
             <thead>
@@ -63,7 +48,6 @@
               </tr>
             </thead>
             <tbody id="employeeTableBody">
-              <!-- Rows will be generated dynamically -->
             </tbody>
           </table>
         </div>
@@ -76,12 +60,11 @@
     <%- include("../includes/manager_left_dashboard_listener", {nonce}) %>
 
     <script nonce="<%= nonce %>">
-      // Przekazujemy companyId z serwera do klienta
       let companyId = "<%= companyId %>" ? "<%= companyId %>" : null;
       companyId = DOMPurify.sanitize(companyId);
 
       let currentDate = new Date();
-      let currentMonth = currentDate.getMonth(); // 0 = January
+      let currentMonth = currentDate.getMonth();
       let currentYear = currentDate.getFullYear();
 
       function formatDateRange(month, year) {
@@ -120,13 +103,13 @@
           const data = await response.json();
           renderTable(data);
         } catch (error) {
-          console.error("Error fetching data:", error);
+          //
         }
       }
 
       function renderTable(data) {
         const tableBody = document.getElementById("employeeTableBody");
-        tableBody.innerHTML = ""; // Clear existing rows
+        tableBody.innerHTML = "";
         data.forEach((employee) => {
           const row = document.createElement("tr")
           row.innerHTML = `
@@ -195,14 +178,12 @@
           .getElementById("next-arrow")
           .addEventListener("click", nextMonth);
 
-        updateDateText(); // Wyświetla bieżący miesiąc na starcie
+        updateDateText();
 
         if (companyId) {
-          // Jeśli companyId jest zdefiniowane, pobierz dane i pokaż kartę
           document.getElementById("employeeCard").style.display = "block";
           fetchEmployeeData();
         } else {
-          // Jeśli companyId jest null, pokaż komunikat
           displayNoCompanyMessage();
         }
       });
@@ -219,7 +200,3 @@
     </script>
   </body>
 </html>
-
-<!--TODO: add sorting
-    TODO: add exporting to excel
-    TODO: add pagination to json-->

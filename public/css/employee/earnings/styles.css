@@ -9,200 +9,221 @@ main {
   flex-direction: row;
 }
 
-  
 .content {
-    width: 75%;
+  width: 75%;
 }
 
 .dropdown {
-    position: absolute;
-    top: 40px;
-    left: 0;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    z-index: 1000;
+  position: absolute;
+  top: 40px;
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  z-index: 1000;
 }
 
 .dropdown-item {
-    padding: 10px;
-    cursor: pointer;
+  padding: 10px;
+  cursor: pointer;
 }
 
 .dropdown-item:hover {
-    background-color: #f1f1f1;
+  background-color: #f1f1f1;
 }
 
 .summary-cards {
-    display: flex;
-    justify-content: space-around;
+  display: flex;
+  justify-content: space-around;
 }
 
 .payroll-card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    width: 250px;
-    text-align: left;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 250px;
+  text-align: left;
 }
 
 .payroll-title {
-    font-size: 1em;
-    color: #666;
-    margin-bottom: 10px;
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 10px;
 }
 
 .payroll-amount {
-    font-size: 2em;
-    color: #000;
-    margin-bottom: 10px;
+  font-size: 2em;
+  color: #000;
+  margin-bottom: 10px;
 }
 
 .payroll-change {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .change-icon {
-    font-size: 1em;
-    color: #28a745;
-    margin-right: 5px;
+  font-size: 1em;
+  color: #28a745;
+  margin-right: 5px;
 }
 
 .change-percentage {
-    font-size: 1em;
-    color: #28a745;
-    margin-right: 5px;
-    background-color: #e6f4ea;
-    padding: 2px 5px;
-    border-radius: 5px;
+  font-size: 1em;
+  color: #28a745;
+  margin-right: 5px;
+  background-color: #e6f4ea;
+  padding: 2px 5px;
+  border-radius: 5px;
 }
 
 .change-text {
-    font-size: 1em;
-    color: #666;
+  font-size: 1em;
+  color: #666;
 }
 
 .charts {
-    margin: 40px 0px;
-    margin-bottom: 60px;
-    display: flex;
-    justify-content: space-around;
+  margin: 40px 0px;
+  margin-bottom: 60px;
+  display: flex;
+  justify-content: space-around;
 }
 
 .chart-card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    width: 50%;
-    max-width: 800px;
-    text-align: left;
-    position: relative;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 50%;
+  max-width: 800px;
+  text-align: left;
+  position: relative;
 }
 
 .chart-card > a {
-    color: black;
-    font-weight: bold;
+  color: black;
+  font-weight: bold;
 }
 
 .chart-title {
-    font-size: 1.5em;
-    color: #333;
-    margin-bottom: 20px;
+  font-size: 1.5em;
+  color: #333;
+  margin-bottom: 20px;
 }
 
 .chart-details {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 10px;
-    width: 200px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  width: 200px;
 }
 
 .details-title {
-    font-size: 1em;
-    color: #333;
-    margin-bottom: 10px;
+  font-size: 1em;
+  color: #333;
+  margin-bottom: 10px;
 }
 
 .details-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
 }
 
 .details-label {
-    font-size: 0.9em;
-    color: #666;
+  font-size: 0.9em;
+  color: #666;
 }
 
 .details-value {
-    font-size: 0.9em;
-    color: #333;
+  font-size: 0.9em;
+  color: #333;
 }
 
 .details-change {
-    font-size: 0.9em;
-    color: #28a745;
+  font-size: 0.9em;
+  color: #28a745;
 }
 
 .card {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
 }
 
 .card h2 {
-    margin-top: 0;
-    text-align: center;
+  margin-top: 0;
+  text-align: center;
+}
+
+.error-message-box {
+  background-color: #fffbea;
+  border: 2px solid black;
+  padding: 15px;
+  border-radius: 5px;
+  font-size: 16px;
+  color: black;
+  text-align: center;
+  font-weight: bold;
+}
+
+.chart-error {
+  color: red;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.no-display {
+  display: none;
 }
 
 @media screen and (max-width: 1170px) {
-    .payroll-card {
-        width: 15%;
-    }
+  .payroll-card {
+    width: 15%;
+  }
 }
 
 @media screen and (max-width: 900px) {
-    main {
-      flex-direction: column;
-    }
+  main {
+    flex-direction: column;
+  }
 
-    .date-picker {
-        width: 80%;
-    }
+  .date-picker {
+    width: 80%;
+  }
 
-    .summary-cards {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-    }
+  .summary-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
 
-    .payroll-card {
-        width: 200px;
-        margin: 10px;
-    }
+  .payroll-card {
+    width: 200px;
+    margin: 10px;
+  }
 
-    .content {
-        width: 100%;
-    }
+  .content {
+    width: 100%;
+  }
 
-    .chart-card {
-        margin: 30px 30px;
-    }
+  .chart-card {
+    margin: 30px 30px;
+  }
 }
-  
-  /* @media screen and (max-width: 1070px) {
+
+/* @media screen and (max-width: 1070px) {
     .content {
       width: 100%;
     }
