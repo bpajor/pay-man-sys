@@ -64,6 +64,7 @@
     "express-winston": "^4.2.0",
     "helmet": "^8.0.0",
     "hi-base32": "^0.5.1",
+    "ip-range-check": "^0.2.0",
     "jsdom": "^25.0.1",
     "nodemailer": "^6.9.15",
     "otpauth": "^9.3.4",
