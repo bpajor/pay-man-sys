@@ -16,7 +16,7 @@ export const transporter = nodemailer.createTransport({
 export const getAllowedHosts = () => {
   const allowed_hosts = [
     "pay-man-sys-dev-446440bbf36f.herokuapp.com",
-    "pay-man-sys-prod-2f207a1e736d.herokuapp.com",
+    "paymansys.org",
   ];
 
   if (process.env.NODE_ENVIRONMENT === "local") {

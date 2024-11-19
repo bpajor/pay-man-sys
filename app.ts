@@ -136,14 +136,14 @@ AppDataSource.initialize()
 
     app.set("trust proxy", 1); // trust only first proxy
 
-    // const limiter = rateLimit({
-    //   windowMs: 15 * 60 * 1000, // 15 minutes
-    //   limit: 100, // limit each IP to 100 requests per windowMs
-    //   message:
-    //     "Too many requests from this IP, please try again after 15 minutes",
-    // });
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      limit: 100, // limit each IP to 100 requests per windowMs
+      message:
+        "Too many requests from this IP, please try again after 15 minutes",
+    });
 
-    // app.use(limiter);
+    app.use(limiter);
 
     app.use(bodyParser.urlencoded({ extended: false }));
 
