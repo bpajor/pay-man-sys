@@ -1,7 +1,7 @@
 import xss from "xss";
 
 export const sanitizeReturnProps = (data: any): any => {
-    if (!Array.isArray(data) && typeof data !== 'object') {
+    if (data instanceof Date || (!Array.isArray(data) && typeof data !== 'object')) {
         return xss(data);
     }
 

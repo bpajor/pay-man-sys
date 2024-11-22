@@ -139,7 +139,7 @@ export const validators = {
     .withMessage("On demand percent factor is required")
     .isNumeric()
     .withMessage("On demand percent factor must be a number")
-    .isInt({ min: 1, max: 100 })
+    .isInt({ min: 0, max: 100 })
     .withMessage("On demand percent factor must be between 1 and 100")
     .customSanitizer((value) => {
       return xss(value);
