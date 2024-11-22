@@ -109,6 +109,7 @@ AppDataSource.initialize()
           httpOnly: true,
           // maxAge: 1000 * 60 * 60 * 24, // 1 dzień
           sameSite: "strict",
+          path: "/",
         },
       })
     );
@@ -134,13 +135,24 @@ AppDataSource.initialize()
 
     app.use(customHelmet);
 
+    app.use((req, res, next) => {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      next();
+    });
+
     app.set("trust proxy", 1); // trust only first proxy
 
     const limiter = rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
-      limit: 100, // limit each IP to 100 requests per windowMs
+      limit: 1000, // limit each IP to 100 requests per windowMs
       message:
         "Too many requests from this IP, please try again after 15 minutes",
+      handler: (req, res, next) => {
+        res.status(429);
+        return next(new Error("Too many requests"));
+      },
     });
 
     app.use(limiter);
@@ -193,9 +205,7 @@ AppDataSource.initialize()
         : path.join(__dirname, "../public");
 
     app.use(
-      Express.static(publicPath, {
-        maxAge: process.env.NODE_ENVIRONMENT === "local" ? undefined : "1y", //Cache static files for 1 year since they will not change
-      })
+      Express.static(publicPath)
     );
 
     app.get("/temp-error", (req, res) => {
@@ -238,18 +248,17 @@ AppDataSource.initialize()
                 .map(() => "connect.sid=****")
                 .join("; ");
             }
-        
+
             // Maskowanie innych nagłówków
             const headersToMask = ["authorization", "x-api-key", "referer"];
-            headersToMask.forEach(header => {
+            headersToMask.forEach((header) => {
               if (req.headers[header]) {
                 req.headers[header] = "****";
               }
             });
           }
           return req[propName];
-        }
-        
+        },
       })
     );
 
@@ -262,10 +271,7 @@ AppDataSource.initialize()
     app.use(
       expressWinston.errorLogger({
         transports: [new winston.transports.Console()],
-        format: winston.format.combine(
-          winston.format.colorize(),
-          winston.format.json()
-        ),
+        format: winston.format.combine(winston.format.json()),
       })
     );
 
@@ -297,36 +303,40 @@ AppDataSource.initialize()
 
     // Middleware obsługi błędów - 4xx, 5xx
     app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-      logger.error(`Error: ${err.message}`, { error: err });
-
-      const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-      const errorMessage =
-        statusCode === 500
-          ? "Internal server error. Please try again later."
-          : err.message;
-
-      let csrf_token;
-      if (req.session.not_authenticated_csrf_secret) {
-        csrf_token = new Tokens().create(
-          req.session.not_authenticated_csrf_secret
-        );
-      } else if (req.session.csrf_secret) {
-        csrf_token = new Tokens().create(req.session.csrf_secret);
+      if (res.statusCode == 429) {
+        res.status(429).send("Too many requests. Please try again later.");
       } else {
-        req.session.not_authenticated_csrf_secret = new Tokens().secretSync();
-        csrf_token = new Tokens().create(
-          req.session.not_authenticated_csrf_secret
-        );
-      }
+        logger.error(`Error: ${err.message}`, { error: err });
 
-      res.status(statusCode).render("error/error", {
-        code: statusCode,
-        message: errorMessage,
-        baseUrl: `${process.env.BASE_URL}`,
-        loggedUser: req.session.user ? req.session.user.uid : null,
-        accountType: req.session.user ? req.session.user.account_type : null,
-        csrfToken: csrf_token,
-      });
+        const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+        const errorMessage =
+          statusCode === 500
+            ? "Internal server error. Please try again later."
+            : err.message;
+
+        let csrf_token;
+        if (req.session.not_authenticated_csrf_secret) {
+          csrf_token = new Tokens().create(
+            req.session.not_authenticated_csrf_secret
+          );
+        } else if (req.session.csrf_secret) {
+          csrf_token = new Tokens().create(req.session.csrf_secret);
+        } else {
+          req.session.not_authenticated_csrf_secret = new Tokens().secretSync();
+          csrf_token = new Tokens().create(
+            req.session.not_authenticated_csrf_secret
+          );
+        }
+
+        res.status(statusCode).render("error/error", {
+          code: statusCode,
+          message: errorMessage,
+          baseUrl: `${process.env.BASE_URL}`,
+          loggedUser: req.session.user ? req.session.user.uid : null,
+          accountType: req.session.user ? req.session.user.account_type : null,
+          csrfToken: csrf_token,
+        });
+      }
     });
 
     startServer(app, logger!);

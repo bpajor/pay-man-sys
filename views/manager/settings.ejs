@@ -429,6 +429,7 @@
       cancelButton.style.display = "none";
     });
 
+    <% if (company) { %>
     const editButtonCompany = document.getElementById("edit-button-company");
     const saveButtonCompany = document.getElementById("save-button-company");
     const cancelButtonCompany = document.getElementById(
@@ -455,6 +456,8 @@
       saveButtonCompany.style.display = "none";
       cancelButtonCompany.style.display = "none";
     });
+
+    <%}%>
 
     function showNotification(message, isSuccess) {
       const notificationBar = document.getElementById("notification-bar");
