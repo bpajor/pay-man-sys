@@ -32,7 +32,7 @@ export const IPGuard = async (
 
   if (
     process.env.NODE_ENVIRONMENT === "local" &&
-    (ip === "::1" || ip === "127.0.0.1")
+    (ip === "::1" || ip === "127.0.0.1" || ip === "::ffff:127.0.0.1")
   ) {
     return next();
   }

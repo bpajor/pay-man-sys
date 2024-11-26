@@ -58,6 +58,13 @@ export const getAllExpensesDetailsAPI = async (req: Request, res: Response) => {
 
   const { company_id } = user;
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).json({ error: `Validation error: ${errors.array()[0].msg}` });
+  }
+
   const { year, month } = req.query;
 
   const period = getPeriod(year as string, month as string);
@@ -97,6 +104,13 @@ export const getAllHoursWorkedByYearAPI = async (
 
   const { company_id } = user;
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).json({ error: `Validation error: ${errors.array()[0].msg}` });
+  }
+
   const { year } = req.query;
 
   const query = HOURS_WORKED_IN_COMPANY_BY_YEAR;
@@ -133,6 +147,13 @@ export const getAverageSalaryAndBonusbByYearAPI = async (
 
   const { company_id } = user;
 
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).json({ error: `Validation error: ${errors.array()[0].msg}` });
+  }
+
   const { year } = req.query;
 
   const query = AVERAGE_SALARY_AND_BONUSES_PER_YEAR;
@@ -163,6 +184,13 @@ export const getAllExpensesDetailsByYearAPI = async (
   }
 
   const { company_id } = user;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).json({ error: `Validation error: ${errors.array()[0].msg}` });
+  }
 
   const { year } = req.query;
 
@@ -272,6 +300,13 @@ export const getEmployeeEarningsDetailsByYearAPI = async (
   const logger: Logger = res.locals.logger;
 
   const user = req.session.user!;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).json({ error: `Validation error: ${errors.array()[0].msg}` });
+  }
 
   let { year } = req.query;
 
@@ -587,6 +622,13 @@ export const getManagerSingleEmpDetailsAPI = async (
   }
 
   const company_id = user.company_id;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    logger.error(`Validation errors: ${errors.array()}`);
+    return res.status(400).json({ error: `Validation error: ${errors.array()[0].msg}` });
+  }
 
   const { month, year, with_details, employee_id } = req.query;
 
