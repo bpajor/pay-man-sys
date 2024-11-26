@@ -24,6 +24,8 @@ export const api_router = Router();
 
 api_router.get(
   "/api/manager/get-all-expenses-details",
+  validators.year,
+  validators.month,
   authenticationAPIRoutesGuard as Application,
   authorizationManagerAPIGuard as Application,
   Guard2fa,
@@ -32,6 +34,7 @@ api_router.get(
 
 api_router.get(
   "/api/manager/get-hours-worked",
+  validators.year,
   authenticationAPIRoutesGuard as Application,
   authorizationManagerAPIGuard as Application,
   Guard2fa,
@@ -48,6 +51,7 @@ api_router.get(
 
 api_router.get(
   "/api/manager/get-year-expenses-details",
+  validators.year,
   authenticationAPIRoutesGuard as Application,
   authorizationManagerAPIGuard as Application,
   Guard2fa,
@@ -65,6 +69,7 @@ api_router.delete(
 
 api_router.get(
   "/api/employee/earnings",
+  validators.year,
   authenticationAPIRoutesGuard as Application,
   authorizationEmployeeAPIGuard as Application,
   Guard2fa,

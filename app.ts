@@ -161,6 +161,29 @@ AppDataSource.initialize()
 
     app.use(Express.json());
 
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      // Sprawdzanie, czy żądanie dotyczy ścieżki zaczynającej się od /css
+      if (req.path.startsWith("/css")) {
+        // Sprawdzenie, czy ścieżka kończy się na .css
+        if (!req.path.endsWith(".css")) {
+          // Jeśli ścieżka nie kończy się na .css, zwróć błąd 400
+          res.status(404).send("Not found");
+          return;
+        }
+      }
+
+      if (req.path.startsWith("/images")) {
+        // Sprawdzenie, czy ścieżka kończy się na .css
+        if (!req.path.endsWith(".png")) {
+          // Jeśli ścieżka nie kończy się na .css, zwróć błąd 400
+          res.status(404).send("Not found");
+          return;
+        }
+      }
+      // Jeśli wszystko jest poprawne, przejdź do następnego middleware
+      next();
+    });
+
     app.get(
       "/css/:account_type/*",
       (req: Express.Request, res: Express.Response, next: NextFunction) => {
