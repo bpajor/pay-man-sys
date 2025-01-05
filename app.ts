@@ -52,13 +52,15 @@ AppDataSource.initialize()
     // })
 
     let redisClient = createClient({
-      url: process.env.REDIS_TEMPORARY_URL,
+      url: process.env.REDIS_URL,
       socket: {
         reconnectStrategy: (retries) => {
           const delay = Math.min(retries * 50, 2000);
           logger.warn(`Reconnecting to Redis in ${delay}ms`);
           return delay;
         },
+        tls: true,
+        rejectUnauthorized: false,
       },
     });
 
