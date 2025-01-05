@@ -19,6 +19,7 @@ export const IPGuard = async (
       cloudflare_ip_range
     );
 
+    (req.headers["x-forwarded-for"] as string).split(",")[1]
     console.log(req.headers["x-forwarded-for"]);
     console.log(cloudflare_ip_range);
     console.log(proxy_ip_from_cf);
