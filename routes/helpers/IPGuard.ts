@@ -74,11 +74,11 @@ export const getCloudflareIpRange = async (): Promise<string[]> => {
     let ipRange: string[] = [];
 
     for (const key in result.ipv4_cidrs) {
-      ipRange.push(result[key]);
+      ipRange.push(result["ipv4_cidrs"][key]);
     }
 
     for (const key in result.ipv6_cidrs) {
-      ipRange.push(result[key]);
+      ipRange.push(result["ipv6_cidrs"][key]);
     }
 
     return ipRange;
