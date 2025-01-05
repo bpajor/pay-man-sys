@@ -11,7 +11,6 @@ import { Employee } from "./Employee";
 
 @Entity("users")
 export class User {
-  // uid - unique id for user
   @PrimaryGeneratedColumn()
   id: number;
 

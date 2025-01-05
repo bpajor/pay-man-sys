@@ -255,27 +255,6 @@ export const deleteJoinRequestByEmailAPI = async (
     return res.status(500).json({ message: "Internal server error" });
   }
 
-  // try {
-  //   const employee = await AppDataSource.getRepository(Employee).findOneBy({
-  //     user: { id: user_id },
-  //   });
-
-  //   if (!req.session.user!.authorized_employees_ids.includes(employee!.id)) {
-  //     logger.error(`Unauthorized`);
-  //     return res.status(403).json({ message: "Unauthorized" });
-  //   }
-
-  //   if (!employee) {
-  //     logger.error(`Employee not found`);
-  //     return res
-  //       .status(404)
-  //       .json({ message: "Requested resources cannot be found" });
-  //   }
-  // } catch (err) {
-  //   logger.error(`Error getting employee data: ${err}`);
-  //   return res.status(500).json({ message: "Internal server error" });
-  // }
-
   const join_request_repo = AppDataSource.getRepository(JoinRequest);
 
   try {
@@ -759,19 +738,16 @@ GROUP BY
 };
 
 const generate2FASecret = (userEmail: string) => {
-  // Utwórz obiekt OTPAuth.TOTP (czasowy kod jednorazowy)
   const totp = new OTPAuth.TOTP({
-    issuer: "PayrollPro", // Nazwa Twojej aplikacji
-    label: userEmail, // Email użytkownika jako identyfikator
+    issuer: "PayrollPro", 
+    label: userEmail,
     algorithm: "SHA1",
     digits: 6,
     period: 30,
   });
 
-  // Wygeneruj tajny klucz (base32 encoded)
   const secret = encode(totp.secret.bytes);
 
-  // Utwórz URL dla aplikacji uwierzytelniającej
   const otpauthURL = totp.toString();
 
   return { secret, otpauthURL };

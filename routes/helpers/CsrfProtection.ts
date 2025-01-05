@@ -25,10 +25,6 @@ export const csrfBodyValidator = (
   const logger: Logger = res.locals.logger;
   logger.info("Validating csrf token");
 
-  // if (!res.locals.enable_csrf) {
-  //   return next();
-  // }
-
   const tokens = new Tokens();
 
   const origin_validated = validateOrigin(req);
@@ -77,10 +73,6 @@ export const csrfAPIValidator = (
 ) => {
   const logger: Logger = res.locals.logger;
   logger.info("Validating csrf token");
-
-  // if (!res.locals.enable_csrf) {
-  //   return next();
-  // }
 
   const tokens = new Tokens();
 
@@ -143,15 +135,4 @@ const validateOrigin = (req: Request) => {
   }
 
   return is_valid_origin && is_valid_referer;
-  // if (
-  //   !(
-  //     req.get("ORIGIN") === "null" ||
-  //     req.get("ORIGIN") === process.env.BASE_URL ||
-  //     req.get("REFERER")?.includes(process.env.BASE_URL!) 
-  //   )
-  // ) { 
-  //   return false;
-  // }
-
-  // return true;
 };

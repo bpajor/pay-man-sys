@@ -12,11 +12,10 @@ export const IPGuard = async (
   let ip;
 
   if (process.env.NODE_ENVIRONMENT === "production") {
-    //TODO - may generate errors in production
     const cloudflare_ip_range = await getCloudflareIpRange();
 
     const proxy_ip_from_cf = ipRangeCheck(
-      req.socket.remoteAddress!,
+      req.headers["cf-connecting-ip"] as string,
       cloudflare_ip_range
     );
 
@@ -43,8 +42,6 @@ export const IPGuard = async (
   }
 
   try {
-    // await isIPReliable(ip);
-    // next();
     if (await isIPReliable(ip)) {
       logger.info(`IP address ${ip} is reliable`);
       return next();
@@ -110,7 +107,7 @@ export const isIPReliable = async (ip: string | string[]): Promise<boolean> => {
         verbose: true,
       },
       headers: {
-        Key: process.env.ABUSEIP_API_KEY, // Zamień na swój klucz API
+        Key: process.env.ABUSEIP_API_KEY, 
         Accept: "application/json",
       },
     });
