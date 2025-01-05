@@ -16,9 +16,13 @@ export const IPGuard = async (
     const cloudflare_ip_range = await getCloudflareIpRange();
 
     const proxy_ip_from_cf = ipRangeCheck(
-      req.socket.remoteAddress!,
+      (req.headers["x-forwarded-for"] as string).split(",")[1],
       cloudflare_ip_range
     );
+
+    console.log((req.headers["x-forwarded-for"] as string).split(",")[1]);
+    console.log(cloudflare_ip_range);
+    console.log(proxy_ip_from_cf);
 
     if (!proxy_ip_from_cf) {
       res.status(403);
