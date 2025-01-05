@@ -10,7 +10,6 @@ import { validators } from "./helpers/Validators";
 
 export const user_router = Router();
 
-// TODO -> add validators
 user_router.post(
   "/user/update-personal-data",
   authenticationRoutesGuard,

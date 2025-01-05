@@ -3,7 +3,7 @@ import { AppDataSource } from "../data-source";
 
 export const connectToDb = async (logger: Logger) => {
   try {
-    await AppDataSource.initialize(); // Nawiązywanie połączenia z bazą danych
+    await AppDataSource.initialize(); 
     logger.info("Connection with db established successfully");
   } catch (error) {
     logger.error("Error connecting to the database:", error);

@@ -156,9 +156,6 @@ export const getManagerEmployeesDetails = async (
   const { uid, account_type } = user_session;
 
   if (!user_session.company_id) {
-    // logger.error(`Company id not found`);
-    // res.status(400);
-    // return next(new Error("Company id not found"));
     try {
       return res.render("manager/employees-details", {
         baseUrl: `${process.env.BASE_URL}`,
@@ -668,7 +665,6 @@ export const getManagerSettings = async (
 
   const { error } = req.query;
 
-  // TODO -> should pass company here
   if (error) {
     logger.warn(`Error happened before rendering settings page: ${error}`);
     return res.status(400).render(

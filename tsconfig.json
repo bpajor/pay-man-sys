@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2020",                      // Ustawienie docelowego standardu ECMAScript
-    "module": "CommonJS",                    // System modułów Node.js
-    "outDir": "./build",                     // Katalog wyjściowy po kompilacji
-    "strict": true,                          // Ścisłe sprawdzanie typów
-    "esModuleInterop": true,                 // Umożliwia użycie importu z modułami CommonJS
-    "skipLibCheck": true,                    // Pomija sprawdzanie typów w plikach definicji .d.ts
-    "forceConsistentCasingInFileNames": true, // Wymusza konsekwencję w nazwach plików
+    "target": "ES2020",                      
+    "module": "CommonJS",                   
+    "outDir": "./build",                     
+    "strict": true,                          
+    "esModuleInterop": true,                
+    "skipLibCheck": true,                    
+    "forceConsistentCasingInFileNames": true, 
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false
   },
-  "include": ["./**/*"],                   // Źródłowe pliki TS
-  "exclude": ["node_modules", "build"]       // Wykluczenie folderów
+  "include": ["./**/*"],                   
+  "exclude": ["node_modules", "build"]       
 }
