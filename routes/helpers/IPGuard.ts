@@ -12,23 +12,23 @@ export const IPGuard = async (
   let ip;
 
   if (process.env.NODE_ENVIRONMENT === "production") {
-    const cloudflare_ip_range = await getCloudflareIpRange();
+    // const cloudflare_ip_range = await getCloudflareIpRange();
 
-    const proxy_ip_from_cf = ipRangeCheck(
-      (req.headers["x-forwarded-for"] as string).split(",")[1],
-      cloudflare_ip_range
-    );
+    // const proxy_ip_from_cf = ipRangeCheck(
+    //   (req.headers["x-forwarded-for"] as string).split(",")[1],
+    //   cloudflare_ip_range
+    // );
 
-    (req.headers["x-forwarded-for"] as string).split(",")[1]
-    console.log(req.headers["x-forwarded-for"]);
-    console.log(cloudflare_ip_range);
-    console.log(proxy_ip_from_cf);
-    console.log(req.socket.remoteAddress);
+    // console.log((req.headers["x-forwarded-for"] as string).split(",")[1])
+    // console.log(req.headers["x-forwarded-for"]);
+    // console.log(cloudflare_ip_range);
+    // console.log(proxy_ip_from_cf);
+    // console.log(req.socket.remoteAddress);
 
-    if (!proxy_ip_from_cf) {
-      res.status(403);
-      return next(new Error("Forbidden"));
-    }
+    // if (!proxy_ip_from_cf) {
+    //   res.status(403);
+    //   return next(new Error("Forbidden"));
+    // }
 
     ip = req.headers["cf-connecting-ip"] || req.socket.remoteAddress;
   } else {
@@ -61,34 +61,34 @@ export const IPGuard = async (
   }
 };
 
-export const getCloudflareIpRange = async (): Promise<string[]> => {
-  try {
-    const response = await axios.get(
-      "https://api.cloudflare.com/client/v4/ips",
-      { headers: { Accept: "application/json" } }
-    );
+// export const getCloudflareIpRange = async (): Promise<string[]> => {
+//   try {
+//     const response = await axios.get(
+//       "https://api.cloudflare.com/client/v4/ips",
+//       { headers: { Accept: "application/json" } }
+//     );
 
-    if (response.status !== 200) {
-      throw new Error("Error while checking IP address");
-    }
+//     if (response.status !== 200) {
+//       throw new Error("Error while checking IP address");
+//     }
 
-    const result = response.data.result;
+//     const result = response.data.result;
 
-    let ipRange: string[] = [];
+//     let ipRange: string[] = [];
 
-    for (const key in result.ipv4_cidrs) {
-      ipRange.push(result["ipv4_cidrs"][key]);
-    }
+//     for (const key in result.ipv4_cidrs) {
+//       ipRange.push(result["ipv4_cidrs"][key]);
+//     }
 
-    for (const key in result.ipv6_cidrs) {
-      ipRange.push(result["ipv6_cidrs"][key]);
-    }
+//     for (const key in result.ipv6_cidrs) {
+//       ipRange.push(result["ipv6_cidrs"][key]);
+//     }
 
-    return ipRange;
-  } catch (error) {
-    throw new Error("Error while checking IP address");
-  }
-};
+//     return ipRange;
+//   } catch (error) {
+//     throw new Error("Error while checking IP address");
+//   }
+// };
 
 export const isIPReliable = async (ip: string | string[]): Promise<boolean> => {
   if (Array.isArray(ip)) {
