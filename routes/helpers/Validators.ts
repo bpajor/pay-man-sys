@@ -68,12 +68,11 @@ export const validators = {
     .trim()
     .escape()
     .customSanitizer((value) => {
-      // Konfiguracja xss bez kodowania HTML
       return xss(value, {
-        whiteList: {}, // Usuwa wszystkie znaczniki HTML
-        stripIgnoreTag: true, // Usuwa nieznane znaczniki HTML
-        stripIgnoreTagBody: ["script"], // Usuwa zawartość tagów <script>
-        escapeHtml: (html) => html, // Pomija automatyczne kodowanie HTML
+        whiteList: {}, 
+        stripIgnoreTag: true, 
+        stripIgnoreTagBody: ["script"], 
+        escapeHtml: (html) => html,
       });
     }),
   address: body("address")
@@ -88,12 +87,11 @@ export const validators = {
     .trim()
     .escape()
     .customSanitizer((value) => {
-      // Konfiguracja xss bez kodowania HTML
       return xss(value, {
-        whiteList: {}, // Usuwa wszystkie znaczniki HTML
-        stripIgnoreTag: true, // Usuwa nieznane znaczniki HTML
-        stripIgnoreTagBody: ["script"], // Usuwa zawartość tagów <script>
-        escapeHtml: (html) => html, // Pomija automatyczne kodowanie HTML
+        whiteList: {}, 
+        stripIgnoreTag: true, 
+        stripIgnoreTagBody: ["script"], 
+        escapeHtml: (html) => html,
       });
     }),
   date_of_birth: body("date_of_birth")

@@ -45,20 +45,16 @@ AppDataSource.initialize()
     // Pass logger to middlewares
     app.use(createLogger);
 
-    // app.use((req: Request, res: Response, next: NextFunction) => {
-    //   res.locals.enable_csrf = false;
-
-    //   return next();
-    // })
-
     let redisClient = createClient({
-      url: process.env.REDIS_TEMPORARY_URL,
+      url: process.env.REDIS_URL,
       socket: {
         reconnectStrategy: (retries) => {
           const delay = Math.min(retries * 50, 2000);
           logger.warn(`Reconnecting to Redis in ${delay}ms`);
           return delay;
         },
+        tls: true,
+        rejectUnauthorized: false,
       },
     });
 
@@ -162,25 +158,20 @@ AppDataSource.initialize()
     app.use(Express.json());
 
     app.use((req: Request, res: Response, next: NextFunction) => {
-      // Sprawdzanie, czy żądanie dotyczy ścieżki zaczynającej się od /css
       if (req.path.startsWith("/css")) {
-        // Sprawdzenie, czy ścieżka kończy się na .css
         if (!req.path.endsWith(".css")) {
-          // Jeśli ścieżka nie kończy się na .css, zwróć błąd 400
           res.status(404).send("Not found");
           return;
         }
       }
 
       if (req.path.startsWith("/images")) {
-        // Sprawdzenie, czy ścieżka kończy się na .css
         if (!req.path.endsWith(".png")) {
-          // Jeśli ścieżka nie kończy się na .css, zwróć błąd 400
           res.status(404).send("Not found");
           return;
         }
       }
-      // Jeśli wszystko jest poprawne, przejdź do następnego middleware
+
       next();
     });
 
@@ -207,14 +198,6 @@ AppDataSource.initialize()
             return next();
           }
 
-          // if (acc_type_from_path === "common") {
-          //   if (!account_type) {
-          //     logger.error("Unauthorized access to CSS file");
-          //   res.status(403);
-          //   return next(new Error("Unauthorized"));
-          //   }
-          // }
-
           return next();
         }
 
@@ -240,30 +223,12 @@ AppDataSource.initialize()
       });
     });
 
-    // app.get("/set-session", (req, res) => {
-    //   // Ustawienie danych sesji
-    //   // TODO ts-node throws error - probably it cant see types.d.ts
-    //   req.session.username = "TestUser";
-    //   res.send("Session set with username: TestUser");
-    // });
-
-    // app.get("/get-session", (req, res) => {
-    //   // Sprawdzenie, czy dane sesji istnieją
-    //   if (req.session.username) {
-    //     res.send(`Session found with username: ${req.session.username}`);
-    //   } else {
-    //     res.send("No session found");
-    //   }
-    // });
-
-    // express-winston logger makes sense BEFORE the router
     app.use(
       expressWinston.logger({
         transports: [new winston.transports.Console()],
         format: winston.format.combine(winston.format.json()),
         requestFilter: (req, propName) => {
           if (propName === "headers") {
-            // Maskowanie ciasteczek - pozostawienie tylko connect.sid
             if (req.headers.cookie) {
               req.headers.cookie = req.headers.cookie
                 .split(";")
@@ -272,7 +237,6 @@ AppDataSource.initialize()
                 .join("; ");
             }
 
-            // Maskowanie innych nagłówków
             const headersToMask = ["authorization", "x-api-key", "referer"];
             headersToMask.forEach((header) => {
               if (req.headers[header]) {
@@ -298,7 +262,6 @@ AppDataSource.initialize()
       })
     );
 
-    // Obsługa błędu 404 - nieznaleziono strony
     app.use((req: Request, res: Response) => {
       let csrf_token;
       if (req.session.not_authenticated_csrf_secret) {
@@ -324,7 +287,6 @@ AppDataSource.initialize()
       });
     });
 
-    // Middleware obsługi błędów - 4xx, 5xx
     app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
       if (res.statusCode == 429) {
         res.status(429).send("Too many requests. Please try again later.");
@@ -369,71 +331,3 @@ AppDataSource.initialize()
     process.exit(1);
   });
 
-// app.use(createLogger)
-
-// app.use(generateScriptNonce);
-
-// app.use(customHelmet)
-
-// app.set('trust proxy', 1); // trust only first proxy
-
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   limit: 100, // limit each IP to 100 requests per windowMs
-//   message: "Too many requests from this IP, please try again after 15 minutes",
-// });
-
-// app.use(limiter);
-
-// app.use(bodyParser.urlencoded({ extended: false }));
-
-// const publicPath =
-//   process.env.NODE_ENVIRONMENT === "local"
-//     ? path.join(__dirname, "public")
-//     : path.join(__dirname, "../public");
-
-// app.use(
-//   Express.static(publicPath, {
-//     maxAge: "1y", //Cache static files for 1 year since they will not change
-//   })
-// );
-
-// // Will be needed probably
-// // app.use(
-// //   session({
-// //     secret: process.env.SESSION_SECRET,
-// //     resave: false,
-// //     saveUninitialized: false,
-// //     store: store,
-// //   })
-// // );
-
-// app.use(auth_routes);
-// app.use(employee_routes);
-
-// startServer(app, logger!);
-
-// // Gracefully close the client when the application is shutting down
-// process.on("SIGTERM", () => {
-//   console.log("SIGTERM signal received: closing PostgreSQL client");
-//   client.end(err => {
-//     if (err) {
-//       console.error("Error closing PostgreSQL client", err);
-//     } else {
-//       console.log("PostgreSQL client closed");
-//     }
-//     process.exit(err ? 1 : 0);
-//   });
-// });
-
-// process.on("SIGINT", () => {
-//   console.log("SIGINT signal received: closing PostgreSQL client");
-//   client.end(err => {
-//     if (err) {
-//       console.error("Error closing PostgreSQL client", err);
-//     } else {
-//       console.log("PostgreSQL client closed");
-//     }
-//     process.exit(err ? 1 : 0);
-//   });
-// // });

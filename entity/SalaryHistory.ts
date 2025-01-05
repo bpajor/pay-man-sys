@@ -48,7 +48,4 @@ export class SalaryHistory {
 
   @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
   income_tax: number;
-
-  // @Column({ length: 255, nullable: true })
-  // description: string;
 }

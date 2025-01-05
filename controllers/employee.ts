@@ -515,12 +515,6 @@ export const postEmployeeJoinRequest = async (
       return next(new Error("Bad request"));
     }
 
-    // const does_jr_for_user_exist = await AppDataSource.getRepository(
-    //   JoinRequest
-    // ).existsBy({
-    //   user: { id: uid },
-    // });
-
     const does_jr_for_user_exist = await jr_repo.exists({
       where: {user: { id: uid }} ,
     })
@@ -976,9 +970,6 @@ GROUP BY
     res.status(500);
     return next(new Error("Internal server error"));
   }
-
-  // 1) Query to update days in sh
-  // 2) Query to update last_marked_day in employees
 
   const first_query = `
     UPDATE salary_history SET 

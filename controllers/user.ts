@@ -7,7 +7,6 @@ import { validationResult } from "express-validator";
 import { validatorError } from "./helpers/validator_errors";
 import { sanitizeReturnProps } from "./helpers/sanitize";
 
-// TODO -> add validation && think if changing personal data should be confirmed by email or 2fa
 export const postUpdateUserPersonalData = async (
   req: Request,
   res: Response,

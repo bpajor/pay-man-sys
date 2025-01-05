@@ -1016,19 +1016,19 @@ export const postLogout = async (
 };
 
 const generate2FASecret = (userEmail: string) => {
-  // Utwórz obiekt OTPAuth.TOTP (czasowy kod jednorazowy)
+
   const totp = new OTPAuth.TOTP({
-    issuer: "PayrollPro", // Nazwa Twojej aplikacji
-    label: userEmail, // Email użytkownika jako identyfikator
+    issuer: "PayrollPro",
+    label: userEmail, 
     algorithm: "SHA1",
     digits: 6,
     period: 30,
   });
 
-  // Wygeneruj tajny klucz (base32 encoded)
+ 
   const secret = encode(totp.secret.bytes);
 
-  // Utwórz URL dla aplikacji uwierzytelniającej
+
   const otpauthURL = totp.toString();
 
   return { secret, otpauthURL };
