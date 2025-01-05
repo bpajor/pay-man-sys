@@ -23,6 +23,7 @@ export const IPGuard = async (
     console.log(req.headers["x-forwarded-for"]);
     console.log(cloudflare_ip_range);
     console.log(proxy_ip_from_cf);
+    console.log(req.socket.remoteAddress);
 
     if (!proxy_ip_from_cf) {
       res.status(403);
